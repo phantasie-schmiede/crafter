@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0">
+    <file datatype="plaintext" original="messages" source-language="en" date="2026-09-04T00:00:00Z" product-name="crafter">
+        <header/>
+        <body>
+            <trans-unit id="extension.title">
+                <source>PSBits Crafter</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
