@@ -1,0 +1,25 @@
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:foundation="http://typo3.org/ns/PSBits/Foundation/ViewHelpers">
+    <h1><foundation:translate id="header" /></h1>
+
+    <f:form
+        action="create"
+        method="post"
+        name="{{ modelVariable }}"
+        object="{{ modelObject }}">
+        <f:render partial="FormFields/{{ partialName }}" />
+
+        <div class="d-flex gap-2 mt-3">
+            <f:link.action
+                action="list"
+                class="btn btn-secondary">
+                <foundation:translate id="cancel" />
+            </f:link.action>
+            <f:form.submit
+                class="btn btn-primary"
+                value="{foundation:translate(id: 'save')}" />
+        </div>
+    </f:form>
+</html>

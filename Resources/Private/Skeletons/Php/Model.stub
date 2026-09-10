@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+{{ fileHeader }}
+
+namespace {{ modelNamespace }};
+
+{{ imports }}
+
+/**
+ * Class {{ className }}
+ *
+ * @package {{ modelNamespace }}
+ */
+{{ classAttributes }}
+class {{ className }} extends {{ parentClass }}
+{
+    {{ classBody }}
+}

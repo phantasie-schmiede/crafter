@@ -1,0 +1,9 @@
+services:
+  _defaults:
+    autoconfigure: true
+    autowire: true
+    public: false
+
+  {{ namespace }}\:
+    exclude: '../Classes/Domain/Model/*'
+    resource: '../Classes/*'

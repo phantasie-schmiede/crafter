@@ -1,0 +1,3 @@
+<trans-unit id="{{ transUnitId }}">
+    <source>{{ transUnitSource }}</source>
+</trans-unit>

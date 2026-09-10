@@ -1,0 +1,4 @@
+$this->{{ repositoryProperty }}->add(${{ modelVariable }});
+$this->persistenceManager->persistAll();
+
+return $this->redirect(actionName: 'show', arguments: ['{{ modelVariable }}' => ${{ modelVariable }}]);

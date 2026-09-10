@@ -1,0 +1,5 @@
+public function __construct(
+    {{ constructorArguments }}
+) {
+    parent::__construct({{ parentArguments }});
+}

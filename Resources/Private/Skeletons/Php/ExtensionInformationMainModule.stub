@@ -1,0 +1,7 @@
+$mainModuleKey = $this->buildModuleKeyPrefix() . '{{ mainModuleName }}';
+$this->addMainModule(
+    GeneralUtility::makeInstance(
+        MainModuleConfiguration::class,
+        key: $mainModuleKey
+    )
+);

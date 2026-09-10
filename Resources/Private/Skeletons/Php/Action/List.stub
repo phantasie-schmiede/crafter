@@ -1,0 +1,3 @@
+$this->view->assign('{{ pluralVariable }}', $this->{{ repositoryProperty }}->findAll());
+
+return $this->htmlResponse();

@@ -1,0 +1,35 @@
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:foundation="http://typo3.org/ns/PSBits/Foundation/ViewHelpers">
+    <h1><foundation:translate id="header" /></h1>
+
+    <f:if condition="{products}">
+        <f:then>
+            <ul class="list-group list-group-flush">
+                <f:for
+                    as="product"
+                    each="{products}">
+                    <li class="list-group-item">
+                        <f:link.action
+                            action="show"
+                            arguments="{product: product}">
+                            {product.title}
+                        </f:link.action>
+                    </li>
+                </f:for>
+            </ul>
+        </f:then>
+        <f:else>
+            <div class="alert alert-info">
+                <foundation:translate id="empty" />
+            </div>
+        </f:else>
+    </f:if>
+
+    <f:link.action
+        action="new"
+        class="btn btn-primary mt-3">
+        <foundation:translate id="new" />
+    </f:link.action>
+</html>

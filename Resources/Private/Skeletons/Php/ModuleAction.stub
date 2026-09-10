@@ -1,0 +1,5 @@
+{{ methodAttributes }}
+public function {{ actionName }}Action(): ResponseInterface
+{
+    {{ methodBody }}
+}

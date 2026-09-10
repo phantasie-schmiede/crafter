@@ -1,0 +1,6 @@
+<f:link.action
+    action="edit"
+    arguments="{{ modelArguments }}"
+    class="btn btn-primary">
+    <foundation:translate id="edit" />
+</f:link.action>

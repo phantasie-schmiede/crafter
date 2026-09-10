@@ -1,0 +1,13 @@
+plugin {
+  {{ signaturePrefix }} {
+    persistence {
+      storagePid = {$plugin.{{ signaturePrefix }}.persistence.storagePid}
+    }
+
+    view {
+      partialRootPaths.10 = {$plugin.{{ signaturePrefix }}.view.partialRootPath}
+    }
+  }
+}
+
+module.{{ signaturePrefix }}.persistence.storagePid = {$plugin.{{ signaturePrefix }}.persistence.storagePid}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    backupGlobals="true"
+    beStrictAboutTestsThatDoNotTestAnything="false"
+    bootstrap="../../.Build/vendor/typo3/testing-framework/Resources/Core/Build/UnitTestsBootstrap.php"
+    cacheDirectory="../../.Build/.phpunit.cache"
+    cacheResult="false"
+    colors="true"
+    failOnRisky="true"
+    failOnWarning="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../.Build/vendor/phpunit/phpunit/phpunit.xsd">
+    <php>
+        <ini name="display_errors"
+            value="1" />
+        <ini name="error_reporting"
+            value="-1" />
+    </php>
+    <source>
+        <include>
+            <directory>../../Classes/</directory>
+        </include>
+    </source>
+    <testsuites>
+        <testsuite name="Crafter unit tests">
+            <directory>../../Tests/Unit/</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

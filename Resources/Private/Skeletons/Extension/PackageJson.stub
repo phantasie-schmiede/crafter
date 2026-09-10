@@ -1,0 +1,28 @@
+{
+  "name": "{{ repositoryName }}",
+  "version": "1.0.0",
+  "description": "{{ description }}",
+  "scripts": {
+    "fix:classes": "node Build/Quality/lint-class-attributes.mjs",
+    "fix:htmlxml": "prettier --config Build/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write \"**/*.{html,xml,xlf}\"",
+    "lint:classes": "node Build/Quality/lint-class-attributes.mjs --dry-run",
+    "lint:htmlxml": "prettier --config Build/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check \"**/*.{html,xml,xlf}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/{{ gitHubRepository }}.git"
+  },
+  "license": "{{ license }}",
+  "bugs": {
+    "url": "https://github.com/{{ gitHubRepository }}/issues"
+  },
+  "homepage": "https://github.com/{{ gitHubRepository }}#readme",
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "@prettier/plugin-xml": "^3.4.2",
+    "prettier": "^3.6.2",
+    "prettier-plugin-organize-attributes": "^1.0.0"
+  }
+}

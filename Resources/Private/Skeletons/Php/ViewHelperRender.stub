@@ -1,0 +1,5 @@
+{{ renderDocBlock }}
+public function render(): {{ renderReturnType }}
+{
+    return {{ renderReturnValue }};
+}

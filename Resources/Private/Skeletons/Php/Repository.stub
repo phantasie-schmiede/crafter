@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+{{ fileHeader }}
+
+namespace {{ repositoryNamespace }};
+
+{{ imports }}
+
+/**
+ * Class {{ className }}Repository
+ *
+ * @extends {{ parentClass }}<{{ className }}>
+ * @package {{ repositoryNamespace }}
+ */
+class {{ className }}Repository extends {{ parentClass }}
+{
+    {{ classBody }}
+}

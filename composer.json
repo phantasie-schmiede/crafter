@@ -1,12 +1,14 @@
 {
     "name": "psbits/crafter",
-    "description": "TYPO3 extension starter package",
+    "description": "Code generator for TYPO3 extensions",
     "type": "typo3-cms-extension",
     "license": "GPL-3.0-or-later",
     "keywords": [
-        "typo3",
+        "code-generator",
+        "dev",
         "extension",
-        "starter"
+        "scaffolding",
+        "typo3"
     ],
     "authors": [
         {
@@ -31,8 +33,12 @@
         "ext-intl": "*",
         "ext-mbstring": "*",
         "ext-simplexml": "*",
+        "nikic/php-parser": "^5.0",
         "php": "^8.3",
-        "typo3/cms-core": "^12.4 || ^13.4"
+        "psbits/foundation": "^3.2",
+        "symfony/console": "^7.0",
+        "symfony/yaml": "^7.0",
+        "typo3/cms-core": "^13.4"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.95",
@@ -89,8 +95,11 @@
             "cp Build/GitHooks/pre-commit .git/hooks/pre-commit"
         ],
         "test:all": [
-            "@lint:all"
+            "@lint:all",
+            "@test:unit"
         ],
+        "test:unit": "phpunit -c Build/Testing/UnitTests.xml --colors=always",
+        "test:unit:update-fixtures": "CRAFTER_UPDATE_FIXTURES=1 phpunit -c Build/Testing/UnitTests.xml --colors=always",
         "validate:composer": "composer validate --no-check-publish"
     }
 }

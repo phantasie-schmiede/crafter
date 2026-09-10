@@ -6,7 +6,10 @@ $finder = PhpCsFixer\Finder::create()
     ->in([
         __DIR__ . '/../../Classes',
         __DIR__ . '/../../Configuration',
+        __DIR__ . '/../../Tests',
     ])
+    // The fixtures are golden masters of generated code and must not be reformatted.
+    ->exclude(['Fixtures/Expected'])
     ->name('*.php');
 
 return (new PhpCsFixer\Config())->setRiskyAllowed(true)

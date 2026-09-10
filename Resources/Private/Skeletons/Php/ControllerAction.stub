@@ -1,0 +1,6 @@
+{{ methodDocBlock }}
+{{ methodAttributes }}
+public function {{ actionName }}Action({{ methodArguments }}): {{ methodReturnType }}
+{
+    {{ methodBody }}
+}

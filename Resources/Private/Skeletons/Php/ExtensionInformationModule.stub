@@ -1,0 +1,8 @@
+$this->addModule(
+    GeneralUtility::makeInstance(
+        ModuleConfiguration::class,
+        controllers : [{{ controllerClass }}Controller::class],
+        key         : $this->buildModuleKeyPrefix() . '{{ moduleName }}',
+        parentModule: $mainModuleKey
+    )
+);

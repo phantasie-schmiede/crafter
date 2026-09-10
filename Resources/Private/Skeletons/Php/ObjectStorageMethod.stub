@@ -1,0 +1,5 @@
+{{ methodDocBlock }}
+public function {{ methodName }}({{ linkedClass }} ${{ parameterName }}): {{ methodReturnType }}
+{
+    {{ methodBody }}
+}

@@ -1,0 +1,3 @@
+{{ propertyDocBlock }}
+{{ propertyAttributes }}
+protected {{ propertyType }} ${{ propertyName }}{{ propertyDefault }};

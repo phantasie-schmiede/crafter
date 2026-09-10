@@ -1,0 +1,6 @@
+
+<f:link.action
+    action="new"
+    class="btn btn-primary mt-3">
+    <foundation:translate id="new" />
+</f:link.action>

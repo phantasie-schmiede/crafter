@@ -1,0 +1,11 @@
+plugin.{{ signaturePrefix }} {
+  persistence {
+    # cat=plugin.{{ signaturePrefix }}//a; type=int+; label=Default storage PID
+    storagePid =
+  }
+
+  view {
+    # cat=plugin.{{ signaturePrefix }}//b; type=string; label=Path to the partials
+    partialRootPath = EXT:{{ extensionKey }}/Resources/Private/Partials/
+  }
+}

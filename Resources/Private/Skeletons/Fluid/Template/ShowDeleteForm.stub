@@ -1,0 +1,10 @@
+<f:form
+    action="delete"
+    arguments="{{ modelArguments }}"
+    method="post">
+    <f:form.button
+        class="btn btn-danger"
+        data="{confirm: '{foundation:translate(id: \'confirmDelete\')}'}">
+        <foundation:translate id="delete" />
+    </f:form.button>
+</f:form>

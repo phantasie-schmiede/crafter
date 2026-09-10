@@ -1,0 +1,30 @@
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:foundation="http://typo3.org/ns/PSBits/Foundation/ViewHelpers">
+    <h1><foundation:translate id="header" /></h1>
+
+    <f:if condition="{{ pluralObject }}">
+        <f:then>
+            <ul class="list-group list-group-flush">
+                <f:for
+                    as="{{ modelVariable }}"
+                    each="{{ pluralObject }}">
+                    <li class="list-group-item">
+                        <f:link.action
+                            action="show"
+                            arguments="{{ modelArguments }}">
+                            {{ labelExpression }}
+                        </f:link.action>
+                    </li>
+                </f:for>
+            </ul>
+        </f:then>
+        <f:else>
+            <div class="alert alert-info">
+                <foundation:translate id="empty" />
+            </div>
+        </f:else>
+    </f:if>
+    {{ newLink }}
+</html>

@@ -8,12 +8,13 @@ $EM_CONF[$_EXTKEY] = [
     'constraints'      => [
         'conflicts' => [],
         'depends'   => [
-            'php'   => '8.3',
-            'typo3' => '12.4.0-13.4.99',
+            'foundation' => '3.2',
+            'php'        => '8.3',
+            'typo3'      => '13.4.0-13.4.99',
         ],
         'suggests'  => [],
     ],
-    'description'      => 'TYPO3 extension starter package',
+    'description'      => 'Code generator for TYPO3 extensions',
     'state'            => 'alpha',
     'title'            => 'PSBits | Crafter',
     'version'          => '1.0.0',

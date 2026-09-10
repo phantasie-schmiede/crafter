@@ -1,0 +1,20 @@
+# {{ packageTitle }}
+
+{{ description }}
+
+## Installation
+
+```bash
+composer require {{ composerName }}
+```
+
+## Development
+
+```bash
+composer install
+composer qa
+```
+
+`composer qa` fixes everything that can be fixed automatically and afterwards runs all linters and the static
+analysis. The same checks run in the `Quality` GitHub Actions workflow and in the `pre-commit` hook that is
+installed by `composer install`.

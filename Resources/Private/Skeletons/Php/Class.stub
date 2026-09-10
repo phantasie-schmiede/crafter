@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+{{ fileHeader }}
+
+namespace {{ namespace }};
+
+{{ imports }}
+
+/**
+ * Class {{ className }}
+ *
+ * @package {{ namespace }}
+ */
+{{ classAttributes }}
+{{ classKeywords }}class {{ className }}{{ classExtends }}{{ classImplements }}
+{
+{{ traits }}
+{{ constants }}
+{{ properties }}
+{{ methods }}
+}

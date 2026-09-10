@@ -1,0 +1,40 @@
+{
+    "authors": [
+        {
+            "email": "{{ authorEmail }}",
+            "name": "{{ author }}",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "{{ namespaceEscaped }}\\": "Classes"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        },
+        "bin-dir": ".Build/bin",
+        "sort-packages": true,
+        "vendor-dir": ".Build/vendor"
+    },
+    "description": "{{ description }}",
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "{{ extensionKey }}",
+            "web-dir": ".Build/public"
+        }
+    },
+    "keywords": [
+        {{ composerKeywords }}
+    ],
+    "license": "{{ license }}",
+    "name": "{{ composerName }}",
+    "require": {
+        {{ composerRequire }}
+    },
+{{ composerDevSection }}
+    "type": "typo3-cms-extension"
+}

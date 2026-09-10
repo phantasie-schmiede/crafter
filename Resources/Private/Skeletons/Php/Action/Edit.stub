@@ -1,0 +1,3 @@
+$this->view->assign('{{ modelVariable }}', ${{ modelVariable }});
+
+return $this->htmlResponse();

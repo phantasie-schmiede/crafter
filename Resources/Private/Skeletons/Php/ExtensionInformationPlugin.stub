@@ -1,0 +1,7 @@
+$this->addPlugin(
+    GeneralUtility::makeInstance(
+        PluginConfiguration::class,
+        controllers: [{{ controllerClass }}Controller::class],
+        name       : '{{ pluginName }}'
+    )
+);

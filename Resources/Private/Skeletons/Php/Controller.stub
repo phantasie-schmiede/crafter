@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+{{ fileHeader }}
+
+namespace {{ controllerNamespace }};
+
+{{ imports }}
+
+/**
+ * Class {{ className }}Controller
+ *
+ * @package {{ controllerNamespace }}
+ */
+class {{ className }}Controller extends {{ parentClass }}
+{
+    {{ classBody }}
+}

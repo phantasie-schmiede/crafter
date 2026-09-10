@@ -1,0 +1,30 @@
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:foundation="http://typo3.org/ns/PSBits/Foundation/ViewHelpers">
+    <h1>{product.title}</h1>
+
+    <div class="d-flex gap-2 mt-3">
+        <f:link.action
+            action="list"
+            class="btn btn-secondary">
+            <foundation:translate id="back" />
+        </f:link.action>
+        <f:link.action
+            action="edit"
+            arguments="{product: product}"
+            class="btn btn-primary">
+            <foundation:translate id="edit" />
+        </f:link.action>
+        <f:form
+            action="delete"
+            arguments="{product: product}"
+            method="post">
+            <f:form.button
+                class="btn btn-danger"
+                data="{confirm: '{foundation:translate(id: \'confirmDelete\')}'}">
+                <foundation:translate id="delete" />
+            </f:form.button>
+        </f:form>
+    </div>
+</html>

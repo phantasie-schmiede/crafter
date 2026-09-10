@@ -1,0 +1,69 @@
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:foundation="http://typo3.org/ns/PSBits/Foundation/ViewHelpers">
+    <div class="mb-3">
+        <label
+            class="form-label"
+            for="product-title">
+            <foundation:translate id="title" />
+        </label>
+        <f:form.textfield
+            class="form-control"
+            id="product-title"
+            property="title" />
+    </div>
+
+    <div class="mb-3">
+        <label
+            class="form-label"
+            for="product-description">
+            <foundation:translate id="description" />
+        </label>
+        <f:form.textarea
+            class="form-control"
+            id="product-description"
+            property="description"
+            rows="5" />
+    </div>
+
+    <div class="mb-3">
+        <label
+            class="form-label"
+            for="product-price">
+            <foundation:translate id="price" />
+        </label>
+        <f:form.textfield
+            class="form-control"
+            id="product-price"
+            property="price"
+            step="any"
+            type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label
+            class="form-label"
+            for="product-active">
+            <foundation:translate id="active" />
+        </label>
+        <f:form.checkbox
+            class="form-check-input"
+            id="product-active"
+            property="active"
+            value="1" />
+    </div>
+
+    <div class="mb-3">
+        <label
+            class="form-label"
+            for="product-releaseDate">
+            <foundation:translate id="releaseDate" />
+        </label>
+        <f:form.textfield
+            class="form-control"
+            id="product-releaseDate"
+            property="releaseDate"
+            type="date" />
+    </div>
+</html>

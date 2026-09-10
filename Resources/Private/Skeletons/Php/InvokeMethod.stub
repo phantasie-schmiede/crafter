@@ -1,0 +1,4 @@
+public function __invoke({{ eventClass }} $event): void
+{
+    {{ methodBody }}
+}

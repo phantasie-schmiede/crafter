@@ -1,0 +1,19 @@
+<?php
+
+$EM_CONF[$_EXTKEY] = [
+    'author'           => '{{ author }}',
+    'author_email'     => '{{ authorEmail }}',
+    'category'         => '{{ emConfCategory }}',
+    'clearCacheOnLoad' => true,
+    'constraints'      => [
+        'conflicts' => [],
+        'depends'   => [
+            {{ emConfDepends }}
+        ],
+        'suggests'  => [],
+    ],
+    'description'      => '{{ description }}',
+    'state'            => '{{ emConfState }}',
+    'title'            => '{{ title }}',
+    'version'          => '{{ extensionVersion }}',
+];

@@ -1,0 +1,539 @@
+crafter:
+  # Skeleton lookup order. The highest priority containing the requested stub wins.
+  # {targetExtension} is replaced with the extension key the generator writes to.
+  skeletonRootPaths:
+    0: 'EXT:crafter/Resources/Private/Skeletons/'
+    10: 'FILE:config/Crafter/Skeletons/'
+    20: 'EXT:{targetExtension}/Resources/Private/Skeletons/'
+
+  # Target directory for extensions that do not exist yet, relative to the project root.
+  extensionRootPath: 'FILE:packages/'
+
+  # Checks performed by crafter:audit.
+  audit:
+    # Categories that are evaluated. Remove one to skip its checks entirely.
+    categories:
+      - 'structure'
+      - 'model'
+      - 'controller'
+      - 'language'
+      - 'registration'
+      - 'orphan'
+    # Every base language file is expected to be translated into these languages.
+    languages:
+      - 'de'
+    # Files an extension must contain, relative to its directory.
+    requiredFiles:
+      - 'Classes/Data/ExtensionInformation.php'
+      - 'Configuration/Services.yaml'
+      - 'composer.json'
+      - 'ext_emconf.php'
+
+  # Trans units created per action in Resources/Private/Language/Frontend/{Controller}/{action}.xlf.
+  # {modelName} is replaced with the model name, {pluralName} with its plural form.
+  actionLabels:
+    edit:
+      cancel: 'Cancel'
+      header: 'Edit {modelName}'
+      save: 'Save'
+    list:
+      empty: 'No {pluralName} found.'
+      header: '{pluralName}'
+      new: 'Add {modelName}'
+    new:
+      cancel: 'Cancel'
+      header: 'New {modelName}'
+      save: 'Save'
+    show:
+      back: 'Back'
+      confirmDelete: 'Do you really want to delete this entry?'
+      delete: 'Delete'
+      edit: 'Edit'
+
+  # Form fields rendered into Resources/Private/Partials/FormFields/{Model}.html, keyed by field type.
+  # "default" is used for every field type without an own entry. Set a type to ~ to skip it.
+  # "attributes" are added to the view helper tag as-is, {propertyName} and {fieldId} are resolved.
+  formFields:
+    boolean:
+      attributes:
+        class: 'form-check-input'
+        value: '1'
+      viewHelper: 'f:form.checkbox'
+    date:
+      attributes:
+        class: 'form-control'
+        type: 'date'
+      viewHelper: 'f:form.textfield'
+    dateTime:
+      attributes:
+        class: 'form-control'
+        type: 'datetime-local'
+      viewHelper: 'f:form.textfield'
+    decimal:
+      attributes:
+        class: 'form-control'
+        step: 'any'
+        type: 'number'
+      viewHelper: 'f:form.textfield'
+    default:
+      attributes:
+        class: 'form-control'
+      viewHelper: 'f:form.textfield'
+    email:
+      attributes:
+        class: 'form-control'
+        type: 'email'
+      viewHelper: 'f:form.textfield'
+    enum: ~
+    file: ~
+    inline: ~
+    integer:
+      attributes:
+        class: 'form-control'
+        type: 'number'
+      viewHelper: 'f:form.textfield'
+    link:
+      attributes:
+        class: 'form-control'
+        type: 'url'
+      viewHelper: 'f:form.textfield'
+    relationMultiple: ~
+    relationSingle: ~
+    richText:
+      attributes:
+        class: 'form-control'
+        rows: '10'
+      viewHelper: 'f:form.textarea'
+    text:
+      attributes:
+        class: 'form-control'
+        rows: '5'
+      viewHelper: 'f:form.textarea'
+
+  # Actions available to crafter:make:controller. Key is the action name without the "Action" suffix.
+  # attributes:   PHP attributes of the method, {pluginAction} placeholders are not used here.
+  # bodySkeleton: skeleton holding the method body. Override it to change what an action does.
+  # imports:      classes imported when the action is generated.
+  # modelArgument: true adds the model as first parameter, e.g. showAction(Product $product).
+  # redirect:     rendered as $this->redirect(...) instead of a return type, see the body skeletons.
+  # returnType:   return type of the method.
+  # template:     name of the Fluid template skeleton, empty means the action renders no own template.
+  # throws:       short class names added to the @throws doc block, imports have to be listed as well.
+  controllerActions:
+    create:
+      attributes:
+        - 'PluginAction(uncached: true)'
+      bodySkeleton: 'Php/Action/Create'
+      imports:
+        - 'TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException'
+        - 'TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
+      modelArgument: true
+      returnType: 'ResponseInterface'
+      throws:
+        - 'IllegalObjectTypeException'
+    delete:
+      attributes:
+        - 'PluginAction(uncached: true)'
+      bodySkeleton: 'Php/Action/Delete'
+      imports:
+        - 'TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException'
+      modelArgument: true
+      returnType: 'ResponseInterface'
+      throws:
+        - 'IllegalObjectTypeException'
+    edit:
+      attributes:
+        - 'PluginAction(uncached: true)'
+      bodySkeleton: 'Php/Action/Edit'
+      modelArgument: true
+      returnType: 'ResponseInterface'
+      template: 'Fluid/Template/Edit'
+    list:
+      attributes:
+        - 'PluginAction(default: true)'
+      bodySkeleton: 'Php/Action/List'
+      returnType: 'ResponseInterface'
+      template: 'Fluid/Template/List'
+    new:
+      attributes:
+        - 'PluginAction(uncached: true)'
+      bodySkeleton: 'Php/Action/New'
+      returnType: 'ResponseInterface'
+      template: 'Fluid/Template/New'
+    show:
+      attributes:
+        - 'PluginAction(uncached: true)'
+      bodySkeleton: 'Php/Action/Show'
+      modelArgument: true
+      returnType: 'ResponseInterface'
+      template: 'Fluid/Template/Show'
+    update:
+      attributes:
+        - 'PluginAction(uncached: true)'
+      bodySkeleton: 'Php/Action/Update'
+      imports:
+        - 'TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException'
+        - 'TYPO3\CMS\Extbase\Persistence\Exception\UnknownObjectException'
+        - 'TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
+      modelArgument: true
+      returnType: 'ResponseInterface'
+      throws:
+        - 'IllegalObjectTypeException'
+        - 'UnknownObjectException'
+
+  # Files created by crafter:make:extension, grouped by feature.
+  # Key is the skeleton identifier, value the target path relative to the extension directory.
+  # Entries can be removed, retargeted or extended. The group "core" is always created.
+  extensionFiles:
+    core:
+      'Extension/Composer': 'composer.json'
+      'Extension/EditorConfig': '.editorconfig'
+      'Extension/EmConf': 'ext_emconf.php'
+      'Extension/ExtensionIcon': 'Resources/Public/Icons/Extension.svg'
+      'Extension/ExtensionInformation': 'Classes/Data/ExtensionInformation.php'
+      'Extension/GitAttributes': '.gitattributes'
+      'Extension/GitIgnore': '.gitignore'
+      'Extension/Readme': 'README.md'
+      'Extension/Services': 'Configuration/Services.yaml'
+    license:
+      'Extension/License': 'LICENSE.txt'
+    typoScript:
+      'Extension/TypoScript/Constants': 'Configuration/TypoScript/constants.typoscript'
+      'Extension/TypoScript/Setup': 'Configuration/TypoScript/setup.typoscript'
+    quality:
+      'Extension/PackageJson': 'package.json'
+      'Extension/Quality/LintClassAttributes': 'Build/Quality/lint-class-attributes.mjs'
+      'Extension/Quality/PhpCsFixer': 'Build/Quality/.php-cs-fixer.dist.php'
+      'Extension/Quality/PhpStan': 'Build/Quality/phpstan.neon.dist'
+      'Extension/Quality/PreCommit': 'Build/GitHooks/pre-commit'
+      'Extension/Quality/Prettier': 'Build/Quality/prettier.config.mjs'
+      'Extension/Quality/PrettierIgnore': 'Build/Quality/.prettierignore'
+      'Extension/Quality/TypoScriptLint': 'Build/Quality/typoscript-lint.yml'
+      'Extension/Quality/YamlLint': 'Build/Quality/.yamllint.yml'
+    ci:
+      'Extension/Workflow/Quality': '.github/workflows/quality.yml'
+
+  # Property types offered by crafter:make:model. Every entry is plain data, so own types can be added and
+  # existing ones adjusted without touching PHP code.
+  # Placeholders: {foreignField}, {linkedClass}, {mmTable}, {propertyName}, {tableName}.
+  # Keys per type:
+  #   attributes    - PHP attributes without the surrounding #[ ], rendered in the given order
+  #   defaultValue  - property default; omit it to declare the property without a default
+  #   docBlock      - optional doc block line above the property
+  #   imports       - fully qualified class names added to the use statements
+  #   linkedClass   - 'enum' or 'model' if the type points to another class
+  #   objectStorage - true creates initializeObject(), add*() and remove*() methods
+  #   phpType       - declared property type
+  fieldTypes:
+    boolean:
+      attributes:
+        - 'Check'
+      defaultValue: 'false'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Check'
+      phpType: 'bool'
+    color:
+      attributes:
+        - 'Color'
+      defaultValue: "''"
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Color'
+      phpType: 'string'
+    date:
+      attributes:
+        - 'Datetime(format: DateType::date)'
+      defaultValue: 'null'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Datetime'
+        - 'PSBits\Foundation\Enum\DateType'
+      phpType: '?\DateTime'
+    dateTime:
+      attributes:
+        - 'Datetime'
+      defaultValue: 'null'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Datetime'
+      phpType: '?\DateTime'
+    decimal:
+      attributes:
+        - 'Number(format: NumberFormat::decimal)'
+      defaultValue: '0.0'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Number'
+        - 'PSBits\Foundation\Enum\NumberFormat'
+      phpType: 'float'
+    email:
+      attributes:
+        - "Input(eval: 'trim,email')"
+      defaultValue: "''"
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Input'
+      phpType: 'string'
+    enum:
+      attributes:
+        - 'Enum(enumClass: {linkedClass}::class)'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Enum'
+      linkedClass: 'enum'
+      phpType: '?{linkedClass}'
+      defaultValue: 'null'
+    file:
+      attributes:
+        - 'File'
+      docBlock: '@var ObjectStorage<FileReference>'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\File'
+        - 'TYPO3\CMS\Extbase\Domain\Model\FileReference'
+        - 'TYPO3\CMS\Extbase\Persistence\ObjectStorage'
+      objectStorage: true
+      phpType: 'ObjectStorage'
+    inline:
+      attributes:
+        - "Cascade(['value' => 'remove'])"
+        - "Inline(foreignField: '{foreignField}', linkedModel: {linkedClass}::class)"
+      docBlock: '@var ObjectStorage<{linkedClass}>'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Inline'
+        - 'TYPO3\CMS\Extbase\Annotation\ORM\Cascade'
+        - 'TYPO3\CMS\Extbase\Persistence\ObjectStorage'
+      linkedClass: 'model'
+      objectStorage: true
+      phpType: 'ObjectStorage'
+    integer:
+      attributes:
+        - 'Number'
+      defaultValue: '0'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Number'
+      phpType: 'int'
+    link:
+      attributes:
+        - 'Link'
+      defaultValue: "''"
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Link'
+      phpType: 'string'
+    relationMultiple:
+      attributes:
+        - "Select(linkedModel: {linkedClass}::class, mm: '{mmTable}', renderType: SelectRenderType::selectMultipleSideBySide)"
+      docBlock: '@var ObjectStorage<{linkedClass}>'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Select'
+        - 'PSBits\Foundation\Enum\SelectRenderType'
+        - 'TYPO3\CMS\Extbase\Persistence\ObjectStorage'
+      linkedClass: 'model'
+      objectStorage: true
+      phpType: 'ObjectStorage'
+    relationSingle:
+      attributes:
+        - 'Select(linkedModel: {linkedClass}::class)'
+      defaultValue: 'null'
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Select'
+      linkedClass: 'model'
+      phpType: '?{linkedClass}'
+    richText:
+      attributes:
+        - 'Text(enableRichText: true)'
+      defaultValue: "''"
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Text'
+      phpType: 'string'
+    slug:
+      attributes:
+        - 'Slug'
+      defaultValue: "''"
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Slug'
+      phpType: 'string'
+    string:
+      attributes:
+        - 'Input'
+      defaultValue: "''"
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Input'
+      phpType: 'string'
+    text:
+      attributes:
+        - 'Text'
+      defaultValue: "''"
+      imports:
+        - 'PSBits\Foundation\Attribute\TCA\ColumnType\Text'
+      phpType: 'string'
+
+  # Class attribute added to generated domain models. {labelProperty} is replaced with the first string property.
+  # It is skipped when the model has no string property. Set attributes to an empty list to disable it.
+  modelCtrl:
+    attributes:
+      - "Ctrl(label: '{labelProperty}')"
+    imports:
+      - 'PSBits\Foundation\Attribute\TCA\Ctrl'
+
+  # Added on top of the field type attributes when a property is marked as required.
+  requiredProperty:
+    attributes:
+      - 'Column(required: true)'
+      - "Validate(['validator' => 'NotEmpty'])"
+    imports:
+      - 'PSBits\Foundation\Attribute\TCA\Column'
+      - 'TYPO3\CMS\Extbase\Annotation\Validate'
+
+  # Class types offered by the crafter:make:* commands. Everything is plain data, so the parent class, the
+  # implemented interfaces, the class attributes and the target path of a type can be changed without touching PHP.
+  # Placeholders: {extensionKey}, {lowerName}, {name}.
+  # Keys per type:
+  #   attributes     - PHP attributes without the surrounding #[ ], rendered in the given order
+  #   extends        - fully qualified parent class
+  #   implements     - fully qualified interfaces
+  #   imports        - additional use statements
+  #   keywords       - class keywords put in front of the class keyword, e.g. 'readonly' or 'final'
+  #   methodSkeleton - skeleton rendered as the initial method of the class
+  #   pathType       - key below crafter.paths defining the target file
+  #   subNamespace   - namespace below the extension namespace
+  #   suffix         - appended to the given class name
+  #   traits         - fully qualified traits
+  classTypes:
+    backendController:
+      attributes:
+        - 'AsController'
+      extends: 'PSBits\Foundation\Controller\Backend\AbstractModuleController'
+      imports:
+        - 'TYPO3\CMS\Backend\Attribute\AsController'
+      pathType: 'backendController'
+      subNamespace: 'Controller\Backend'
+      suffix: 'Controller'
+    eventListener:
+      attributes:
+        - "AsEventListener(identifier: '{extensionKey}/{lowerName}')"
+      imports:
+        - 'TYPO3\CMS\Core\Attribute\AsEventListener'
+      methodSkeleton: 'Php/InvokeMethod'
+      pathType: 'eventListener'
+      subNamespace: 'EventListener'
+    service:
+      keywords: 'readonly'
+      pathType: 'service'
+      subNamespace: 'Service'
+      suffix: 'Service'
+    viewHelper:
+      extends: 'TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper'
+      methodSkeleton: 'Php/ViewHelperRender'
+      pathType: 'viewHelper'
+      subNamespace: 'ViewHelpers'
+      suffix: 'ViewHelper'
+
+  # Resolution of short dependency names given to crafter:make:service and crafter:make:backend-controller.
+  # A name containing a backslash is always used as is. Otherwise the suffix decides where the class lives:
+  # aliases are looked up first, then the sub namespace of the matching suffix inside the target extension.
+  dependencies:
+    aliases:
+      Context: 'TYPO3\CMS\Core\Context\Context'
+      ModuleTemplateFactory: 'TYPO3\CMS\Backend\Template\ModuleTemplateFactory'
+      PersistenceManager: 'TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
+      ResourceFactory: 'TYPO3\CMS\Core\Resource\ResourceFactory'
+      SiteFinder: 'TYPO3\CMS\Core\Site\SiteFinder'
+    suffixes:
+      Repository: 'Domain\Repository'
+      Service: 'Service'
+      Utility: 'Utility'
+
+  # Argument types offered by crafter:make:view-helper for registerArgument().
+  viewHelperArgumentTypes:
+    - 'array'
+    - 'boolean'
+    - 'integer'
+    - 'mixed'
+    - 'object'
+    - 'string'
+
+  # Return types offered by crafter:make:view-helper. `value` is the expression the generated render() returns,
+  # `docBlock` is an optional doc block line added above the method.
+  viewHelperReturnTypes:
+    array:
+      docBlock: '@return array<int, mixed>'
+      value: '[]'
+    bool:
+      value: 'false'
+    float:
+      value: '0.0'
+    int:
+      value: '0'
+    mixed:
+      value: 'null'
+    string:
+      value: "''"
+
+  # Labels of a backend module. {moduleTitle} is replaced with the humanized module name.
+  moduleLabels:
+    mlang_labels_tabdescr: '{moduleTitle} module'
+    mlang_labels_tablabel: '{moduleTitle}'
+    mlang_tabs_tab: '{moduleTitle}'
+
+  # Target file paths relative to the extension directory.
+  # Available placeholders: {name}, {lowerName}, {path}, {controller}, {action}, {language}.
+  paths:
+    backendController: 'Classes/Controller/Backend/{name}Controller.php'
+    backendTemplate: 'Resources/Private/Templates/Backend/{controller}/{action}.html'
+    controller: 'Classes/Controller/{name}Controller.php'
+    demand: 'Classes/Domain/Demand/{name}Demand.php'
+    enum: 'Classes/Domain/Enum/{name}.php'
+    eventListener: 'Classes/EventListener/{name}.php'
+    formFieldsPartial: 'Resources/Private/Partials/FormFields/{name}.html'
+    languageBackend: 'Resources/Private/Language/Backend/{path}/{name}.xlf'
+    languageFrontend: 'Resources/Private/Language/Frontend/{controller}/{action}.xlf'
+    model: 'Classes/Domain/Model/{name}.php'
+    repository: 'Classes/Domain/Repository/{name}Repository.php'
+    service: 'Classes/Service/{name}Service.php'
+    template: 'Resources/Private/Templates/{controller}/{action}.html'
+    utility: 'Classes/Utility/{name}Utility.php'
+    viewHelper: 'Classes/ViewHelpers/{path}/{name}ViewHelper.php'
+
+  defaults:
+    author: 'Daniel Ablass'
+    authorEmail: 'dn@phantasie-schmiede.de'
+    composerRequire:
+      php: '^8.3'
+      psbits/foundation: '^3.2'
+      typo3/cms-core: '^13.4'
+    composerRequireDev:
+      friendsofphp/php-cs-fixer: '^3.95'
+      helmich/typo3-typoscript-lint: '^3.3'
+      phpstan/phpstan: '^2.2'
+      roave/security-advisories: 'dev-latest'
+      saschaegerer/phpstan-typo3: '^2.1'
+    controllerExtends: 'TYPO3\CMS\Extbase\Mvc\Controller\ActionController'
+    copyrightHolder: 'phantasie-schmiede'
+    crudActions:
+      - 'list'
+      - 'show'
+      - 'new'
+      - 'create'
+      - 'edit'
+      - 'update'
+      - 'delete'
+    defaultLanguage: 'en'
+    emConfCategory: 'plugin'
+    emConfDepends:
+      foundation: '3.2'
+      php: '8.3'
+      typo3: '13.4.0-13.4.99'
+    emConfState: 'alpha'
+    extensionFileGroups:
+      - 'core'
+      - 'license'
+      - 'typoScript'
+      - 'quality'
+      - 'ci'
+    extensionVersion: '0.1.0'
+    fluentSetters: true
+    gitHubOrganization: 'phantasie-schmiede'
+    languages:
+      - 'en'
+      - 'de'
+    license: 'GPL-3.0-or-later'
+    modelExtends: 'TYPO3\CMS\Extbase\DomainObject\AbstractEntity'
+    repositoryExtends: 'TYPO3\CMS\Extbase\Persistence\Repository'
+    vendor: 'PSBits'
+
+  # Freely definable values, available as {{ placeholder }} in every stub.
+  variables: {}
