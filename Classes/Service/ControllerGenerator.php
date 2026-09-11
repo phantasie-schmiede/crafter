@@ -15,6 +15,10 @@ use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function array_key_exists;
+use function is_array;
+use function sprintf;
+
 /**
  * Class ControllerGenerator
  *

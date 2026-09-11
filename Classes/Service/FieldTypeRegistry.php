@@ -13,6 +13,10 @@ namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Exception\CrafterException;
 
+use function array_key_exists;
+use function is_array;
+use function sprintf;
+
 /**
  * Class FieldTypeRegistry
  *

@@ -28,6 +28,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function in_array;
+use function is_string;
+use function sprintf;
+
 /**
  * Class MakeModelCommand
  *
@@ -143,21 +147,25 @@ class MakeModelCommand extends AbstractCrafterCommand
         }
 
         if (false === $this->hasChanges($results)) {
-            $io->warning(sprintf(
-                'Nothing has been written, all files of model "%s" are already up to date.'
+            $io->warning(
+                sprintf(
+                    'Nothing has been written, all files of model "%s" are already up to date.'
                 . ' Use --force to overwrite files that differ.',
-                $name
-            ));
+                    $name
+                )
+            );
 
             return Command::SUCCESS;
         }
 
         $io->success(sprintf('Model "%s" has been created.', $name));
-        $io->note(sprintf(
-            'The TCA is derived from the attributes in the model, there is nothing to add in Configuration/TCA.'
+        $io->note(
+            sprintf(
+                'The TCA is derived from the attributes in the model, there is nothing to add in Configuration/TCA.'
             . ' Run "vendor/bin/typo3 extension:setup" to update the database schema of %s.',
-            $blueprint->getTableName()
-        ));
+                $blueprint->getTableName()
+            )
+        );
 
         return Command::SUCCESS;
     }
@@ -217,10 +225,13 @@ class MakeModelCommand extends AbstractCrafterCommand
             $foreignField    = '';
 
             if ('' !== $linkedClassType) {
-                $linkedClass = trim((string)$io->ask(sprintf(
-                    'Referenced %s class (UpperCamelCase)',
-                    $linkedClassType
-                ), ucfirst($name)));
+                $linkedClass = trim((string)$io->ask(
+                    sprintf(
+                        'Referenced %s class (UpperCamelCase)',
+                        $linkedClassType
+                    ),
+                    ucfirst($name)
+                ));
             }
 
             if (str_contains(

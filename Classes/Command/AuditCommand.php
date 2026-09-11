@@ -22,6 +22,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function is_string;
+use function sprintf;
+
 /**
  * Class AuditCommand
  *
@@ -154,11 +157,13 @@ class AuditCommand extends AbstractCrafterCommand
             $io->listing(array_keys($hints));
         }
 
-        $io->writeln(sprintf(
-            '%d error(s), %d warning(s), %d notice(s).',
-            $counts[AuditSeverity::error->value] ?? 0,
-            $counts[AuditSeverity::warning->value] ?? 0,
-            $counts[AuditSeverity::notice->value] ?? 0
-        ));
+        $io->writeln(
+            sprintf(
+                '%d error(s), %d warning(s), %d notice(s).',
+                $counts[AuditSeverity::error->value] ?? 0,
+                $counts[AuditSeverity::warning->value] ?? 0,
+                $counts[AuditSeverity::notice->value] ?? 0
+            )
+        );
     }
 }

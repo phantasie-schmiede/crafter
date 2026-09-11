@@ -18,6 +18,11 @@ use TYPO3\CMS\Core\Package\Exception\UnknownPackageException;
 use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function is_array;
+use function is_string;
+use function sprintf;
+use function strlen;
+
 /**
  * Class PathResolver
  *

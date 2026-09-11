@@ -13,6 +13,8 @@ namespace PSBits\Crafter\Data;
 
 use PSBits\Crafter\Utility\NamingUtility;
 
+use function in_array;
+
 /**
  * Class ControllerBlueprint
  *

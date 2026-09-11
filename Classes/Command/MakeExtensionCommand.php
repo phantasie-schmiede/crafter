@@ -25,6 +25,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
+use function in_array;
+use function is_scalar;
+use function is_string;
+use function sprintf;
+
 /**
  * Class MakeExtensionCommand
  *
@@ -103,10 +109,12 @@ class MakeExtensionCommand extends AbstractCrafterCommand
         $extensionPath = $this->pathResolver->resolveExtensionPath($extensionKey);
 
         if (is_dir($extensionPath) && false === (bool)$input->getOption(self::OPTION_FORCE)) {
-            $io->warning(sprintf(
-                'Directory "%s" already exists. Existing files are skipped, use --force to overwrite them.',
-                $this->makeRelative($extensionPath)
-            ));
+            $io->warning(
+                sprintf(
+                    'Directory "%s" already exists. Existing files are skipped, use --force to overwrite them.',
+                    $this->makeRelative($extensionPath)
+                )
+            );
         }
 
         $blueprint = $this->buildBlueprint($input, $io, $extensionKey);

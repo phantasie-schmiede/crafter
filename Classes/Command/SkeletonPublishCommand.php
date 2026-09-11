@@ -21,6 +21,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Core\Core\Environment;
 
+use function sprintf;
+
 /**
  * Class SkeletonPublishCommand
  *
@@ -72,11 +74,13 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
         $rootPaths    = $this->pathResolver->getResolvedRootPaths($extensionKey);
 
         if (!isset($rootPaths[$priority])) {
-            $io->error(sprintf(
-                'No skeleton root path configured for priority %d. Available priorities: %s',
-                $priority,
-                implode(', ', array_keys($rootPaths))
-            ));
+            $io->error(
+                sprintf(
+                    'No skeleton root path configured for priority %d. Available priorities: %s',
+                    $priority,
+                    implode(', ', array_keys($rootPaths))
+                )
+            );
 
             return Command::FAILURE;
         }
@@ -85,11 +89,13 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
         $targetPath = $rootPaths[$priority] . ltrim($identifier, '/') . PathResolver::SKELETON_FILE_EXTENSION;
 
         if ($sourcePath === $targetPath) {
-            $io->note(sprintf(
-                'Skeleton "%s" is already published at priority %d. Nothing to do.',
-                $identifier,
-                $priority
-            ));
+            $io->note(
+                sprintf(
+                    'Skeleton "%s" is already published at priority %d. Nothing to do.',
+                    $identifier,
+                    $priority
+                )
+            );
 
             return Command::SUCCESS;
         }
@@ -100,11 +106,13 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
         );
         $result      = $this->fileWriter->write($targetPath, (string)file_get_contents($sourcePath));
         $projectPath = rtrim(Environment::getProjectPath(), '/') . '/';
-        $io->writeln(sprintf(
-            '%s %s',
-            $result->status->getLabel(),
-            str_replace($projectPath, '', $result->path)
-        ));
+        $io->writeln(
+            sprintf(
+                '%s %s',
+                $result->status->getLabel(),
+                str_replace($projectPath, '', $result->path)
+            )
+        );
 
         if (true === $result->dryRun) {
             $io->note('Dry run - no file has been written.');

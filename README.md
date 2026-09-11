@@ -10,22 +10,22 @@ composer require psbits/crafter
 
 ## Commands
 
-| Command                           | Purpose                                                                 |
-|-----------------------------------|-------------------------------------------------------------------------|
-| `crafter:make:extension`          | Creates the base structure of a new TYPO3 extension                     |
-| `crafter:make:model`              | Creates a domain model and optionally its repository and controller     |
-| `crafter:make:repository`         | Creates a repository for an existing domain model                       |
-| `crafter:make:controller`         | Creates a frontend controller with templates, language files and plugin |
-| `crafter:make:backend-controller` | Creates a backend module controller and registers the module            |
-| `crafter:make:service`            | Creates a service class with its constructor dependencies               |
-| `crafter:make:event-listener`     | Creates a PSR-14 event listener                                         |
-| `crafter:make:view-helper`        | Creates a Fluid view helper                                             |
-| `crafter:audit`                   | Checks an extension against the conventions Crafter generates by        |
+| Command                           | Purpose                                                                  |
+|-----------------------------------|--------------------------------------------------------------------------|
+| `crafter:make:extension`          | Creates the base structure of a new TYPO3 extension                      |
+| `crafter:make:model`              | Creates a domain model and optionally its repository and controller      |
+| `crafter:make:repository`         | Creates a repository for an existing domain model                        |
+| `crafter:make:controller`         | Creates a frontend controller with templates, language files and plugin  |
+| `crafter:make:backend-controller` | Creates a backend module controller and registers the module             |
+| `crafter:make:service`            | Creates a service class with its constructor dependencies                |
+| `crafter:make:event-listener`     | Creates a PSR-14 event listener                                          |
+| `crafter:make:view-helper`        | Creates a Fluid view helper                                              |
+| `crafter:audit`                   | Checks an extension against the conventions Crafter generates by         |
 | `crafter:config:dump`             | Shows the effective configuration; `--origins` reveals the winning layer |
-| `crafter:skeleton:list`           | Lists all skeletons and the root path each one is loaded from           |
-| `crafter:skeleton:where`          | Shows all lookup locations of a skeleton and which one wins             |
-| `crafter:skeleton:show`           | Renders a skeleton with the effective variables without writing a file  |
-| `crafter:skeleton:publish`        | Copies a skeleton into an overriding root path for customization        |
+| `crafter:skeleton:list`           | Lists all skeletons and the root path each one is loaded from            |
+| `crafter:skeleton:where`          | Shows all lookup locations of a skeleton and which one wins              |
+| `crafter:skeleton:show`           | Renders a skeleton with the effective variables without writing a file   |
+| `crafter:skeleton:publish`        | Copies a skeleton into an overriding root path for customization         |
 
 All commands accept `--extension|-e` to resolve configuration and skeletons for a specific extension. Every command
 that writes files supports `--dry-run` and `--force`.
@@ -47,13 +47,13 @@ vendor/bin/typo3 crafter:make:extension budget_tracker \
 Which files belong to which group is defined in `crafter.extensionFiles` and can be changed like any other
 configuration value. The group `core` is always created:
 
-| Group        | Contents                                                                     |
-|--------------|------------------------------------------------------------------------------|
+| Group        | Contents                                                                      |
+|--------------|-------------------------------------------------------------------------------|
 | `core`       | `composer.json`, `ext_emconf.php`, `ExtensionInformation`, `Services.yaml`, … |
-| `license`    | `LICENSE.txt`                                                                |
-| `typoScript` | `Configuration/TypoScript/constants.typoscript` and `setup.typoscript`       |
-| `quality`    | `Build/Quality/*`, `Build/GitHooks/pre-commit`, `package.json`               |
-| `ci`         | `.github/workflows/quality.yml`                                              |
+| `license`    | `LICENSE.txt`                                                                 |
+| `typoScript` | `Configuration/TypoScript/constants.typoscript` and `setup.typoscript`        |
+| `quality`    | `Build/Quality/*`, `Build/GitHooks/pre-commit`, `package.json`                |
+| `ci`         | `.github/workflows/quality.yml`                                               |
 
 New extensions are written to `crafter.extensionRootPath` (`packages/` by default).
 
@@ -187,10 +187,12 @@ The command creates the controller extending Foundation's `AbstractModuleControl
 language file per action, the module label file and the module registration. The first action given becomes the
 default action, the methods themselves are written alphabetically.
 
-The module is registered by adding `addMainModule()` and `addModule()` to the existing `ExtensionInformation`, from
-which Foundation builds `Configuration/Backend/Modules.php`. Running the command again for another controller only
-adds the missing `addModule()` call. `--module-name`, `--no-templates`, `--no-language` and `--no-module` control
-the details. The three module labels are configured in `crafter.moduleLabels`.
+The module is registered by adding `addMainModule()` and `addModule()` to the existing `ExtensionInformation` and by
+creating `Configuration/Backend/Modules.php`, which TYPO3 reads to discover the modules. That file is a one-liner
+that hands the `ExtensionInformation` to Foundation's `ModuleService`, so it never has to be touched again and is
+only written when it does not exist yet. Running the command again for another controller only adds the missing
+`addModule()` call. `--module-name`, `--no-templates`, `--no-language` and `--no-module` control the details. The
+three module labels are configured in `crafter.moduleLabels`.
 
 ## Customization
 
@@ -313,14 +315,14 @@ vendor/bin/typo3 crafter:audit my_extension -c language -c orphan --strict
 anything and derives every expected path from the same `paths` configuration the generators use, so an extension
 with an own directory layout is audited against that layout.
 
-| Category       | Checks                                                                       |
-|----------------|------------------------------------------------------------------------------|
-| `structure`    | files listed in `crafter.audit.requiredFiles` exist                          |
-| `model`        | every domain model has a repository                                          |
-| `controller`   | every action that renders something has a template                           |
-| `language`     | labels used in a template exist in the language file, translations exist     |
-| `registration` | every controller is registered as plugin or backend module                    |
-| `orphan`       | templates without action, language files without template, repositories without model |
+| Category       | Checks                                                                                       |
+|----------------|:---------------------------------------------------------------------------------------------|
+| `structure`    | files listed in `crafter.audit.requiredFiles` exist                                          |
+| `model`        | every domain model has a repository                                                          |
+| `controller`   | every action that renders something has a template                                           |
+| `language`     | labels used in a template exist in the language file, translations exist                     |
+| `registration` | every controller is registered as plugin or backend module, module configuration file exists |
+| `orphan`       | templates without action, language files without template, repositories without model        |
 
 The expected labels are read from the template files themselves, so overridden templates are checked against their
 own content instead of a fixed list. Findings are reported with a severity and, where possible, the command that
@@ -366,5 +368,5 @@ composer test:unit:update-fixtures
 git diff Tests/Fixtures/Expected
 ```
 
-Values that change with every run — the `date` attribute of XLIFF files and the copyright year — are normalised
-before the comparison, so the fixtures stay stable over time.
+Values that change with every run — the `date` attribute of XLIFF files and the copyright year — are replaced by a
+placeholder before the comparison and are stored that way in the fixtures, so the fixtures stay stable over time.

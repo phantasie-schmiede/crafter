@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Utility;
 
+use function strlen;
+
 /**
  * Class PhpUtility
  *

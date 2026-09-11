@@ -12,12 +12,15 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Utility\PhpUtility;
 
 /**
  * Class ModuleRegistrar
  *
- * Adds a backend module of a generated module controller to the ExtensionInformation of the extension. Foundation
- * builds Configuration/Backend/Modules.php from there, so no further registration is needed.
+ * Adds a backend module of a generated module controller to the ExtensionInformation of the extension and makes
+ * sure Configuration/Backend/Modules.php exists, because TYPO3 only picks up modules that are returned by that
+ * file. Foundation builds the actual configuration from the ExtensionInformation, so the file itself stays a
+ * one-liner that never has to be touched again.
  *
  * @package PSBits\Crafter\Service
  */
@@ -26,8 +29,10 @@ readonly class ModuleRegistrar
     public const string MAIN_MODULE_CONFIGURATION = 'PSBits\Foundation\Data\MainModuleConfiguration';
     public const string MAIN_MODULE_NAME          = 'main';
     public const string MODULE_CONFIGURATION      = 'PSBits\Foundation\Data\ModuleConfiguration';
+    public const string MODULE_SERVICE            = 'PSBits\Foundation\Service\Configuration\ModuleService';
     public const string SKELETON_MAIN_MODULE      = 'Php/ExtensionInformationMainModule';
     public const string SKELETON_MODULE           = 'Php/ExtensionInformationModule';
+    public const string SKELETON_MODULES_FILE     = 'Extension/BackendModules';
 
     public function __construct(
         protected ClassGenerator       $classGenerator,
@@ -61,6 +66,7 @@ readonly class ModuleRegistrar
         }
 
         $source = (string)file_get_contents($filePath);
+        $this->ensureModuleConfiguration($extensionKey);
 
         // The main module has to exist before the module referencing it via $mainModuleKey.
         $modified = $this->codeInjector->addConstructorBlock(
@@ -115,5 +121,31 @@ readonly class ModuleRegistrar
         $this->fileWriter->modify($filePath, $modified);
 
         return true;
+    }
+
+    /**
+     * Writes Configuration/Backend/Modules.php. Existing files are left untouched by the FileWriter, so a project
+     * that has customised the file keeps its version.
+     */
+    private function ensureModuleConfiguration(string $extensionKey): void
+    {
+        $namespace = $this->pathResolver->resolveNamespace(
+            $extensionKey,
+            (string)$this->configurationService->getValue('defaults.vendor', $extensionKey, 'PSBits')
+        );
+        $this->fileWriter->write(
+            $this->pathResolver->resolveTargetPath('backendModules', $extensionKey),
+            $this->skeletonRenderer->render(
+                self::SKELETON_MODULES_FILE,
+                [
+                    'imports' => PhpUtility::renderImports([
+                        $namespace . '\Data\ExtensionInformation',
+                        self::MODULE_SERVICE,
+                        'TYPO3\CMS\Core\Utility\GeneralUtility',
+                    ]),
+                ],
+                $extensionKey
+            )
+        );
     }
 }

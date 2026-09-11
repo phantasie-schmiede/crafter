@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit;
 
+use PSBits\Crafter\Data\ExtensionBlueprint;
 use PSBits\Crafter\Service\BackendControllerGenerator;
 use PSBits\Crafter\Service\ClassGenerator;
 use PSBits\Crafter\Service\CodeInjector;
 use PSBits\Crafter\Service\ControllerGenerator;
+use PSBits\Crafter\Service\ExtensionGenerator;
 use PSBits\Crafter\Service\FieldTypeRegistry;
 use PSBits\Crafter\Service\LanguageFileGenerator;
 use PSBits\Crafter\Service\ModelGenerator;
@@ -38,6 +40,8 @@ abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
 
     protected ControllerGenerator $controllerGenerator;
 
+    protected ExtensionGenerator $extensionGenerator;
+
     protected LanguageFileGenerator $languageFileGenerator;
 
     protected ModelGenerator $modelGenerator;
@@ -50,6 +54,12 @@ abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
 
         $codeInjector         = new CodeInjector();
         $this->classGenerator = new ClassGenerator(
+            $this->configurationService,
+            $this->fileWriter,
+            $this->pathResolver,
+            $this->skeletonRenderer
+        );
+        $this->extensionGenerator = new ExtensionGenerator(
             $this->configurationService,
             $this->fileWriter,
             $this->pathResolver,
@@ -103,6 +113,34 @@ abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
             ),
             $this->pathResolver,
             $this->skeletonRenderer
+        );
+    }
+
+    /**
+     * Generates the `core` file group, which every follow-up generator expects to be present, most notably
+     * Classes/Data/ExtensionInformation.php.
+     */
+    protected function generateBaseExtension(): void
+    {
+        $this->extensionGenerator->generate(
+            new ExtensionBlueprint(
+                extensionKey: self::EXTENSION_KEY,
+                extensionName: 'DemoShop',
+                vendor: 'PSBits',
+                namespace: 'PSBits\DemoShop',
+                composerName: 'psbits/demo-shop',
+                title: 'Demo Shop',
+                packageTitle: 'PSBits Demo Shop',
+                description: 'Test extension.',
+                author: 'Daniel Ablass',
+                authorEmail: 'dn@phantasie-schmiede.de',
+                license: 'GPL-3.0-or-later',
+                category: 'plugin',
+                state: 'alpha',
+                version: '0.1.0',
+                gitHubOrganization: 'phantasie-schmiede'
+            ),
+            ['core']
         );
     }
 }

@@ -14,6 +14,8 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Utility\NamingUtility;
 
+use function is_array;
+
 /**
  * Class LanguageFileGenerator
  *

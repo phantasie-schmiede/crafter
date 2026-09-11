@@ -473,6 +473,7 @@ crafter:
   # Available placeholders: {name}, {lowerName}, {path}, {controller}, {action}, {language}.
   paths:
     backendController: 'Classes/Controller/Backend/{name}Controller.php'
+    backendModules: 'Configuration/Backend/Modules.php'
     backendTemplate: 'Resources/Private/Templates/Backend/{controller}/{action}.html'
     controller: 'Classes/Controller/{name}Controller.php'
     demand: 'Classes/Domain/Demand/{name}Demand.php'

@@ -21,6 +21,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function in_array;
+use function sprintf;
+
 /**
  * Class MakeViewHelperCommand
  *
@@ -137,10 +140,12 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
             }
 
             if (1 !== preg_match(self::ARGUMENT_PATTERN, $definition, $match)) {
-                $io->error(sprintf(
-                    'The argument "%s" is malformed. Expected name[:type[:required[:description]]].',
-                    $definition
-                ));
+                $io->error(
+                    sprintf(
+                        'The argument "%s" is malformed. Expected name[:type[:required[:description]]].',
+                        $definition
+                    )
+                );
 
                 return null;
             }
@@ -148,11 +153,13 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
             $type = '' === ($match['type'] ?? '') ? 'mixed' : $match['type'];
 
             if (false === in_array($type, $availableTypes, true)) {
-                $io->error(sprintf(
-                    'Unknown argument type "%s". Available types: %s',
-                    $type,
-                    implode(', ', array_map(static fn(mixed $value): string => (string)$value, $availableTypes))
-                ));
+                $io->error(
+                    sprintf(
+                        'Unknown argument type "%s". Available types: %s',
+                        $type,
+                        implode(', ', array_map(static fn(mixed $value): string => (string)$value, $availableTypes))
+                    )
+                );
 
                 return null;
             }
@@ -186,11 +193,13 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
         $returnType  = (string)$input->getOption(self::OPTION_RETURN_TYPE);
 
         if (false === isset($returnTypes[$returnType])) {
-            $io->error(sprintf(
-                'Unknown return type "%s". Available types: %s',
-                $returnType,
-                implode(', ', array_keys($returnTypes))
-            ));
+            $io->error(
+                sprintf(
+                    'Unknown return type "%s". Available types: %s',
+                    $returnType,
+                    implode(', ', array_keys($returnTypes))
+                )
+            );
 
             return null;
         }

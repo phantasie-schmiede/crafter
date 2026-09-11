@@ -17,6 +17,10 @@ use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Utility\NamingUtility;
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function is_array;
+use function sprintf;
+use function strlen;
+
 /**
  * Class ModelGenerator
  *

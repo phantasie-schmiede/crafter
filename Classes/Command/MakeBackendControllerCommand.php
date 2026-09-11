@@ -22,6 +22,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function is_string;
+use function sprintf;
+
 /**
  * Class MakeBackendControllerCommand
  *
@@ -146,11 +149,13 @@ class MakeBackendControllerCommand extends AbstractCrafterCommand
         }
 
         if (false === $this->hasChanges($results)) {
-            $io->warning(sprintf(
-                'Nothing has been written, "%sController" is already up to date.'
+            $io->warning(
+                sprintf(
+                    'Nothing has been written, "%sController" is already up to date.'
                 . ' Use --force to overwrite a file that differs.',
-                $name
-            ));
+                    $name
+                )
+            );
 
             return Command::SUCCESS;
         }

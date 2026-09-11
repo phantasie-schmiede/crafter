@@ -28,6 +28,9 @@ use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
+use function dirname;
+use function sprintf;
+
 /**
  * Class AbstractCrafterTestCase
  *

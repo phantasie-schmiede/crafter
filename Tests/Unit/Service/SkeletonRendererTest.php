@@ -20,6 +20,8 @@ use PSBits\Crafter\Tests\Fixtures\CallbackEventDispatcher;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function dirname;
+
 /**
  * Class SkeletonRendererTest
  *

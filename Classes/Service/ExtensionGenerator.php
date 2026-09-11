@@ -15,6 +15,11 @@ use PSBits\Crafter\Data\ExtensionBlueprint;
 use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Exception\CrafterException;
 
+use function in_array;
+use function is_array;
+use function sprintf;
+use function strlen;
+
 /**
  * Class ExtensionGenerator
  *

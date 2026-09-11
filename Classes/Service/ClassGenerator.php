@@ -17,6 +17,9 @@ use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function is_array;
+use function sprintf;
+
 /**
  * Class ClassGenerator
  *

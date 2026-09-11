@@ -19,6 +19,9 @@ use PSBits\Crafter\Exception\CrafterException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function dirname;
+use function sprintf;
+
 /**
  * Class FileWriter
  *

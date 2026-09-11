@@ -15,6 +15,14 @@ use PSBits\Crafter\Data\AuditFinding;
 use PSBits\Crafter\Enum\AuditSeverity;
 use PSBits\Crafter\Exception\CrafterException;
 
+use function array_key_exists;
+use function count;
+use function dirname;
+use function in_array;
+use function is_array;
+use function is_string;
+use function sprintf;
+
 /**
  * Class ExtensionAuditor
  *
@@ -35,6 +43,7 @@ class ExtensionAuditor
     public const string CATEGORY_REGISTRATION          = 'registration';
     public const string CATEGORY_STRUCTURE             = 'structure';
     public const string EXTENSION_INFORMATION_SKELETON = 'Extension/ExtensionInformation';
+    public const string MAIN_MODULE_MARKER             = '$this->addModule(';
 
     public function __construct(
         protected readonly ConfigurationService $configurationService,
@@ -321,6 +330,24 @@ class ExtensionAuditor
 
         $content  = (string)file_get_contents($informationPath);
         $findings = [];
+
+        // Without Configuration/Backend/Modules.php TYPO3 does not pick up any module, however well registered.
+        if (str_contains($content, self::MAIN_MODULE_MARKER)) {
+            $modulesPath = $this->pathResolver->resolveTargetPath('backendModules', $extensionKey);
+
+            if (!is_file($modulesPath)) {
+                $findings[] = new AuditFinding(
+                    category: self::CATEGORY_REGISTRATION,
+                    severity: AuditSeverity::error,
+                    message : 'Backend modules are registered, but the module configuration file is missing.',
+                    path    : $this->makeRelative($modulesPath, $extensionPath),
+                    hint    : sprintf(
+                        'crafter:make:backend-controller <Name> -e %s --force',
+                        $extensionKey
+                    )
+                );
+            }
+        }
 
         foreach ($controllers as $controller) {
             if (str_contains($content, $controller['name'] . 'Controller::class')) {

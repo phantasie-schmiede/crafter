@@ -17,6 +17,10 @@ use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
+use function array_key_exists;
+use function is_scalar;
+use function sprintf;
+
 /**
  * Class SkeletonRenderer
  *

@@ -25,6 +25,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function is_string;
+use function sprintf;
+
 /**
  * Class MakeControllerCommand
  *
@@ -135,11 +138,13 @@ class MakeControllerCommand extends AbstractCrafterCommand
         }
 
         if (false === $this->hasChanges($results)) {
-            $io->warning(sprintf(
-                'Nothing has been written, all files of controller "%sController" are already up to date.'
+            $io->warning(
+                sprintf(
+                    'Nothing has been written, all files of controller "%sController" are already up to date.'
                 . ' Use --force to overwrite files that differ.',
-                $name
-            ));
+                    $name
+                )
+            );
 
             return Command::SUCCESS;
         }
@@ -147,11 +152,13 @@ class MakeControllerCommand extends AbstractCrafterCommand
         $io->success(sprintf('Controller "%sController" has been created.', $name));
 
         if (true === $blueprint->withPlugin) {
-            $io->note(sprintf(
-                'The plugin "%s" is registered in ExtensionInformation. Foundation derives the plugin'
+            $io->note(
+                sprintf(
+                    'The plugin "%s" is registered in ExtensionInformation. Foundation derives the plugin'
                 . ' configuration from the PluginAction attributes, no further registration is required.',
-                $blueprint->getPluginName()
-            ));
+                    $blueprint->getPluginName()
+                )
+            );
         }
 
         return Command::SUCCESS;

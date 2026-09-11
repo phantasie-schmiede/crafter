@@ -20,6 +20,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function is_string;
+use function sprintf;
+
 /**
  * Class MakeRepositoryCommand
  *
@@ -85,11 +88,13 @@ class MakeRepositoryCommand extends AbstractCrafterCommand
         }
 
         if (false === $this->hasChanges($results)) {
-            $io->warning(sprintf(
-                'Nothing has been written, "%sRepository" is already up to date.'
+            $io->warning(
+                sprintf(
+                    'Nothing has been written, "%sRepository" is already up to date.'
                 . ' Use --force to overwrite a file that differs.',
-                $name
-            ));
+                    $name
+                )
+            );
 
             return Command::SUCCESS;
         }

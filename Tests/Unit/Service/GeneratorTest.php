@@ -31,6 +31,7 @@ final class GeneratorTest extends AbstractGeneratorTestCase
     #[Test]
     public function backendControllerIsGeneratedWithTemplatesAndLanguageFiles(): void
     {
+        $this->generateBaseExtension();
         $this->backendControllerGenerator->generate(
             self::EXTENSION_KEY,
             'Import',
@@ -50,6 +51,15 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         $this->assertFileMatchesFixture(
             'Resources/Private/Language/Backend/Modules/demoshop_import.xlf',
             'Backend/demoshop_import.xlf'
+        );
+        // TYPO3 only picks up modules that are returned by this file.
+        $this->assertFileMatchesFixture(
+            'Configuration/Backend/Modules.php',
+            'Backend/Modules.php'
+        );
+        $this->assertFileMatchesFixture(
+            'Classes/Data/ExtensionInformation.php',
+            'Backend/ExtensionInformation.php'
         );
     }
 
@@ -110,6 +120,28 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         ));
 
         $this->assertFileMatchesFixture('Classes/Domain/Model/Product.php', 'Product.php');
+    }
+
+    #[Test]
+    public function moduleConfigurationImportsAreSortedForAnyVendor(): void
+    {
+        $this->generateBaseExtension();
+
+        // A vendor sorting after 'PSBits\Foundation' must not break the import order.
+        file_put_contents(
+            $this->getExtensionFilePath('composer.json'),
+            (string)json_encode(['autoload' => ['psr-4' => ['Zeta\DemoShop\\' => 'Classes/']]])
+        );
+        $this->backendControllerGenerator->generate(self::EXTENSION_KEY, 'Import', ['index'], [], 'import');
+
+        self::assertStringContainsString(
+            implode("\n", [
+                'use PSBits\Foundation\Service\Configuration\ModuleService;',
+                'use TYPO3\CMS\Core\Utility\GeneralUtility;',
+                'use Zeta\DemoShop\Data\ExtensionInformation;',
+            ]),
+            (string)file_get_contents($this->getExtensionFilePath('Configuration/Backend/Modules.php'))
+        );
     }
 
     #[Test]

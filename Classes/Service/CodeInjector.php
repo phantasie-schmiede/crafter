@@ -13,6 +13,9 @@ namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function count;
+use function strlen;
+
 /**
  * Class CodeInjector
  *

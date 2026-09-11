@@ -16,6 +16,8 @@ use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function dirname;
+
 /**
  * Class PathResolverTest
  *

@@ -21,6 +21,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function is_string;
+use function sprintf;
+
 /**
  * Class AbstractMakeClassCommand
  *
@@ -122,10 +125,12 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
         $className = $this->classGenerator->getClassName($blueprint);
 
         if (false === $this->hasChanges($results)) {
-            $io->warning(sprintf(
-                'Nothing has been written, "%s" is already up to date. Use --force to overwrite a file that differs.',
-                $className
-            ));
+            $io->warning(
+                sprintf(
+                    'Nothing has been written, "%s" is already up to date. Use --force to overwrite a file that differs.',
+                    $className
+                )
+            );
 
             return Command::SUCCESS;
         }

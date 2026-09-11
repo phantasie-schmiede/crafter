@@ -14,13 +14,11 @@ namespace PSBits\Crafter\Tests\Unit\Service;
 use PHPUnit\Framework\Attributes\Test;
 use PSBits\Crafter\Data\AuditFinding;
 use PSBits\Crafter\Data\ControllerBlueprint;
-use PSBits\Crafter\Data\ExtensionBlueprint;
 use PSBits\Crafter\Data\ModelBlueprint;
 use PSBits\Crafter\Data\PropertyDefinition;
 use PSBits\Crafter\Enum\AuditSeverity;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ExtensionAuditor;
-use PSBits\Crafter\Service\ExtensionGenerator;
 use PSBits\Crafter\Tests\Unit\AbstractGeneratorTestCase;
 
 /**
@@ -35,19 +33,11 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
 {
     private ExtensionAuditor $extensionAuditor;
 
-    private ExtensionGenerator $extensionGenerator;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->extensionAuditor   = new ExtensionAuditor($this->configurationService, $this->pathResolver);
-        $this->extensionGenerator = new ExtensionGenerator(
-            $this->configurationService,
-            $this->fileWriter,
-            $this->pathResolver,
-            $this->skeletonRenderer
-        );
+        $this->extensionAuditor = new ExtensionAuditor($this->configurationService, $this->pathResolver);
     }
 
     #[Test]
@@ -65,6 +55,19 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         unlink($this->getExtensionFilePath('Resources/Private/Language/Frontend/Product/de.list.xlf'));
 
         self::assertCount(1, $this->auditCategory('language'));
+    }
+
+    #[Test]
+    public function missingModuleConfigurationFileIsReported(): void
+    {
+        $this->generateExtension();
+        $this->backendControllerGenerator->generate(self::EXTENSION_KEY, 'Import', ['index'], [], 'import');
+        unlink($this->getExtensionFilePath('Configuration/Backend/Modules.php'));
+        $findings = $this->auditCategory('registration');
+
+        self::assertCount(1, $findings);
+        self::assertSame(AuditSeverity::error, $findings[0]->severity);
+        self::assertSame('Configuration/Backend/Modules.php', $findings[0]->path);
     }
 
     #[Test]
@@ -153,26 +156,7 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
      */
     private function generateExtension(): void
     {
-        $this->extensionGenerator->generate(
-            new ExtensionBlueprint(
-                extensionKey: self::EXTENSION_KEY,
-                extensionName: 'DemoShop',
-                vendor: 'PSBits',
-                namespace: 'PSBits\DemoShop',
-                composerName: 'psbits/demo-shop',
-                title: 'Demo Shop',
-                packageTitle: 'PSBits Demo Shop',
-                description: 'Test extension.',
-                author: 'Daniel Ablass',
-                authorEmail: 'dn@phantasie-schmiede.de',
-                license: 'GPL-3.0-or-later',
-                category: 'plugin',
-                state: 'alpha',
-                version: '0.1.0',
-                gitHubOrganization: 'phantasie-schmiede'
-            ),
-            ['core']
-        );
+        $this->generateBaseExtension();
         $properties = [new PropertyDefinition(name: 'title', type: 'string', required: true)];
         $this->modelGenerator->generate(new ModelBlueprint(
             extensionKey: self::EXTENSION_KEY,
