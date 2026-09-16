@@ -47,13 +47,13 @@ vendor/bin/typo3 crafter:make:extension budget_tracker \
 Which files belong to which group is defined in `crafter.extensionFiles` and can be changed like any other
 configuration value. The group `core` is always created:
 
-| Group        | Contents                                                                      |
-|--------------|-------------------------------------------------------------------------------|
-| `core`       | `composer.json`, `ext_emconf.php`, `ExtensionInformation`, `Services.yaml`, … |
-| `license`    | `LICENSE.txt`                                                                 |
-| `typoScript` | `Configuration/TypoScript/constants.typoscript` and `setup.typoscript`        |
-| `quality`    | `Build/Quality/*`, `Build/GitHooks/pre-commit`, `package.json`                |
-| `ci`         | `.github/workflows/quality.yml`                                               |
+| Group        | Contents                                                                                                |
+|--------------|---------------------------------------------------------------------------------------------------------|
+| `core`       | `composer.json`, `ext_emconf.php`, `ExtensionInformation`, `AGENTS.md`, `CLAUDE.md`, `Services.yaml`, … |
+| `license`    | `LICENSE.txt`                                                                                           |
+| `typoScript` | `Configuration/TypoScript/constants.typoscript` and `setup.typoscript`                                  |
+| `quality`    | `Build/Quality/*`, `Build/GitHooks/pre-commit`, `package.json`                                          |
+| `ci`         | `.github/workflows/quality.yml`                                                                         |
 
 New extensions are written to `crafter.extensionRootPath` (`packages/` by default).
 

@@ -1,0 +1,8 @@
+<?php
+
+declare(strict_types=1);
+
+{{ imports }}
+
+return GeneralUtility::makeInstance(ModuleService::class)
+    ->buildModuleConfiguration(GeneralUtility::makeInstance(ExtensionInformation::class));

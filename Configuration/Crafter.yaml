@@ -186,6 +186,8 @@ crafter:
   # Entries can be removed, retargeted or extended. The group "core" is always created.
   extensionFiles:
     core:
+      'Extension/AgentsMd': 'AGENTS.md'
+      'Extension/ClaudeMd': 'CLAUDE.md'
       'Extension/Composer': 'composer.json'
       'Extension/EditorConfig': '.editorconfig'
       'Extension/EmConf': 'ext_emconf.php'
