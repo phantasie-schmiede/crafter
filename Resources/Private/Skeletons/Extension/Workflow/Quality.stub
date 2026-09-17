@@ -27,31 +27,6 @@ jobs:
       - name: Install dependencies
         run: composer update --no-interaction --no-progress
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
+{{ workflowNode }}
 
-      - name: Install npm dependencies
-        run: npm install
-
-      - name: Composer security audit
-        run: composer audit:composer
-
-      - name: Install yamllint
-        run: python -m pip install --user yamllint
-
-      - name: YAML lint
-        run: composer lint:yaml
-
-      - name: PHP CS check
-        run: composer lint:php
-
-      - name: PHPStan
-        run: composer analyze:php
-
-      - name: Class attribute lint
-        run: composer lint:classes
-
-      - name: HTML/XML/XLF lint
-        run: composer lint:htmlxml
+{{ workflowSteps }}

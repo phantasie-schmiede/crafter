@@ -21,6 +21,7 @@ composer require psbits/crafter
 | `crafter:make:event-listener`     | Creates a PSR-14 event listener                                          |
 | `crafter:make:view-helper`        | Creates a Fluid view helper                                              |
 | `crafter:audit`                   | Checks an extension against the conventions Crafter generates by         |
+| `crafter:sync`                    | Brings the toolchain files of an existing extension in sync              |
 | `crafter:config:dump`             | Shows the effective configuration; `--origins` reveals the winning layer |
 | `crafter:skeleton:list`           | Lists all skeletons and the root path each one is loaded from            |
 | `crafter:skeleton:where`          | Shows all lookup locations of a skeleton and which one wins              |
@@ -323,6 +324,7 @@ with an own directory layout is audited against that layout.
 | `language`     | labels used in a template exist in the language file, translations exist                     |
 | `registration` | every controller is registered as plugin or backend module, module configuration file exists |
 | `orphan`       | templates without action, language files without template, repositories without model        |
+| `toolchain`    | renewable toolchain files exist and match the generated output                               |
 
 The expected labels are read from the template files themselves, so overridden templates are checked against their
 own content instead of a fixed list. Findings are reported with a severity and, where possible, the command that
@@ -334,7 +336,7 @@ Everything is configurable:
 ```yaml
 crafter:
   audit:
-    categories: ['structure', 'model', 'controller', 'language', 'registration', 'orphan']
+    categories: ['structure', 'model', 'controller', 'language', 'registration', 'orphan', 'toolchain']
     languages: ['de', 'fr']
     requiredFiles:
       - 'Classes/Data/ExtensionInformation.php'
@@ -342,6 +344,43 @@ crafter:
       - 'composer.json'
       - 'ext_emconf.php'
 ```
+
+## Syncing the Toolchain
+
+Every generated extension ships a quality toolchain: the composer scripts, `package.json`, the `Build/Quality/*`
+configuration, the pre-commit hook, the CI workflow and the agent instructions (`AGENTS.md`/`CLAUDE.md`). It is
+derived from `crafter.tools`, and a tool is enabled when the extension contains one of its signals:
+
+| Tool             | Signals              | Contributes                                            |
+|------------------|----------------------|--------------------------------------------------------|
+| `classLint`      | `html`               | class attribute lint (Node)                            |
+| `composerAudit`  | always               | `composer audit` + `roave/security-advisories`         |
+| `phpCsFixer`     | `php`                | `lint:php`/`fix:php`                                   |
+| `phpStan`        | `php`                | `analyze:php`                                          |
+| `prettier`       | `html`, `xml`, `xlf` | HTML/XML/XLF formatting (Node)                         |
+| `typoScriptLint` | `typoscript`         | `lint:typoscript`                                      |
+| `yamlLint`       | `yaml`               | `lint:yaml`                                            |
+
+The signals are derived from the extension's files, so a PHP only extension gets the PHP tools and nothing else.
+An extension's own `Build/` and `vendor/` are excluded from the scan, so the quality files can never turn a tool on.
+
+`crafter:sync` computes that toolchain for an existing extension and writes everything that is missing or has
+drifted:
+
+```bash
+vendor/bin/typo3 crafter:sync budget_tracker
+vendor/bin/typo3 crafter:sync budget_tracker --dry-run
+```
+
+Which files are managed and how is defined in `crafter.sync.renewable`:
+
+- `createIfMissing` (`AGENTS.md`, `CLAUDE.md`): written when absent, existing user edits are preserved
+- `merge` (`composer.json`, `package.json`): the managed keys are merged, user owned scripts and dependencies survive
+- `overwrite` (`Build/*`, workflow files): always brought back to the current generator output
+
+Merge files are compared semantically, so reformatting or reordering an existing `composer.json` or `package.json`
+never counts as drift. The toolchain is also kept in sync automatically: every `crafter:make:*` command aligns
+these files after writing, and `crafter:audit -c toolchain` reports missing or outdated toolchain files.
 
 ## Quality Tools
 

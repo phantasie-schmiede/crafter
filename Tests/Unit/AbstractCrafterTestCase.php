@@ -13,9 +13,12 @@ namespace PSBits\Crafter\Tests\Unit;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PSBits\Crafter\Service\ConfigurationService;
+use PSBits\Crafter\Service\ExtensionProfileService;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\PathResolver;
 use PSBits\Crafter\Service\SkeletonRenderer;
+use PSBits\Crafter\Service\SyncService;
+use PSBits\Crafter\Service\ToolchainGenerator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\NullLogger;
 use TYPO3\CMS\Core\Configuration\Loader\YamlFileLoader;
@@ -51,6 +54,8 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
 
     protected EventDispatcherInterface $eventDispatcher;
 
+    protected ExtensionProfileService $extensionProfileService;
+
     protected FileWriter $fileWriter;
 
     /** @var PackageManager&MockObject */
@@ -61,6 +66,10 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
     protected string $projectPath = '';
 
     protected SkeletonRenderer $skeletonRenderer;
+
+    protected SyncService $syncService;
+
+    protected ToolchainGenerator $toolchainGenerator;
 
     protected function setUp(): void
     {
@@ -75,12 +84,22 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
             $this->eventDispatcher,
             new YamlFileLoader(new NullLogger())
         );
-        $this->pathResolver     = new PathResolver($this->configurationService, $this->packageManager);
-        $this->fileWriter       = new FileWriter($this->eventDispatcher);
-        $this->skeletonRenderer = new SkeletonRenderer(
+        $this->extensionProfileService = new ExtensionProfileService();
+        $this->pathResolver            = new PathResolver($this->configurationService, $this->packageManager);
+        $this->fileWriter              = new FileWriter($this->eventDispatcher);
+        $this->skeletonRenderer        = new SkeletonRenderer(
             $this->configurationService,
             $this->eventDispatcher,
             $this->pathResolver
+        );
+        $this->toolchainGenerator = new ToolchainGenerator($this->configurationService);
+        $this->syncService        = new SyncService(
+            $this->configurationService,
+            $this->extensionProfileService,
+            $this->fileWriter,
+            $this->pathResolver,
+            $this->skeletonRenderer,
+            $this->toolchainGenerator
         );
         $this->fileWriter->reset();
     }

@@ -18,6 +18,7 @@ use PSBits\Crafter\Exception\CrafterException;
 use function in_array;
 use function is_array;
 use function sprintf;
+use function str_starts_with;
 use function strlen;
 
 /**
@@ -33,13 +34,16 @@ readonly class ExtensionGenerator
     public const string CORE_GROUP                     = 'core';
     public const string SKELETON_COMPOSER_DEV_SECTION  = 'Extension/ComposerDevSection';
     public const string SKELETON_EXTENSION_INFORMATION = 'Extension/ExtensionInformation';
+    public const string SKELETON_PACKAGE_JSON          = 'Extension/PackageJson';
     public const string QUALITY_GROUP                  = 'quality';
 
     public function __construct(
-        protected ConfigurationService $configurationService,
-        protected FileWriter           $fileWriter,
-        protected PathResolver         $pathResolver,
-        protected SkeletonRenderer     $skeletonRenderer,
+        protected ConfigurationService      $configurationService,
+        protected ExtensionProfileService   $extensionProfileService,
+        protected FileWriter                $fileWriter,
+        protected PathResolver              $pathResolver,
+        protected SkeletonRenderer          $skeletonRenderer,
+        protected ToolchainGenerator        $toolchainGenerator,
     ) {
     }
 
@@ -51,9 +55,15 @@ readonly class ExtensionGenerator
     public function generate(ExtensionBlueprint $blueprint, array $groups): array
     {
         $extensionPath = $this->pathResolver->resolveExtensionPath($blueprint->extensionKey);
-        $variables     = $this->buildVariables($blueprint, $groups);
+        $files         = $this->getFiles($blueprint->extensionKey, $groups);
+        $profile       = $this->extensionProfileService->fromPlannedFiles(array_values($files));
+        $variables     = $this->buildVariables(
+            $blueprint,
+            $groups,
+            $this->toolchainGenerator->getVariables($profile, $blueprint->extensionKey)
+        );
 
-        foreach ($this->getFiles($blueprint->extensionKey, $groups) as $identifier => $relativePath) {
+        foreach ($files as $identifier => $relativePath) {
             $this->fileWriter->write(
                 $extensionPath . ltrim($relativePath, '/'),
                 $this->skeletonRenderer->render($identifier, $variables, $blueprint->extensionKey)
@@ -132,15 +142,62 @@ readonly class ExtensionGenerator
 
         ksort($files);
 
-        return $files;
+        return $this->pruneFiles($files, $extensionKey);
     }
 
     /**
-     * @param string[] $groups
+     * Configuration files of a tool are only created when the extension profile enables that tool. The remaining
+     * quality group files need at least one enabled tool, otherwise no tooling would be configured at all.
+     *
+     * @param array<string, string> $files
      *
      * @return array<string, string>
      */
-    private function buildVariables(ExtensionBlueprint $blueprint, array $groups): array
+    private function pruneFiles(array $files, ?string $extensionKey): array
+    {
+        $profile            = $this->extensionProfileService->fromPlannedFiles(array_values($files));
+        $enabledConfigFiles = $this->toolchainGenerator->getConfigFiles($profile, $extensionKey);
+        $enabledTools       = $this->toolchainGenerator->getEnabledTools($profile, $extensionKey);
+        $toolConfigFiles    = [];
+        $toolsConfiguration = $this->configurationService->getValue('tools', $extensionKey, []);
+
+        if (is_array($toolsConfiguration)) {
+            foreach ($toolsConfiguration as $tool) {
+                $configFiles = is_array($tool) && is_array($tool['configFiles'] ?? null) ? $tool['configFiles'] : [];
+
+                foreach (array_keys($configFiles) as $identifier) {
+                    $toolConfigFiles[(string)$identifier] = true;
+                }
+            }
+        }
+
+        foreach ($files as $identifier => $relativePath) {
+            if (isset($enabledConfigFiles[$identifier])) {
+                continue;
+            }
+
+            if (isset($toolConfigFiles[$identifier]) || (self::isToolchainFile($identifier) && [] === $enabledTools)) {
+                unset($files[$identifier]);
+            }
+        }
+
+        return $files;
+    }
+
+    private static function isToolchainFile(string $identifier): bool
+    {
+        return str_starts_with($identifier, 'Extension/Quality/')
+            || str_starts_with($identifier, 'Extension/Workflow/')
+            || self::SKELETON_PACKAGE_JSON === $identifier;
+    }
+
+    /**
+     * @param string[]              $groups
+     * @param array<string, string> $toolchainVariables
+     *
+     * @return array<string, string>
+     */
+    private function buildVariables(ExtensionBlueprint $blueprint, array $groups, array $toolchainVariables): array
     {
         $extensionKey = $blueprint->extensionKey;
         $variables    = [
@@ -173,9 +230,6 @@ readonly class ExtensionGenerator
         $variables['composerRequire'] = $this->renderJsonMap(
             $this->getMap('defaults.composerRequire', $extensionKey)
         );
-        $variables['composerRequireDev'] = $this->renderJsonMap(
-            $this->getMap('defaults.composerRequireDev', $extensionKey)
-        );
         $variables['emConfDepends'] = $this->renderPhpMap(
             $this->getMap('defaults.emConfDepends', $extensionKey)
         );
@@ -186,7 +240,11 @@ readonly class ExtensionGenerator
             $variables,
             $extensionKey
         ));
-        $variables['composerDevSection'] = in_array(self::QUALITY_GROUP, $groups, true)
+
+        $variables                       = array_merge($variables, $toolchainVariables);
+        $hasToolchain                    = in_array(self::QUALITY_GROUP, $groups, true);
+        $variables['agentsToolChecks']   = $hasToolchain ? $variables['agentsToolChecks'] : '';
+        $variables['composerDevSection'] = $hasToolchain
             ? rtrim($this->skeletonRenderer->render(self::SKELETON_COMPOSER_DEV_SECTION, $variables, $extensionKey))
             : '';
 

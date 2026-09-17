@@ -19,6 +19,7 @@ crafter:
       - 'language'
       - 'registration'
       - 'orphan'
+      - 'toolchain'
     # Every base language file is expected to be translated into these languages.
     languages:
       - 'de'
@@ -214,6 +215,135 @@ crafter:
       'Extension/Quality/YamlLint': 'Build/Quality/.yamllint.yml'
     ci:
       'Extension/Workflow/Quality': '.github/workflows/quality.yml'
+
+  # Tooling of the quality group. A tool is enabled when the extension profile contains one of the signals of its
+  # "when" list; an empty list enables it always. Each tool contributes its own composer/npm scripts, require-dev
+  # packages, configuration files and workflow steps, plus an `agentsBullet` describing its checks for AGENTS.md.
+  tools:
+    classLint:
+      agentsBullet: '`lint:classes`/`fix:classes` enforce the class attribute breakpoint order.'
+      composerScripts:
+        fix:classes: 'npm run fix:classes'
+        lint:classes: 'npm run lint:classes'
+      configFiles:
+        'Extension/Quality/LintClassAttributes': 'Build/Quality/lint-class-attributes.mjs'
+      needsNode: true
+      packageScripts:
+        fix:classes: 'node Build/Quality/lint-class-attributes.mjs'
+        lint:classes: 'node Build/Quality/lint-class-attributes.mjs --dry-run'
+      when:
+        - 'html'
+      workflowSteps:
+        - name: 'Class attribute lint'
+          run: 'composer lint:classes'
+    composerAudit:
+      agentsBullet: '`audit:composer` checks against known security advisories.'
+      composerScripts:
+        audit:composer: 'composer audit --abandoned=report'
+      requireDev:
+        roave/security-advisories: 'dev-latest'
+      when: []
+      workflowSteps:
+        - name: 'Composer security audit'
+          run: 'composer audit:composer'
+    phpCsFixer:
+      agentsBullet: '`lint:php`/`fix:php` run PHP-CS-Fixer.'
+      composerScripts:
+        fix:php: 'php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --verbose'
+        lint:php: 'php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --dry-run --diff --verbose'
+      configFiles:
+        'Extension/Quality/PhpCsFixer': 'Build/Quality/.php-cs-fixer.dist.php'
+      requireDev:
+        'friendsofphp/php-cs-fixer': '^3.95'
+      when:
+        - 'php'
+      workflowSteps:
+        - name: 'PHP CS check'
+          run: 'composer lint:php'
+    phpStan:
+      agentsBullet: '`analyze:php` runs PHPStan.'
+      composerScripts:
+        analyze:php: 'phpstan analyse --configuration=Build/Quality/phpstan.neon.dist --no-progress'
+      configFiles:
+        'Extension/Quality/PhpStan': 'Build/Quality/phpstan.neon.dist'
+      requireDev:
+        'phpstan/phpstan': '^2.2'
+        'saschaegerer/phpstan-typo3': '^2.1'
+      when:
+        - 'php'
+      workflowSteps:
+        - name: 'PHPStan'
+          run: 'composer analyze:php'
+    prettier:
+      agentsBullet: '`lint:htmlxml`/`fix:htmlxml` format HTML, XML and XLIF files with Prettier.'
+      composerScripts:
+        fix:htmlxml: 'npm run fix:htmlxml'
+        lint:htmlxml: 'npm run lint:htmlxml'
+      configFiles:
+        'Extension/Quality/Prettier': 'Build/Quality/prettier.config.mjs'
+        'Extension/Quality/PrettierIgnore': 'Build/Quality/.prettierignore'
+      needsNode: true
+      packageDevDependencies:
+        '@prettier/plugin-xml': '^3.4.2'
+        prettier: '^3.6.2'
+        prettier-plugin-organize-attributes: '^1.0.0'
+      packageScripts:
+        fix:htmlxml: 'prettier --config Build/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "**/*.{html,xml,xlf}"'
+        lint:htmlxml: 'prettier --config Build/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"'
+      when:
+        - 'html'
+        - 'xml'
+        - 'xlf'
+      workflowSteps:
+        - name: 'HTML/XML/XLF lint'
+          run: 'composer lint:htmlxml'
+    typoScriptLint:
+      agentsBullet: '`lint:typoscript` lints the TypoScript configuration.'
+      composerScripts:
+        lint:typoscript: 'typoscript-lint --config=Build/Quality/typoscript-lint.yml --ansi Configuration/TypoScript'
+      configFiles:
+        'Extension/Quality/TypoScriptLint': 'Build/Quality/typoscript-lint.yml'
+      requireDev:
+        'helmich/typo3-typoscript-lint': '^3.3'
+      when:
+        - 'typoscript'
+      workflowSteps:
+        - name: 'TypoScript lint'
+          run: 'composer lint:typoscript'
+    yamlLint:
+      agentsBullet: '`lint:yaml` lints YAML files with yamllint.'
+      composerScripts:
+        lint:yaml: 'python -m pip install --user yamllint; yamllint -c Build/Quality/.yamllint.yml Configuration'
+      configFiles:
+        'Extension/Quality/YamlLint': 'Build/Quality/.yamllint.yml'
+      when:
+        - 'yaml'
+      workflowSteps:
+        - name: 'Install yamllint'
+          run: 'python -m pip install --user yamllint'
+        - name: 'YAML lint'
+          run: 'composer lint:yaml'
+
+  # Files crafter:sync and the toolchain audit keep aligned with the generators.
+  # policy:
+  #   createIfMissing - written when absent, existing user edits are preserved
+  #   merge           - the managed keys are merged into the existing composer.json/package.json
+  #   overwrite       - always brought back to the current skeleton output
+  sync:
+    renewable:
+      - 'Extension/Workflow/Quality'
+      - 'Extension/Quality/YamlLint'
+      - 'Extension/Quality/TypoScriptLint'
+      - 'Extension/Quality/PrettierIgnore'
+      - 'Extension/Quality/Prettier'
+      - 'Extension/Quality/PreCommit'
+      - 'Extension/Quality/PhpStan'
+      - 'Extension/Quality/PhpCsFixer'
+      - 'Extension/Quality/LintClassAttributes'
+      - {identifier: 'Extension/PackageJson', policy: 'merge'}
+      - {identifier: 'Extension/Composer', policy: 'merge'}
+      - {identifier: 'Extension/ClaudeMd', policy: 'createIfMissing'}
+      - {identifier: 'Extension/AgentsMd', policy: 'createIfMissing'}
 
   # Property types offered by crafter:make:model. Every entry is plain data, so own types can be added and
   # existing ones adjusted without touching PHP code.
@@ -499,11 +629,7 @@ crafter:
       psbits/foundation: '^3.2'
       typo3/cms-core: '^13.4'
     composerRequireDev:
-      friendsofphp/php-cs-fixer: '^3.95'
-      helmich/typo3-typoscript-lint: '^3.3'
-      phpstan/phpstan: '^2.2'
-      roave/security-advisories: 'dev-latest'
-      saschaegerer/phpstan-typo3: '^2.1'
+      {}
     controllerExtends: 'TYPO3\CMS\Extbase\Mvc\Controller\ActionController'
     copyrightHolder: 'phantasie-schmiede'
     crudActions:

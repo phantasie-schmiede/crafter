@@ -61,9 +61,11 @@ abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
         );
         $this->extensionGenerator = new ExtensionGenerator(
             $this->configurationService,
+            $this->extensionProfileService,
             $this->fileWriter,
             $this->pathResolver,
-            $this->skeletonRenderer
+            $this->skeletonRenderer,
+            $this->toolchainGenerator
         );
         $this->languageFileGenerator = new LanguageFileGenerator(
             $this->configurationService,

@@ -37,7 +37,12 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
     {
         parent::setUp();
 
-        $this->extensionAuditor = new ExtensionAuditor($this->configurationService, $this->pathResolver);
+        $this->extensionAuditor = new ExtensionAuditor(
+            $this->configurationService,
+            $this->extensionProfileService,
+            $this->pathResolver,
+            $this->syncService
+        );
     }
 
     #[Test]
@@ -46,6 +51,32 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         $this->generateExtension();
 
         self::assertSame([], $this->extensionAuditor->audit(self::EXTENSION_KEY));
+    }
+
+    #[Test]
+    public function outdatedToolchainFileIsReported(): void
+    {
+        $this->generateExtension();
+        $path = $this->getExtensionFilePath('Build/Quality/phpstan.neon.dist');
+        file_put_contents($path, (string)file_get_contents($path) . "\n# drift");
+        $findings = $this->auditCategory('toolchain');
+
+        self::assertCount(1, $findings);
+        self::assertSame(AuditSeverity::notice, $findings[0]->severity);
+        self::assertSame('Build/Quality/phpstan.neon.dist', $findings[0]->path);
+        self::assertSame('crafter:sync demo_shop', $findings[0]->hint);
+    }
+
+    #[Test]
+    public function missingToolchainFileIsReported(): void
+    {
+        $this->generateExtension();
+        unlink($this->getExtensionFilePath('Build/Quality/.yamllint.yml'));
+        $findings = $this->auditCategory('toolchain');
+
+        self::assertCount(1, $findings);
+        self::assertSame(AuditSeverity::warning, $findings[0]->severity);
+        self::assertSame('Build/Quality/.yamllint.yml', $findings[0]->path);
     }
 
     #[Test]
@@ -151,8 +182,9 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
     }
 
     /**
-     * Creates an extension that satisfies every audit category: base files, a model, its repository and a controller
-     * including templates, language files and a registered plugin.
+     * Creates an extension that satisfies every audit category: base files, a model, its repository, a controller
+     * including templates, language files and a registered plugin. The toolchain sync runs afterwards, exactly like
+     * the ToolchainSyncEventListener would after a generation command.
      */
     private function generateExtension(): void
     {
@@ -171,5 +203,6 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
             actions: ['list', 'show', 'new', 'create', 'edit', 'update', 'delete'],
             properties: $properties
         ));
+        $this->syncService->sync(self::EXTENSION_KEY);
     }
 }

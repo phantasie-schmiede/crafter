@@ -109,6 +109,7 @@ inconsistencies between the codebase and these instructions, mention them - don'
   the read-only verification.
 - A pre-commit hook (`Build/GitHooks/pre-commit`, auto-installed by `composer install`) runs `composer lint:all`.
 - The same checks run in the `Quality` GitHub Actions workflow.
+{{ agentsToolChecks }}
 
 ## Do not modify
 

@@ -21,6 +21,7 @@ use function dirname;
 use function in_array;
 use function is_array;
 use function is_string;
+use function ltrim;
 use function sprintf;
 
 /**
@@ -42,12 +43,15 @@ class ExtensionAuditor
     public const string CATEGORY_ORPHAN                = 'orphan';
     public const string CATEGORY_REGISTRATION          = 'registration';
     public const string CATEGORY_STRUCTURE             = 'structure';
+    public const string CATEGORY_TOOLCHAIN             = 'toolchain';
     public const string EXTENSION_INFORMATION_SKELETON = 'Extension/ExtensionInformation';
     public const string MAIN_MODULE_MARKER             = '$this->addModule(';
 
     public function __construct(
-        protected readonly ConfigurationService $configurationService,
-        protected readonly PathResolver         $pathResolver,
+        protected readonly ConfigurationService    $configurationService,
+        protected readonly ExtensionProfileService $extensionProfileService,
+        protected readonly PathResolver            $pathResolver,
+        protected readonly SyncService             $syncService,
     ) {
     }
 
@@ -93,6 +97,10 @@ class ExtensionAuditor
 
         if (in_array(self::CATEGORY_ORPHAN, $categories, true)) {
             array_push($findings, ...$this->auditOrphans($extensionKey, $extensionPath, $controllers));
+        }
+
+        if (in_array(self::CATEGORY_TOOLCHAIN, $categories, true)) {
+            array_push($findings, ...$this->auditToolchain($extensionKey, $extensionPath));
         }
 
         usort(
@@ -392,6 +400,36 @@ class ExtensionAuditor
                 message : 'Required file is missing.',
                 path    : $relativePath,
                 hint    : sprintf('crafter:make:extension %s', $extensionKey)
+            );
+        }
+
+        return $findings;
+    }
+
+    /**
+     * @return AuditFinding[]
+     */
+    private function auditToolchain(string $extensionKey, string $extensionPath): array
+    {
+        $profile  = $this->extensionProfileService->fromDirectory($extensionPath);
+        $findings = [];
+
+        foreach ($this->syncService->getRenewableEntries($extensionKey) as $identifier => $entry) {
+            if (!$this->syncService->isApplicable($identifier, $profile, $extensionKey)) {
+                continue;
+            }
+
+            if ($this->syncService->isUpToDate($identifier, $extensionKey, $profile, $entry['policy'])) {
+                continue;
+            }
+
+            $target     = $extensionPath . ltrim($entry['target'], '/');
+            $findings[] = new AuditFinding(
+                category: self::CATEGORY_TOOLCHAIN,
+                severity: is_file($target) ? AuditSeverity::notice : AuditSeverity::warning,
+                message : is_file($target) ? 'Toolchain file is outdated.' : 'Toolchain file is missing.',
+                path    : $this->makeRelative($target, $extensionPath),
+                hint    : sprintf('crafter:sync %s', $extensionKey)
             );
         }
 
