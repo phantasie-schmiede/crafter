@@ -632,8 +632,8 @@ crafter:
     authorEmail: 'dn@phantasie-schmiede.de'
     composerRequire:
       php: '^8.3'
-      psbits/foundation: '^3.2'
-      typo3/cms-core: '^13.4'
+      psbits/foundation: '^4.0'
+      typo3/cms-core: '^13.4 || ^14.3'
     composerRequireDev:
       {}
     controllerExtends: 'TYPO3\CMS\Extbase\Mvc\Controller\ActionController'
@@ -649,9 +649,9 @@ crafter:
     defaultLanguage: 'en'
     emConfCategory: 'plugin'
     emConfDepends:
-      foundation: '3.2'
+      foundation: '4.0'
       php: '8.3'
-      typo3: '13.4.0-13.4.99'
+      typo3: '13.4.0-14.99.99'
     emConfState: 'alpha'
     extensionFileGroups:
       - 'core'

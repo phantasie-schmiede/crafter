@@ -63,46 +63,28 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
     protected SyncService        $syncService;
     protected ToolchainGenerator $toolchainGenerator;
 
-    protected function setUp(): void
+    private static function getFixturePath(string $name): string
     {
-        parent::setUp();
-
-        $this->projectPath = $this->createTemporaryDirectory();
-        $this->initializeEnvironment();
-        $this->initializePackageManager();
-
-        $this->eventDispatcher      = new NoopEventDispatcher();
-        $this->configurationService = new ConfigurationService(
-            $this->eventDispatcher,
-            new YamlFileLoader(new NullLogger())
-        );
-        $this->extensionProfileService = new ExtensionProfileService();
-        $this->pathResolver            = new PathResolver($this->configurationService, $this->packageManager);
-        $this->fileWriter              = new FileWriter($this->eventDispatcher);
-        $this->skeletonRenderer        = new SkeletonRenderer(
-            $this->configurationService,
-            $this->eventDispatcher,
-            $this->pathResolver
-        );
-        $this->toolchainGenerator = new ToolchainGenerator($this->configurationService);
-        $this->syncService        = new SyncService(
-            $this->configurationService,
-            $this->extensionProfileService,
-            $this->fileWriter,
-            $this->pathResolver,
-            $this->skeletonRenderer,
-            $this->toolchainGenerator
-        );
-        $this->fileWriter->reset();
+        return dirname(__DIR__) . '/Fixtures/Expected/' . $name;
     }
 
-    protected function tearDown(): void
+    /**
+     * Replaces values that change with every run, currently the generation date of XLIFF files and the copyright
+     * year of PHP files.
+     */
+    private static function normalizeVolatileValues(string $content): string
     {
-        if ('' !== $this->projectPath && is_dir($this->projectPath)) {
-            GeneralUtility::rmdir($this->projectPath, true);
-        }
-
-        parent::tearDown();
+        return preg_replace(
+            [
+                '/date="[^"]*"/',
+                '/(\(c\) )\d{4}/',
+            ],
+            [
+                'date="@@date@@"',
+                '$1@@year@@',
+            ],
+            $content
+        );
     }
 
     /**
@@ -146,6 +128,48 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         return (string)file_get_contents($path);
     }
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->projectPath = $this->createTemporaryDirectory();
+        $this->initializeEnvironment();
+        $this->initializePackageManager();
+
+        $this->eventDispatcher      = new NoopEventDispatcher();
+        $this->configurationService = new ConfigurationService(
+            $this->eventDispatcher,
+            new YamlFileLoader(new NullLogger())
+        );
+        $this->extensionProfileService = new ExtensionProfileService();
+        $this->pathResolver            = new PathResolver($this->configurationService, $this->packageManager);
+        $this->fileWriter              = new FileWriter($this->eventDispatcher);
+        $this->skeletonRenderer        = new SkeletonRenderer(
+            $this->configurationService,
+            $this->eventDispatcher,
+            $this->pathResolver
+        );
+        $this->toolchainGenerator = new ToolchainGenerator($this->configurationService);
+        $this->syncService        = new SyncService(
+            $this->configurationService,
+            $this->extensionProfileService,
+            $this->fileWriter,
+            $this->pathResolver,
+            $this->skeletonRenderer,
+            $this->toolchainGenerator
+        );
+        $this->fileWriter->reset();
+    }
+
+    protected function tearDown(): void
+    {
+        if ('' !== $this->projectPath && is_dir($this->projectPath)) {
+            GeneralUtility::rmdir($this->projectPath, true);
+        }
+
+        parent::tearDown();
+    }
+
     /**
      * Writes a project wide configuration layer, which is the layer a project uses to override the defaults.
      */
@@ -161,24 +185,6 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         GeneralUtility::mkdir_deep($path);
 
         return $path;
-    }
-
-    private static function getFixturePath(string $name): string
-    {
-        return dirname(__DIR__) . '/Fixtures/Expected/' . $name;
-    }
-
-    /**
-     * Replaces values that change with every run, currently the generation date of XLIFF files and the copyright
-     * year of PHP files.
-     */
-    private static function normalizeVolatileValues(string $content): string
-    {
-        return (string)preg_replace(
-            ['/date="[^"]*"/', '/(\(c\) )\d{4}/'],
-            ['date="@@date@@"', '$1@@year@@'],
-            $content
-        );
     }
 
     private function initializeEnvironment(): void
@@ -200,36 +206,53 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
     {
         $crafterPath = dirname(__DIR__, 2) . '/';
         $package     = $this->createMock(PackageInterface::class);
-        $package->method('getPackagePath')->willReturn($crafterPath);
+        $package->method('getPackagePath')
+            ->willReturn($crafterPath);
 
         $this->packageManager = $this->createMock(PackageManager::class);
-        $this->packageManager->method('isPackageActive')->willReturnCallback(
-            static fn(string $packageKey): bool => 'crafter' === $packageKey
-        );
-        $this->packageManager->method('resolvePackagePath')->willReturnCallback(
-            static function(string $path) use ($crafterPath): string {
-                if (!str_starts_with($path, 'EXT:crafter/')) {
+        $this->packageManager->method('isPackageActive')
+            ->willReturnCallback(
+                static fn(string $packageKey): bool => 'crafter' === $packageKey
+            );
+        $this->packageManager->method('extractPackageKeyFromPackagePath')
+            ->willReturnCallback(
+                static function(string $path): string {
+                    if (!str_starts_with($path, 'EXT:')) {
+                        throw new UnknownPackageException(
+                            sprintf('Path "%s" cannot be resolved in this test.', $path),
+                            1757426432
+                        );
+                    }
+
+                    return explode('/', substr($path, 4), 2)[0];
+                }
+            );
+        $this->packageManager->method('resolvePackagePath')
+            ->willReturnCallback(
+                static function(string $path) use ($crafterPath): string {
+                    if (!str_starts_with($path, 'EXT:crafter/')) {
+                        throw new UnknownPackageException(
+                            sprintf('Path "%s" cannot be resolved in this test.', $path),
+                            1757426431
+                        );
+                    }
+
+                    return str_replace('EXT:crafter/', $crafterPath, $path);
+                }
+            );
+        $this->packageManager->method('getPackage')
+            ->willReturnCallback(
+                static function(string $packageKey) use ($package): PackageInterface {
+                    if ('crafter' === $packageKey) {
+                        return $package;
+                    }
+
                     throw new UnknownPackageException(
-                        sprintf('Path "%s" cannot be resolved in this test.', $path),
-                        1757426431
+                        sprintf('Package "%s" is not available in this test.', $packageKey),
+                        1757426430
                     );
                 }
-
-                return str_replace('EXT:crafter/', $crafterPath, $path);
-            }
-        );
-        $this->packageManager->method('getPackage')->willReturnCallback(
-            static function(string $packageKey) use ($package): PackageInterface {
-                if ('crafter' === $packageKey) {
-                    return $package;
-                }
-
-                throw new UnknownPackageException(
-                    sprintf('Package "%s" is not available in this test.', $packageKey),
-                    1757426430
-                );
-            }
-        );
+            );
 
         ExtensionManagementUtility::setPackageManager($this->packageManager);
     }

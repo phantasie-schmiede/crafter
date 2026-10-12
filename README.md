@@ -408,7 +408,9 @@ Both require a coverage driver (pcov or xdebug); without one the suite runs with
 ## Tests
 
 The unit tests wire the real service graph against a throwaway project directory, so no database and no running
-TYPO3 installation are required.
+TYPO3 installation are required. The suite supports TYPO3 13.4 and 14.3; CI runs a matrix over both cores (PHP
+8.3/8.4/8.5, plus a lowest-dependency leg) and static analysis separately per core (jobs `qa-v13` and `qa-v14`).
+Locally, switch the installed core with `composer update --with "typo3/cms-core:^13.4" -W` (or `^14.3`).
 
 ```bash
 composer test:unit

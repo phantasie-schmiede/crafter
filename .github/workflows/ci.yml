@@ -63,6 +63,18 @@ jobs:
           - typo3: '13.4'
             php: '8.3'
             lowest: true
+          - typo3: '14.3'
+            php: '8.3'
+            lowest: false
+          - typo3: '14.3'
+            php: '8.4'
+            lowest: false
+          - typo3: '14.3'
+            php: '8.5'
+            lowest: false
+          - typo3: '14.3'
+            php: '8.3'
+            lowest: true
 
     steps:
       - name: Checkout
@@ -145,7 +157,7 @@ jobs:
           path: .Build/coverage/
           if-no-files-found: warn
 
-  qa:
+  qa-v13:
     name: 'Static analysis & linters (TYPO3 13.4)'
     needs: is-push-for-open-pr
     if: always() && (github.event_name != 'push' || needs.is-push-for-open-pr.outputs.is-pr != 'true')
@@ -181,15 +193,82 @@ jobs:
           path: .Build/vendor
           key: vendor-${{ runner.os }}-qa-t313.4-${{ hashFiles('composer.json') }}
           restore-keys: |
-            vendor-${{ runner.os }}-qa-
+            vendor-${{ runner.os }}-qa-t313.4-
 
       - name: Install dependencies
         # Pinned on purpose: saschaegerer/phpstan-typo3 only ever supports one core
-        # major at a time and PHPStan behaviour differs between them, so linting on
-        # a fixed core keeps results stable.
+        # major at a time and PHPStan behaviour differs between them, so each major
+        # gets its own job. Linting on a fixed core keeps results stable.
         env:
           COMPOSER_NO_SECURITY_BLOCKING: '1'
         run: composer update --with "typo3/cms-core:^13.4" -W --prefer-dist --no-interaction --no-progress
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Lint and analyse
+        run: >-
+          composer analyze:php
+          && composer lint:classes
+          && composer lint:htmlxml
+          && composer lint:php
+          && composer lint:yaml
+          && composer validate:composer
+
+      - name: Report dependency advisories
+        # Reported, not enforced: every TYPO3 major in the support window still
+        # carries open Packagist advisories, so gating on this would leave the
+        # build permanently red and people would stop reading it. Surfaces as a
+        # GitHub warning annotation instead.
+        run: >-
+          composer audit --abandoned=report
+          || echo "::warning::composer audit reported findings - see the job log"
+
+  qa-v14:
+    name: 'Static analysis & linters (TYPO3 14.3)'
+    needs: is-push-for-open-pr
+    if: always() && (github.event_name != 'push' || needs.is-push-for-open-pr.outputs.is-pr != 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, mbstring, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json', '**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: .Build/vendor
+          key: vendor-${{ runner.os }}-qa-t314.3-${{ hashFiles('composer.json') }}
+          restore-keys: |
+            vendor-${{ runner.os }}-qa-t314.3-
+
+      - name: Install dependencies
+        # Pinned on purpose: saschaegerer/phpstan-typo3 only ever supports one core
+        # major at a time and PHPStan behaviour differs between them, so each major
+        # gets its own job. Linting on a fixed core keeps results stable.
+        env:
+          COMPOSER_NO_SECURITY_BLOCKING: '1'
+        run: composer update --with "typo3/cms-core:^14.3" -W --prefer-dist --no-interaction --no-progress
 
       - name: Install Node dependencies
         run: npm install
@@ -216,12 +295,13 @@ jobs:
     name: Publish to TER
     # Explicitly check dependency results because the PR check is skipped for tags.
     # This prevents a skipped job in the dependency chain from blocking publishing.
-    needs: [tests, qa, coverage]
+    needs: [tests, qa-v13, qa-v14, coverage]
     if: >-
       ${{
         !cancelled() &&
         needs.tests.result == 'success' &&
-        needs.qa.result == 'success' &&
+        needs.qa-v13.result == 'success' &&
+        needs.qa-v14.result == 'success' &&
         needs.coverage.result == 'success' &&
         github.event_name == 'push' &&
         startsWith(github.ref, 'refs/tags/')
