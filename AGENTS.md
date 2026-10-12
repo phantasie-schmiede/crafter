@@ -200,7 +200,7 @@ Repository quality checks are defined in `composer.json`, `package.json`, and `B
 ## Onboarding run notes
 
 - Running QA locally requires installed dependencies (`composer install` / `composer update`, plus npm dependencies via
-  Composer post-install).
+  Composer post-install) and the `yamllint` CLI for `lint:yaml`.
 - In restricted environments, Composer dependency installation may fail if GitHub authentication for dist downloads is
   unavailable.
 - Tests run against a throwaway project directory — no database or running TYPO3 installation is required.

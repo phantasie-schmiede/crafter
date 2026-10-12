@@ -387,7 +387,23 @@ these files after writing, and `crafter:audit -c toolchain` reports missing or o
 ```bash
 composer lint:all
 composer test:all
+composer qa
 ```
+
+`composer qa` runs all fixes, all lint checks and the unit tests. `lint:yaml` requires the `yamllint` CLI.
+
+#### Code coverage
+
+CI measures the line coverage of the unit suite once per run (job "Code coverage", TYPO3 13.4 / PHP 8.4 with pcov)
+and uploads the clover/cobertura/html reports as the `coverage` artifact. The suite's coverage must not drop below
+the baseline in `Build/Quality/coverage-baseline.json` (tolerance: 0.5 points to absorb small drift between PHP
+versions); the job fails when it does.
+
+- `composer test:coverage`: runs the unit suite with coverage and checks the baseline
+- `composer test:coverage:update-baseline`: runs the unit suite and rewrites `Build/Quality/coverage-baseline.json`
+  with the measured value
+
+Both require a coverage driver (pcov or xdebug); without one the suite runs without coverage.
 
 ## Tests
 

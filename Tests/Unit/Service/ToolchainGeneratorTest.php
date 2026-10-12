@@ -59,7 +59,12 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
             $this->toolchainGenerator->getManagedComposerScripts($profile)
         );
         self::assertSame(
-            ['Extension/Quality/PhpCsFixer', 'Extension/Quality/PhpStan'],
+            [
+                'Extension/Quality/PhpCsFixer',
+                'Extension/Quality/PhpCsFixerClassBlockSeparation',
+                'Extension/Quality/PhpCsFixerPropertyNamesAlignment',
+                'Extension/Quality/PhpStan',
+            ],
             array_keys($this->toolchainGenerator->getConfigFiles($profile))
         );
     }

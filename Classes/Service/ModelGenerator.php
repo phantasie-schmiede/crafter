@@ -230,7 +230,7 @@ readonly class ModelGenerator
     }
 
     /**
-     * @param string[] $values
+     * @param string[]              $values
      * @param array<string, string> $replacements
      *
      * @return string[]

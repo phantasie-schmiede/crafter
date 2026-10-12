@@ -59,10 +59,9 @@ use function trim;
  */
 final class SyncService
 {
-    public const string POLICY_CREATE_IF_MISSING = 'createIfMissing';
-    public const string POLICY_MERGE             = 'merge';
-    public const string POLICY_OVERWRITE         = 'overwrite';
-
+    public const string POLICY_CREATE_IF_MISSING       = 'createIfMissing';
+    public const string POLICY_MERGE                   = 'merge';
+    public const string POLICY_OVERWRITE               = 'overwrite';
     public const array ALWAYS_MANAGED_COMPOSER_SCRIPTS = ['fix:all', 'lint:all', 'post-install-cmd', 'validate:composer'];
 
     public function __construct(

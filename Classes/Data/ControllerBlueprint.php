@@ -29,15 +29,15 @@ readonly class ControllerBlueprint
      * @param PropertyDefinition[] $properties
      */
     public function __construct(
-        public string  $extensionKey,
-        public string  $name,
-        public string  $modelName = '',
-        public array   $actions = [],
-        public array   $properties = [],
-        public bool    $withTemplates = true,
-        public bool    $withLanguageFiles = true,
-        public bool    $withPlugin = true,
-        public string  $pluginName = '',
+        public string $extensionKey,
+        public string $name,
+        public string $modelName = '',
+        public array  $actions = [],
+        public array  $properties = [],
+        public bool   $withTemplates = true,
+        public bool   $withLanguageFiles = true,
+        public bool   $withPlugin = true,
+        public string $pluginName = '',
     ) {
     }
 

@@ -207,6 +207,8 @@ crafter:
       'Extension/PackageJson': 'package.json'
       'Extension/Quality/LintClassAttributes': 'Build/Quality/lint-class-attributes.mjs'
       'Extension/Quality/PhpCsFixer': 'Build/Quality/.php-cs-fixer.dist.php'
+      'Extension/Quality/PhpCsFixerClassBlockSeparation': 'Build/Quality/php-cs-fixer/ClassBlockSeparationFixer.php'
+      'Extension/Quality/PhpCsFixerPropertyNamesAlignment': 'Build/Quality/php-cs-fixer/PropertyNamesAlignmentFixer.php'
       'Extension/Quality/PhpStan': 'Build/Quality/phpstan.neon.dist'
       'Extension/Quality/PreCommit': 'Build/GitHooks/pre-commit'
       'Extension/Quality/Prettier': 'Build/Quality/prettier.config.mjs'
@@ -253,6 +255,8 @@ crafter:
         lint:php: 'php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --dry-run --diff --verbose'
       configFiles:
         'Extension/Quality/PhpCsFixer': 'Build/Quality/.php-cs-fixer.dist.php'
+        'Extension/Quality/PhpCsFixerClassBlockSeparation': 'Build/Quality/php-cs-fixer/ClassBlockSeparationFixer.php'
+        'Extension/Quality/PhpCsFixerPropertyNamesAlignment': 'Build/Quality/php-cs-fixer/PropertyNamesAlignmentFixer.php'
       requireDev:
         'friendsofphp/php-cs-fixer': '^3.95'
       when:
@@ -313,7 +317,7 @@ crafter:
     yamlLint:
       agentsBullet: '`lint:yaml` lints YAML files with yamllint.'
       composerScripts:
-        lint:yaml: 'python -m pip install --user yamllint; yamllint -c Build/Quality/.yamllint.yml Configuration'
+        lint:yaml: 'yamllint -c Build/Quality/.yamllint.yml Configuration'
       configFiles:
         'Extension/Quality/YamlLint': 'Build/Quality/.yamllint.yml'
       when:
@@ -339,6 +343,8 @@ crafter:
       - 'Extension/Quality/PreCommit'
       - 'Extension/Quality/PhpStan'
       - 'Extension/Quality/PhpCsFixer'
+      - 'Extension/Quality/PhpCsFixerPropertyNamesAlignment'
+      - 'Extension/Quality/PhpCsFixerClassBlockSeparation'
       - 'Extension/Quality/LintClassAttributes'
       - {identifier: 'Extension/PackageJson', policy: 'merge'}
       - {identifier: 'Extension/Composer', policy: 'merge'}

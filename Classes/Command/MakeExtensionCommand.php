@@ -57,8 +57,7 @@ class MakeExtensionCommand extends AbstractCrafterCommand
     public const string OPTION_TITLE               = 'title';
     public const string OPTION_VENDOR              = 'vendor';
     public const string OPTION_VERSION             = 'package-version';
-
-    private const string EXTENSION_KEY_PATTERN = '/^[a-z][a-z0-9_]{2,}$/';
+    private const string EXTENSION_KEY_PATTERN     = '/^[a-z][a-z0-9_]{2,}$/';
 
     public function __construct(
         protected readonly ConfigurationService $configurationService,

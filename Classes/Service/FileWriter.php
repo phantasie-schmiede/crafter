@@ -33,8 +33,7 @@ use function sprintf;
 class FileWriter
 {
     private bool $dryRun = false;
-
-    private bool $force = false;
+    private bool $force  = false;
 
     /** @var WriteResult[] */
     private array $results = [];

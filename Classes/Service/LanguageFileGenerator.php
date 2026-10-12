@@ -93,8 +93,8 @@ readonly class LanguageFileGenerator
      * Writes one XLIFF file per configured language. The file of a translation is prefixed with its language key,
      * so the placeholder carrying the file name has to be named.
      *
-     * @param array<string, string> $placeholders         placeholders of the configured path
-     * @param array<string, string> $units                translation identifier => source text
+     * @param array<string, string> $placeholders placeholders of the configured path
+     * @param array<string, string> $units        translation identifier => source text
      */
     public function writeLanguageFiles(
         string $extensionKey,

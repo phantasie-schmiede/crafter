@@ -35,18 +35,12 @@ use PSBits\Crafter\Service\RepositoryGenerator;
 abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
 {
     protected BackendControllerGenerator $backendControllerGenerator;
-
-    protected ClassGenerator $classGenerator;
-
-    protected ControllerGenerator $controllerGenerator;
-
-    protected ExtensionGenerator $extensionGenerator;
-
-    protected LanguageFileGenerator $languageFileGenerator;
-
-    protected ModelGenerator $modelGenerator;
-
-    protected RepositoryGenerator $repositoryGenerator;
+    protected ClassGenerator             $classGenerator;
+    protected ControllerGenerator        $controllerGenerator;
+    protected ExtensionGenerator         $extensionGenerator;
+    protected LanguageFileGenerator      $languageFileGenerator;
+    protected ModelGenerator             $modelGenerator;
+    protected RepositoryGenerator        $repositoryGenerator;
 
     protected function setUp(): void
     {

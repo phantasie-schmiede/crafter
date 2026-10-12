@@ -38,12 +38,12 @@ readonly class ExtensionGenerator
     public const string QUALITY_GROUP                  = 'quality';
 
     public function __construct(
-        protected ConfigurationService      $configurationService,
-        protected ExtensionProfileService   $extensionProfileService,
-        protected FileWriter                $fileWriter,
-        protected PathResolver              $pathResolver,
-        protected SkeletonRenderer          $skeletonRenderer,
-        protected ToolchainGenerator        $toolchainGenerator,
+        protected ConfigurationService    $configurationService,
+        protected ExtensionProfileService $extensionProfileService,
+        protected FileWriter              $fileWriter,
+        protected PathResolver            $pathResolver,
+        protected SkeletonRenderer        $skeletonRenderer,
+        protected ToolchainGenerator      $toolchainGenerator,
     ) {
     }
 

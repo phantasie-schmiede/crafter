@@ -41,8 +41,8 @@ class SyncCommand extends AbstractCrafterCommand
     public const string ARGUMENT_EXTENSION_KEY = 'extensionKey';
 
     public function __construct(
-        protected readonly FileWriter   $fileWriter,
-        protected readonly SyncService  $syncService,
+        protected readonly FileWriter  $fileWriter,
+        protected readonly SyncService $syncService,
     ) {
         parent::__construct();
     }

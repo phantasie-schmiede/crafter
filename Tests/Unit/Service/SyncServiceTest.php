@@ -62,6 +62,8 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         );
         self::assertFileExists($this->getExtensionFilePath('Build/Quality/phpstan.neon.dist'));
         self::assertFileExists($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
+        self::assertFileExists($this->getExtensionFilePath('Build/Quality/php-cs-fixer/ClassBlockSeparationFixer.php'));
+        self::assertFileExists($this->getExtensionFilePath('Build/Quality/php-cs-fixer/PropertyNamesAlignmentFixer.php'));
         self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/lint-class-attributes.mjs'));
         self::assertFileExists($this->getExtensionFilePath('Build/GitHooks/pre-commit'));
         self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/.yamllint.yml'));

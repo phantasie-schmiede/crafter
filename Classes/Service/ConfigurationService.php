@@ -209,8 +209,8 @@ class ConfigurationService
     }
 
     /**
-     * @param array<string, mixed> $target
-     * @param array<string, mixed> $override
+     * @param array<string, mixed>  $target
+     * @param array<string, mixed>  $override
      * @param array<string, string> $origins
      *
      * @return array<string, mixed>

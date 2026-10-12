@@ -25,8 +25,8 @@ final class BeforeSkeletonRenderEvent
      * @param array<string, string> $variables
      */
     public function __construct(
-        private string          $identifier,
-        private array           $variables,
+        private string           $identifier,
+        private array            $variables,
         private readonly ?string $extensionKey,
     ) {
     }

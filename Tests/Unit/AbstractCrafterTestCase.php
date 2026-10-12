@@ -50,25 +50,17 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
 {
     protected const string EXTENSION_KEY = 'demo_shop';
 
-    protected ConfigurationService $configurationService;
-
+    protected ConfigurationService     $configurationService;
     protected EventDispatcherInterface $eventDispatcher;
-
-    protected ExtensionProfileService $extensionProfileService;
-
-    protected FileWriter $fileWriter;
+    protected ExtensionProfileService  $extensionProfileService;
+    protected FileWriter               $fileWriter;
 
     /** @var PackageManager&MockObject */
-    protected PackageManager $packageManager;
-
-    protected PathResolver $pathResolver;
-
-    protected string $projectPath = '';
-
-    protected SkeletonRenderer $skeletonRenderer;
-
-    protected SyncService $syncService;
-
+    protected PackageManager     $packageManager;
+    protected PathResolver       $pathResolver;
+    protected string             $projectPath = '';
+    protected SkeletonRenderer   $skeletonRenderer;
+    protected SyncService        $syncService;
     protected ToolchainGenerator $toolchainGenerator;
 
     protected function setUp(): void
