@@ -123,6 +123,14 @@ final class GeneratorTest extends AbstractGeneratorTestCase
     }
 
     #[Test]
+    public function extensionIsGeneratedWithTheQualityWorkflow(): void
+    {
+        $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
+
+        $this->assertFileMatchesFixture('.github/workflows/quality.yml', 'Workflow/Quality.yml');
+    }
+
+    #[Test]
     public function moduleConfigurationImportsAreSortedForAnyVendor(): void
     {
         $this->generateBaseExtension();

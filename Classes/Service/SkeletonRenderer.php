@@ -31,13 +31,17 @@ use function sprintf;
  * - its indentation is applied to every line of the inserted value
  * - if the value is empty, the whole line is removed
  *
+ * Inline placeholders may carry a leading "$" (e.g. ${{ propertyName }}) to render a PHP variable. A "$" before
+ * a name that is not a known variable is left untouched, which is how GitHub Actions expressions such as
+ * ${{ matrix.php }} survive the rendering.
+ *
  * @package PSBits\Crafter\Service
  */
 class SkeletonRenderer
 {
     public const string BLOCK_PATTERN        = '/^([ \t]*)\{\{\s*([\w.]+)\s*}}[ \t]*(\r?\n|$)/m';
     public const string FILE_HEADER_SKELETON = 'Php/FileHeader';
-    public const string INLINE_PATTERN       = '/\{\{\s*([\w.]+)\s*}}/';
+    public const string INLINE_PATTERN       = '/(\$?)\{\{\s*([\w.]+)\s*}}/';
 
     private bool $renderingFileHeader = false;
 
@@ -149,7 +153,17 @@ class SkeletonRenderer
 
         return preg_replace_callback(
             self::INLINE_PATTERN,
-            fn(array $matches): string => $this->resolveValue($matches[1], $variables, $identifier),
+            function(array $matches) use ($variables, $identifier): string {
+                $prefix = $matches[1];
+                $name   = $matches[2];
+
+                if ('' !== $prefix && !array_key_exists($name, $variables)) {
+                    // A "$" before an unknown name is a GitHub Actions expression, not a crafter placeholder.
+                    return $matches[0];
+                }
+
+                return $prefix . $this->resolveValue($name, $variables, $identifier);
+            },
             (string)$skeleton
         );
     }

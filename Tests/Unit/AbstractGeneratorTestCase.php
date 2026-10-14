@@ -113,10 +113,12 @@ abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
     }
 
     /**
-     * Generates the `core` file group, which every follow-up generator expects to be present, most notably
-     * Classes/Data/ExtensionInformation.php.
+     * Generates the `core` file group by default, which every follow-up generator expects to be present, most
+     * notably Classes/Data/ExtensionInformation.php.
+     *
+     * @param string[] $groups
      */
-    protected function generateBaseExtension(): void
+    protected function generateBaseExtension(array $groups = ['core']): void
     {
         $this->extensionGenerator->generate(
             new ExtensionBlueprint(
@@ -136,7 +138,7 @@ abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
                 version: '0.1.0',
                 gitHubOrganization: 'phantasie-schmiede'
             ),
-            ['core']
+            $groups
         );
     }
 }

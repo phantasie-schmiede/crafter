@@ -328,6 +328,17 @@ crafter:
         - name: 'YAML lint'
           run: 'composer lint:yaml'
 
+  # Support matrix and TER publishing of the generated `quality.yml` workflow. Every matrix leg pins one core
+  # major and one PHP version and runs a dependency install; `lowest` additionally installs the lowest allowed
+  # dependencies. Setting the matrix to an empty list disables the job.
+  ci:
+    matrix:
+      - {lowest: true, php: '8.3', typo3: '13.4'}
+      - {php: '8.5', typo3: '14.3'}
+    # Adds the publish-to-ter job, which publishes the extension on semver tags. The publishing repository needs
+    # the TYPO3_API_TOKEN repository secret.
+    publishToTer: true
+
   # Files crafter:sync and the toolchain audit keep aligned with the generators.
   # policy:
   #   createIfMissing - written when absent, existing user edits are preserved

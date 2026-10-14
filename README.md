@@ -54,9 +54,27 @@ configuration value. The group `core` is always created:
 | `license`    | `LICENSE.txt`                                                                                           |
 | `typoScript` | `Configuration/TypoScript/constants.typoscript` and `setup.typoscript`                                  |
 | `quality`    | `Build/Quality/*`, `Build/GitHooks/pre-commit`, `package.json`                                          |
-| `ci`         | `.github/workflows/quality.yml`                                                                         |
+| `ci`         | `.github/workflows/quality.yml` (toolchain checks, support matrix, TER publishing)                      |
 
 New extensions are written to `crafter.extensionRootPath` (`packages/` by default).
+
+### CI Workflow of Generated Extensions
+
+The `quality.yml` workflow runs the toolchain checks on one PHP version, a support matrix that verifies the
+supported TYPO3/PHP combinations still resolve their dependencies, and a `publish-to-ter` job that publishes the
+extension to TER on semver tags. Both the matrix and the publish job are configured under `crafter.ci`:
+
+```yaml
+crafter:
+  ci:
+    matrix:
+      - {lowest: true, php: '8.3', typo3: '13.4'}
+      - {php: '8.5', typo3: '14.3'}
+    publishToTer: true
+```
+
+Setting the matrix to an empty list disables the job; `publishToTer: false` skips the publishing job. Publishing
+requires the `TYPO3_API_TOKEN` repository secret in the extension's repository.
 
 ## Creating a Domain Model
 

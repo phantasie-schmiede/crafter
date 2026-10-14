@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - '*'
 
 jobs:
   quality:
@@ -25,8 +27,12 @@ jobs:
         run: composer validate --no-check-publish
 
       - name: Install dependencies
+        env:
+          COMPOSER_NO_SECURITY_BLOCKING: '1'
         run: composer update --no-interaction --no-progress
 
 {{ workflowNode }}
 
 {{ workflowSteps }}
+{{ workflowMatrix }}
+{{ workflowPublish }}

@@ -17,6 +17,7 @@ use function array_key_last;
 use function array_merge;
 use function in_array;
 use function is_array;
+use function is_string;
 use function json_encode;
 use function ksort;
 use function sort;
@@ -231,7 +232,9 @@ final class ToolchainGenerator
             'packageScripts'           => $this->renderJsonMap(
                 $this->getManagedPackageScripts($profile, $extensionKey)
             ),
+            'workflowMatrix'           => $this->renderWorkflowMatrix($extensionKey),
             'workflowNode'             => true === $needsNode ? $this->renderWorkflowNode() : '',
+            'workflowPublish'          => $this->renderWorkflowPublish($extensionKey),
             'workflowSteps'            => $this->renderWorkflowSteps($enabledTools, $extensionKey),
         ];
     }
@@ -376,6 +379,198 @@ final class ToolchainGenerator
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Support matrix legs of `crafter.ci.matrix`, normalized. Malformed legs are skipped.
+     *
+     * @return array<int, array{lowest: bool, php: string, typo3: string}>
+     */
+    private function getCiMatrix(?string $extensionKey): array
+    {
+        $matrix = $this->configurationService->getValue('ci.matrix', $extensionKey, []);
+
+        if (!is_array($matrix)) {
+            return [];
+        }
+
+        $legs = [];
+
+        foreach ($matrix as $leg) {
+            if (!is_array($leg) || !is_string($leg['typo3'] ?? null) || !is_string($leg['php'] ?? null)) {
+                continue;
+            }
+
+            $legs[] = [
+                'lowest' => true === ($leg['lowest'] ?? false),
+                'php'    => (string)$leg['php'],
+                'typo3'  => (string)$leg['typo3'],
+            ];
+        }
+
+        return $legs;
+    }
+
+    private function renderWorkflowMatrix(?string $extensionKey): string
+    {
+        $legs = $this->getCiMatrix($extensionKey);
+
+        if ([] === $legs) {
+            return '';
+        }
+
+        $includeLines = [];
+
+        foreach ($legs as $leg) {
+            $fields = [];
+
+            if (true === $leg['lowest']) {
+                $fields[] = 'lowest: true';
+            }
+
+            $fields[] = sprintf("php: '%s'", $leg['php']);
+            $fields[] = sprintf("typo3: '%s'", $leg['typo3']);
+
+            $includeLines[] = '          - ' . $fields[0]
+                . "\n            " . implode("\n            ", array_slice($fields, 1));
+        }
+
+        return implode("\n", [
+            '',
+            '  support-matrix:',
+            "    name: 'Dependency check TYPO3 \${{ matrix.typo3 }} / PHP \${{ matrix.php }}'",
+            '    runs-on: ubuntu-latest',
+            '    strategy:',
+            '      fail-fast: false',
+            '      matrix:',
+            '        include:',
+            ...$includeLines,
+            '    steps:',
+            '      - uses: actions/checkout@v4',
+            '',
+            '      - name: Setup PHP',
+            '        uses: shivammathur/setup-php@v2',
+            '        with:',
+            '          php-version: ${{ matrix.php }}',
+            '          coverage: none',
+            '          tools: composer:v2',
+            '',
+            '      - name: Check dependency install',
+            '        env:',
+            "          COMPOSER_NO_SECURITY_BLOCKING: '1'",
+            '        run: >-',
+            '          composer update',
+            '          --with "typo3/cms-core:^${{ matrix.typo3 }}"',
+            '          -W',
+            '          --prefer-dist',
+            '          --no-interaction',
+            '          --no-progress',
+            '          --no-scripts',
+            "          \${{ matrix.lowest && '--prefer-lowest --prefer-stable' || '' }}",
+        ]);
+    }
+
+    private function renderWorkflowPublish(?string $extensionKey): string
+    {
+        if (true !== (bool)$this->configurationService->getValue('ci.publishToTer', $extensionKey, false)) {
+            return '';
+        }
+
+        $extensionKey ??= '';
+        $needs        = ['quality'];
+
+        if ([] !== $this->getCiMatrix($extensionKey)) {
+            $needs[] = 'support-matrix';
+        }
+
+        $conditions = ['!cancelled()'];
+
+        foreach ($needs as $job) {
+            $conditions[] = sprintf('needs.%s.result == \'success\'', $job);
+        }
+
+        $conditions[] = "github.event_name == 'push'";
+        $conditions[] = "startsWith(github.ref, 'refs/tags/')";
+
+        $ifLines = [];
+
+        foreach ($conditions as $condition) {
+            $ifLines[] = '        ' . $condition . ' &&';
+        }
+
+        $lastIfLine           = count($ifLines) - 1;
+        $ifLines[$lastIfLine] = substr($ifLines[$lastIfLine], 0, -3);
+
+        return implode("\n", [
+            '',
+            '  publish-to-ter:',
+            '    name: Publish to TER',
+            sprintf('    needs: [%s]', implode(', ', $needs)),
+            '    if: >-',
+            '      ${{',
+            ...$ifLines,
+            '      }}',
+            '    runs-on: ubuntu-latest',
+            '    env:',
+            '      TYPO3_API_TOKEN: ${{ secrets.TYPO3_API_TOKEN }}',
+            '    steps:',
+            '      - name: Checkout',
+            '        uses: actions/checkout@v4',
+            '        with:',
+            '          ref: ${{ github.ref }}',
+            '          fetch-depth: 0',
+            '',
+            '      - name: Check tag pattern',
+            '        run: |',
+            '          if ! [[ "${GITHUB_REF}" =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then',
+            '            echo "Not a semver tag, aborting." >&2',
+            '            exit 1',
+            '          fi',
+            '',
+            '      - name: Get version',
+            '        run: echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"',
+            '',
+            '      - name: Setup PHP',
+            '        uses: shivammathur/setup-php@v2',
+            '        with:',
+            "          php-version: '8.3'",
+            '          extensions: intl, mbstring, zip, curl',
+            '          coverage: none',
+            '          tools: composer:v2',
+            '',
+            '      - name: Ensure ext_emconf.php matches tag',
+            '        run: |',
+            sprintf(
+                '          emconf="$(php -r \'$_EXTKEY="%s"; include "ext_emconf.php"; echo $EM_CONF["%s"]["version"];\'")"',
+                $extensionKey,
+                $extensionKey
+            ),
+            '          if [[ "$emconf" != "$version" ]]; then',
+            '            echo "ext_emconf.php ($emconf) does not match tag ($version), aborting." >&2',
+            '            exit 1',
+            '          fi',
+            '',
+            '      - name: Get tag description (TER comment)',
+            '        run: |',
+            "          comment=\"\$(git tag -l \"\$version\" --format '%(contents)')\"",
+            '          if [[ -z "${comment// }" ]]; then',
+            '            echo "comment=Released version $version" >> "$GITHUB_ENV"',
+            '          else',
+            '            {',
+            "              echo 'comment<<EOF'",
+            '              echo "$comment"',
+            "              echo 'EOF'",
+            '            } >> "$GITHUB_ENV"',
+            '          fi',
+            '',
+            '      - name: Install tailor',
+            '        run: |',
+            '          composer global require typo3/tailor --prefer-dist --no-progress --no-suggest',
+            '          echo "tailor_bin=$(composer config -g home)/vendor/bin/tailor" >> "$GITHUB_ENV"',
+            '',
+            '      - name: Publish to TER',
+            '        run: php "$tailor_bin" ter:publish "$version" --comment "$comment"',
+        ]);
     }
 
     private function renderWorkflowNode(): string

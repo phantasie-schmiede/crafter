@@ -164,6 +164,60 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
     }
 
     #[Test]
+    public function theSupportMatrixAndTerPublishJobAreRenderedForTheWorkflow(): void
+    {
+        $profile   = $this->extensionProfileService->fromPlannedFiles([]);
+        $variables = $this->toolchainGenerator->getVariables($profile, self::EXTENSION_KEY);
+
+        self::assertStringContainsString('support-matrix:', $variables['workflowMatrix']);
+        self::assertStringContainsString('lowest: true', $variables['workflowMatrix']);
+        self::assertStringContainsString("php: '8.3'", $variables['workflowMatrix']);
+        self::assertStringContainsString("typo3: '13.4'", $variables['workflowMatrix']);
+        self::assertStringContainsString("php: '8.5'", $variables['workflowMatrix']);
+        self::assertStringContainsString("typo3: '14.3'", $variables['workflowMatrix']);
+        self::assertStringContainsString('--prefer-lowest --prefer-stable', $variables['workflowMatrix']);
+        self::assertStringContainsString('needs.support-matrix.result', $variables['workflowPublish']);
+        self::assertStringContainsString('needs: [quality, support-matrix]', $variables['workflowPublish']);
+        self::assertStringContainsString('publish-to-ter:', $variables['workflowPublish']);
+        self::assertStringContainsString(
+            '$_EXTKEY="' . self::EXTENSION_KEY . '"',
+            $variables['workflowPublish']
+        );
+    }
+
+    #[Test]
+    public function theTerPublishJobDependsOnlyOnQualityWithoutASupportMatrix(): void
+    {
+        $this->writeProjectConfiguration(<<<'YAML'
+            crafter:
+              ci:
+                matrix: []
+            YAML);
+        $profile   = $this->extensionProfileService->fromPlannedFiles([]);
+        $variables = $this->toolchainGenerator->getVariables($profile, self::EXTENSION_KEY);
+
+        self::assertSame('', $variables['workflowMatrix']);
+        self::assertStringContainsString('needs: [quality]', $variables['workflowPublish']);
+        self::assertStringNotContainsString('support-matrix', $variables['workflowPublish']);
+    }
+
+    #[Test]
+    public function theSupportMatrixAndTerPublishCanBeDisabled(): void
+    {
+        $this->writeProjectConfiguration(<<<'YAML'
+            crafter:
+              ci:
+                matrix: []
+                publishToTer: false
+            YAML);
+        $profile   = $this->extensionProfileService->fromPlannedFiles([]);
+        $variables = $this->toolchainGenerator->getVariables($profile, self::EXTENSION_KEY);
+
+        self::assertSame('', $variables['workflowMatrix']);
+        self::assertSame('', $variables['workflowPublish']);
+    }
+
+    #[Test]
     public function directoryProfileIgnoresBuildAndVendor(): void
     {
         $extensionPath = $this->getExtensionFilePath('');
