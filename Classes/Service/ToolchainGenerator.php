@@ -477,7 +477,7 @@ final class ToolchainGenerator
         }
 
         $extensionKey ??= '';
-        $needs        = ['quality'];
+        $needs = ['quality'];
 
         if ([] !== $this->getCiMatrix($extensionKey)) {
             $needs[] = 'support-matrix';

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Command;
 
 use PSBits\Crafter\Data\WriteResult;
+use PSBits\Crafter\Exception\CrafterException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -23,6 +24,9 @@ use function is_string;
 
 /**
  * Class AbstractCrafterCommand
+ *
+ * Every command implements handle(). The final execute() wrapper catches CrafterException and reports it via
+ * $io->error() with a failure exit code, so validation errors never surface as uncaught exceptions.
  *
  * @package PSBits\Crafter\Command
  */
@@ -41,6 +45,21 @@ abstract class AbstractCrafterCommand extends Command
             'Extension key the configuration and skeleton cascade is resolved for'
         );
     }
+
+    final protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = $this->getIo($input, $output);
+
+        try {
+            return $this->handle($input, $io);
+        } catch (CrafterException $exception) {
+            $io->error($exception->getMessage());
+
+            return Command::FAILURE;
+        }
+    }
+
+    abstract protected function handle(InputInterface $input, SymfonyStyle $io): int;
 
     protected function addFileOptions(): static
     {

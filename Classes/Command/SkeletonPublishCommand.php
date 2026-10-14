@@ -18,7 +18,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Environment;
 
 use function sprintf;
@@ -65,11 +65,10 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
         );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
         $identifier   = (string)$input->getArgument(self::ARGUMENT_IDENTIFIER);
-        $io           = $this->getIo($input, $output);
         $priority     = $this->determinePriority($input, $extensionKey);
         $rootPaths    = $this->pathResolver->getResolvedRootPaths($extensionKey);
 

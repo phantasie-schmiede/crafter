@@ -17,7 +17,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class SkeletonShowCommand
@@ -65,11 +65,10 @@ class SkeletonShowCommand extends AbstractCrafterCommand
         );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
         $identifier   = (string)$input->getArgument(self::ARGUMENT_IDENTIFIER);
-        $io           = $this->getIo($input, $output);
 
         if (true === $input->getOption(self::OPTION_VARIABLES)) {
             $rows = [];
@@ -90,7 +89,7 @@ class SkeletonShowCommand extends AbstractCrafterCommand
             return Command::SUCCESS;
         }
 
-        $output->writeln($this->skeletonRenderer->render(
+        $io->writeln($this->skeletonRenderer->render(
             $identifier,
             $this->parseVariables($input),
             $extensionKey
