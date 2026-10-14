@@ -159,7 +159,8 @@ class AuditCommand extends AbstractCrafterCommand
 
         foreach ($findings as $finding) {
             if ('' !== $finding->hint) {
-                $hints['vendor/bin/typo3 ' . $finding->hint] = true;
+                $command                                 = str_starts_with($finding->hint, 'crafter:') ? substr($finding->hint, 8) : $finding->hint;
+                $hints['vendor/bin/crafter ' . $command] = true;
             }
         }
 

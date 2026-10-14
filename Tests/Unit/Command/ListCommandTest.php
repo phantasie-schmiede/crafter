@@ -32,6 +32,6 @@ final class ListCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('crafter:make:model', $tester->getDisplay());
         self::assertStringContainsString('Creates a domain model and optionally its repository', $tester->getDisplay());
         self::assertStringContainsString('crafter:list', $tester->getDisplay());
-        self::assertStringContainsString('vendor/bin/typo3 <command> --help', $tester->getDisplay());
+        self::assertStringContainsString('vendor/bin/crafter <command> --help', $tester->getDisplay());
     }
 }

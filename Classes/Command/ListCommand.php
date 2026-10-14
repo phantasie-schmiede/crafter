@@ -58,7 +58,7 @@ class ListCommand extends AbstractCrafterCommand
 
         $io->title('Crafter commands');
         $io->table(['Command', 'Description'], $rows);
-        $io->note('Run "vendor/bin/typo3 <command> --help" for the arguments and options of a single command.');
+        $io->note('Run "vendor/bin/crafter <command> --help" for the arguments and options of a single command.');
 
         return Command::SUCCESS;
     }

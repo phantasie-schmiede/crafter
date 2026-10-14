@@ -338,7 +338,7 @@ class MakeExtensionCommand extends AbstractCrafterCommand
             ),
             sprintf('Require it: composer require %s:@dev', $blueprint->composerName),
             sprintf('Install the tooling: cd %s && composer install', $this->makeRelative($extensionPath)),
-            sprintf('Add a model: vendor/bin/typo3 crafter:make:model -e %s', $blueprint->extensionKey),
+            sprintf('Add a model: vendor/bin/crafter make:model -e %s', $blueprint->extensionKey),
         ]);
     }
 

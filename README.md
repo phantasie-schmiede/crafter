@@ -12,36 +12,48 @@ composer require psbits/crafter
 
 | Command                           | Purpose                                                                  |
 |-----------------------------------|--------------------------------------------------------------------------|
+| `crafter:audit`                   | Checks an extension against the conventions Crafter generates by         |
+| `crafter:config:dump`             | Shows the effective configuration; `--origins` reveals the winning layer |
+| `crafter:list`                    | Lists all crafter commands with a short description                      |
+| `crafter:make:backend-controller` | Creates a backend module controller and registers the module             |
+| `crafter:make:controller`         | Creates a frontend controller with templates, language files and plugin  |
+| `crafter:make:event-listener`     | Creates a PSR-14 event listener                                          |
 | `crafter:make:extension`          | Creates the base structure of a new TYPO3 extension                      |
 | `crafter:make:model`              | Creates a domain model and optionally its repository and controller      |
 | `crafter:make:repository`         | Creates a repository for an existing domain model                        |
-| `crafter:make:controller`         | Creates a frontend controller with templates, language files and plugin  |
-| `crafter:make:backend-controller` | Creates a backend module controller and registers the module             |
 | `crafter:make:service`            | Creates a service class with its constructor dependencies                |
-| `crafter:make:event-listener`     | Creates a PSR-14 event listener                                          |
 | `crafter:make:view-helper`        | Creates a Fluid view helper                                              |
-| `crafter:audit`                   | Checks an extension against the conventions Crafter generates by         |
-| `crafter:sync`                    | Brings the toolchain files of an existing extension in sync              |
-| `crafter:config:dump`             | Shows the effective configuration; `--origins` reveals the winning layer |
 | `crafter:skeleton:list`           | Lists all skeletons and the root path each one is loaded from            |
-| `crafter:skeleton:where`          | Shows all lookup locations of a skeleton and which one wins              |
-| `crafter:skeleton:show`           | Renders a skeleton with the effective variables without writing a file   |
 | `crafter:skeleton:publish`        | Copies a skeleton into an overriding root path for customization         |
+| `crafter:skeleton:show`           | Renders a skeleton with the effective variables without writing a file   |
+| `crafter:skeleton:where`          | Shows all lookup locations of a skeleton and which one wins              |
+| `crafter:sync`                    | Brings the toolchain files of an existing extension in sync              |
 
 All commands accept `--extension|-e` to resolve configuration and skeletons for a specific extension. Every command
 that writes files supports `--dry-run` and `--force`.
 
+The extension ships a `vendor/bin/crafter` wrapper as the entry point for all commands. It suggests close matches
+for an unknown name. Every known command is delegated to the regular `vendor/bin/typo3` CLI with all arguments and
+options, so the wrapper never changes what a command does. The `crafter:` prefix is optional:
+
+```bash
+vendor/bin/crafter                  # lists all commands
+vendor/bin/crafter make:model ...   # same as vendor/bin/typo3 crafter:make:model ...
+```
+
+All examples in this document use the wrapper.
+
 ## Creating an Extension
 
 ```bash
-vendor/bin/typo3 crafter:make:extension budget_tracker
+vendor/bin/crafter make:extension budget_tracker
 ```
 
 The command asks for vendor, title, description, author, license, state, version and which file groups to create.
 Every question can be answered upfront with the matching option, and `--no-interaction` runs it fully unattended:
 
 ```bash
-vendor/bin/typo3 crafter:make:extension budget_tracker \
+vendor/bin/crafter make:extension budget_tracker \
     --vendor=PSBits --description="Budget tracking" --groups=core,license,quality --no-interaction
 ```
 
@@ -79,14 +91,14 @@ requires the `TYPO3_API_TOKEN` repository secret in the extension's repository.
 ## Creating a Domain Model
 
 ```bash
-vendor/bin/typo3 crafter:make:model Product -e budget_tracker
+vendor/bin/crafter make:model Product -e budget_tracker
 ```
 
 The command asks for the properties one after another and afterwards whether the matching repository should be
 created as well. Non-interactively every property is passed as a comma separated list of `key=value` pairs:
 
 ```bash
-vendor/bin/typo3 crafter:make:model Product -e budget_tracker --with-repository --no-interaction \
+vendor/bin/crafter make:model Product -e budget_tracker --with-repository --no-interaction \
     --property="name=title,type=string,required=1" \
     --property="name=price,type=decimal" \
     --property="name=images,type=file" \
@@ -130,7 +142,7 @@ top when a property is marked as required, and `crafter.modelCtrl` defines the `
 ## Creating a Controller
 
 ```bash
-vendor/bin/typo3 crafter:make:controller Product -e my_extension --actions=crud
+vendor/bin/crafter make:controller Product -e my_extension --actions=crud
 ```
 
 `--actions` takes a comma separated list of actions, `crud` being the shortcut for all of them. Without the option
@@ -168,9 +180,9 @@ form. Setting a type to `~` excludes it from generated forms.
 ## Creating Supporting Classes
 
 ```bash
-vendor/bin/typo3 crafter:make:service Import -e my_extension -d ProductRepository -d PersistenceManager
-vendor/bin/typo3 crafter:make:event-listener ProductEnricher -e my_extension -E 'TYPO3\CMS\Core\Database\Event\AlterTableDefinitionStatementsEvent'
-vendor/bin/typo3 crafter:make:view-helper Teaser -e my_extension --sub-path=Product -a 'product:object:1:The product' -r array
+vendor/bin/crafter make:service Import -e my_extension -d ProductRepository -d PersistenceManager
+vendor/bin/crafter make:event-listener ProductEnricher -e my_extension -E 'TYPO3\CMS\Core\Database\Event\AlterTableDefinitionStatementsEvent'
+vendor/bin/crafter make:view-helper Teaser -e my_extension --sub-path=Product -a 'product:object:1:The product' -r array
 ```
 
 `--dependency|-d` may be repeated and takes either a fully qualified class name or a short one. Short names are
@@ -199,7 +211,7 @@ crafter:
 ## Creating a Backend Module
 
 ```bash
-vendor/bin/typo3 crafter:make:backend-controller Import -e my_extension -a showUploadForm,import -d ImportService
+vendor/bin/crafter make:backend-controller Import -e my_extension -a showUploadForm,import -d ImportService
 ```
 
 The command creates the controller extending Foundation's `AbstractModuleController`, one Fluid template and one
@@ -235,7 +247,7 @@ skeletonRootPaths:
 To use an own copyright block in every generated PHP class, publish and edit a single file:
 
 ```bash
-vendor/bin/typo3 crafter:skeleton:publish Php/FileHeader
+vendor/bin/crafter skeleton:publish Php/FileHeader
 ```
 ```
 /*
@@ -326,8 +338,8 @@ a generator assembles a file from. Check `$event->getIdentifier()` before acting
 ## Auditing
 
 ```bash
-vendor/bin/typo3 crafter:audit my_extension
-vendor/bin/typo3 crafter:audit my_extension -c language -c orphan --strict
+vendor/bin/crafter audit my_extension
+vendor/bin/crafter audit my_extension -c language -c orphan --strict
 ```
 
 `crafter:audit` compares an existing extension against the conventions Crafter generates by. It never writes
@@ -386,8 +398,8 @@ An extension's own `Build/` and `vendor/` are excluded from the scan, so the qua
 drifted:
 
 ```bash
-vendor/bin/typo3 crafter:sync budget_tracker
-vendor/bin/typo3 crafter:sync budget_tracker --dry-run
+vendor/bin/crafter sync budget_tracker
+vendor/bin/crafter sync budget_tracker --dry-run
 ```
 
 Which files are managed and how is defined in `crafter.sync.renewable`:
