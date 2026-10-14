@@ -58,7 +58,7 @@ delegate($vendorDir, $target, array_slice($arguments, 1));
 function locateVendorDir(): string
 {
     $candidates = [
-        dirname(__DIR__, 2), // installed as a package: <project>/vendor
+        dirname(__DIR__, 3), // installed as a package: <project>/vendor
         dirname(__DIR__) . '/.Build/vendor', // repository local build
     ];
 
@@ -149,6 +149,9 @@ function renderUnknown(SymfonyStyle $io, string $key, array $inventory): void
 }
 
 /**
+ * The distance is measured against the name without the "crafter:" prefix, so that partial
+ * command names like "makeModel" suggest "crafter:make:model".
+ *
  * @param array<string, array{description: string}> $inventory
  */
 function suggest(string $key, array $inventory): array
@@ -156,8 +159,11 @@ function suggest(string $key, array $inventory): array
     $suggestions = [];
 
     foreach (array_keys($inventory) as $name) {
-        if (3 >= levenshtein($key, $name)) {
-            $suggestions[] = [$name, levenshtein($key, $name)];
+        $short = str_starts_with($name, 'crafter:') ? substr($name, 8) : $name;
+        $distance = min(levenshtein($key, $name), levenshtein($key, $short));
+
+        if (3 >= $distance) {
+            $suggestions[] = [$name, $distance];
         }
     }
 
