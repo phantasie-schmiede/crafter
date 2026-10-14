@@ -1,15 +1,4 @@
 {
-    "name": "psbits/crafter",
-    "description": "Code generator for TYPO3 extensions",
-    "type": "typo3-cms-extension",
-    "license": "GPL-3.0-or-later",
-    "keywords": [
-        "code-generator",
-        "dev",
-        "extension",
-        "scaffolding",
-        "typo3"
-    ],
     "authors": [
         {
             "name": "Daniel Ablass",
@@ -31,6 +20,31 @@
     "bin": [
         "bin/crafter"
     ],
+    "config": {
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        },
+        "bin-dir": ".Build/bin",
+        "sort-packages": true,
+        "vendor-dir": ".Build/vendor"
+    },
+    "description": "Code and file generator for TYPO3 extensions",
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "crafter",
+            "web-dir": ".Build/public"
+        }
+    },
+    "keywords": [
+        "code-generator",
+        "dev",
+        "extension",
+        "scaffolding",
+        "typo3"
+    ],
+    "license": "GPL-3.0-or-later",
+    "name": "psbits/crafter",
     "require": {
         "ext-fileinfo": "*",
         "ext-intl": "*",
@@ -51,25 +65,6 @@
         "saschaegerer/phpstan-typo3": "^2.1 || ^3.0",
         "typo3/coding-standards": "^0.5.3",
         "typo3/testing-framework": "^9.5"
-    },
-    "config": {
-        "allow-plugins": {
-            "typo3/class-alias-loader": true,
-            "typo3/cms-composer-installers": true
-        },
-        "bin-dir": ".Build/bin",
-        "preferred-install": {
-            "typo3/cms-core": "source",
-            "*": "dist"
-        },
-        "sort-packages": true,
-        "vendor-dir": ".Build/vendor"
-    },
-    "extra": {
-        "typo3/cms": {
-            "extension-key": "crafter",
-            "web-dir": ".Build/public"
-        }
     },
     "scripts": {
         "analyze:php": "phpstan analyse --configuration=Build/Quality/phpstan.neon.dist --no-progress",
@@ -112,5 +107,6 @@
         "test:unit": "php -d memory_limit=1G .Build/bin/phpunit -c Build/Testing/UnitTests.xml",
         "test:unit:update-fixtures": "CRAFTER_UPDATE_FIXTURES=1 php -d memory_limit=1G .Build/bin/phpunit -c Build/Testing/UnitTests.xml",
         "validate:composer": "composer validate --no-check-publish"
-    }
+    },
+    "type": "typo3-cms-extension"
 }
