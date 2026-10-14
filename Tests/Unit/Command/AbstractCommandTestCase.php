@@ -13,6 +13,7 @@ namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PSBits\Crafter\Command\AuditCommand;
 use PSBits\Crafter\Command\ConfigDumpCommand;
+use PSBits\Crafter\Command\ListCommand;
 use PSBits\Crafter\Command\MakeBackendControllerCommand;
 use PSBits\Crafter\Command\MakeControllerCommand;
 use PSBits\Crafter\Command\MakeEventListenerCommand;
@@ -33,6 +34,7 @@ use PSBits\Crafter\Service\ExtensionAuditor;
 use PSBits\Crafter\Service\FieldTypeRegistry;
 use PSBits\Crafter\Service\ModelPropertyReader;
 use PSBits\Crafter\Tests\Unit\AbstractGeneratorTestCase;
+use PSBits\Crafter\Utility\CommandInventory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -50,6 +52,7 @@ abstract class AbstractCommandTestCase extends AbstractGeneratorTestCase
 {
     protected AuditCommand                 $auditCommand;
     protected ConfigDumpCommand            $configDumpCommand;
+    protected ListCommand                  $listCommand;
     protected MakeBackendControllerCommand $makeBackendControllerCommand;
     protected MakeControllerCommand        $makeControllerCommand;
     protected MakeEventListenerCommand     $makeEventListenerCommand;
@@ -77,6 +80,7 @@ abstract class AbstractCommandTestCase extends AbstractGeneratorTestCase
             )
         );
         $this->configDumpCommand            = new ConfigDumpCommand($this->configurationService);
+        $this->listCommand                  = new ListCommand(new CommandInventory());
         $this->makeBackendControllerCommand = new MakeBackendControllerCommand(
             $this->backendControllerGenerator,
             $this->classGenerator,

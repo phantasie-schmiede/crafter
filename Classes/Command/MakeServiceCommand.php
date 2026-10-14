@@ -34,6 +34,20 @@ class MakeServiceCommand extends AbstractMakeClassCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a service class with its constructor dependencies.
+
+            Dependencies are given with the repeatable option --dependency as fully qualified
+            class names or as short names like ContactRepository, which are resolved against the
+            target extension. Use --sub-path to place the service in a sub directory of the base
+            directory of the class type.
+
+            Example:
+              crafter:make:service --extension budget_manager Import \
+                  --dependency ContactRepository --sub-path Import
+            HELP
+        );
         $this->addDependencyOption();
         $this->addSubPathOption();
     }

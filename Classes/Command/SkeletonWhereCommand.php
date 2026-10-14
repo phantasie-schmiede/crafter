@@ -41,6 +41,15 @@ class SkeletonWhereCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Shows all lookup locations of a skeleton in priority order and marks which one
+            currently wins. Locations without a file are listed as missing.
+
+            Example:
+              crafter:skeleton:where Php/FileHeader --extension budget_manager
+            HELP
+        );
         $this->addArgument(
             self::ARGUMENT_IDENTIFIER,
             InputArgument::REQUIRED,

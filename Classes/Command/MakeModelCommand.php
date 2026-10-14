@@ -64,6 +64,29 @@ class MakeModelCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a domain model with strongly typed properties and, optionally, the matching
+            repository and a CRUD controller including templates and language files.
+
+            The TCA is derived from the attributes of the model, there is nothing to maintain in
+            Configuration/TCA. Run "vendor/bin/typo3 extension:setup" afterwards to update the
+            database schema of the new table.
+
+            Properties can either be asked interactively or given non-interactively with the
+            repeatable option --property as comma separated key=value pairs:
+              --property "name=title,type=string,required=1"
+              --property "name=contact,type=relationSingle,linkedClass=Contact"
+
+            The available field types are listed by "crafter:config:dump".
+
+            Example:
+              crafter:make:model --extension budget_manager Contact \
+                  --property "name=title,type=string,required=1" \
+                  --property "name=email,type=email" \
+                  --with-repository --with-controller
+            HELP
+        );
         $this->addFileOptions();
         $this->addArgument(self::ARGUMENT_NAME, InputArgument::OPTIONAL, 'Model name, e.g. Contact');
         $this->addOption(

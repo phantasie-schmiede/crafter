@@ -60,6 +60,20 @@ class MakeControllerCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a frontend controller, optionally with CRUD actions, Fluid templates and language
+            files, and registers a plugin in the ExtensionInformation of the extension.
+
+            The model the controller works with defaults to the controller name and can be overridden
+            with --model. The actions are a comma separated list or the single word "crud" for all
+            CRUD actions. Use --no-plugin, --no-templates or --no-language to drop single artifacts.
+
+            Example:
+              crafter:make:controller --extension budget_manager Product --actions crud
+              crafter:make:controller --extension budget_manager Report --actions "list,show" --no-plugin
+            HELP
+        );
         $this->addFileOptions();
         $this->addArgument(self::ARGUMENT_NAME, InputArgument::OPTIONAL, 'Controller name without suffix, e.g. Product');
         $this->addOption(

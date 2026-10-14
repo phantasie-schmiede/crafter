@@ -56,6 +56,21 @@ class MakeBackendControllerCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a backend module controller including its templates, language files and the
+            module registration in the ExtensionInformation of the extension.
+
+            The actions are a comma separated list, the first one becomes the default action of the
+            module (defaults to "index"). Constructor dependencies are given with the repeatable
+            option --dependency as fully qualified class names or short names like ContactRepository.
+            Use --no-templates, --no-language or --no-module to drop single artifacts.
+
+            Example:
+              crafter:make:backend-controller --extension budget_manager Import \
+                  --actions "index,upload" --dependency ImportService
+            HELP
+        );
         $this->addFileOptions();
         $this->addArgument(
             self::ARGUMENT_NAME,

@@ -70,6 +70,20 @@ class MakeExtensionCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates the base structure of a new TYPO3 extension including composer.json,
+            ext_emconf.php, ext_localconf.php, the ExtensionInformation, a
+            Configuration/Services.yaml, the quality toolchain and the agent instructions.
+
+            The extension key is given in lower_underscored notation. The further details
+            (author, vendor, license, ...) are asked interactively or can be given as options
+            for a non-interactive run.
+
+            Example:
+              crafter:make:extension budget_manager --author "Daniel Ablass" --vendor PSBits
+            HELP
+        );
         $this->addFileOptions();
         $this->addArgument(
             self::ARGUMENT_EXTENSION_KEY,

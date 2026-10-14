@@ -46,6 +46,17 @@ class SkeletonShowCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Renders a skeleton with the effective variables without writing a file. Additional
+            placeholder values can be injected with the repeatable option --set in the form
+            name=value. With --variables the available placeholders are listed instead of the
+            rendered content.
+
+            Example:
+              crafter:skeleton:show Php/FileHeader --extension budget_manager --set "year=2026"
+            HELP
+        );
         $this->addArgument(
             self::ARGUMENT_IDENTIFIER,
             InputArgument::REQUIRED,

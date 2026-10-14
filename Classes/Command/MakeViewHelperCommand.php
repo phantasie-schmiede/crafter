@@ -58,6 +58,21 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a Fluid view helper with typed arguments and a configurable return type of
+            the render() method.
+
+            Arguments are given with the repeatable option --argument in the form
+            name[:type[:required[:description]]], where the type is one of array, boolean,
+            integer, mixed, object and string. The return type defaults to string and is chosen
+            from the types configured under crafter.viewHelperReturnTypes.
+
+            Example:
+              crafter:make:view-helper --extension budget_manager ContactView \
+                  --argument "contact:object:1:The contact to render" --return-type string
+            HELP
+        );
         $this->addDependencyOption();
         $this->addSubPathOption();
         $this->addOption(

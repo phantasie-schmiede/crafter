@@ -47,6 +47,16 @@ class MakeRepositoryCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a repository for an existing domain model. The class extends the repository
+            base class configured under crafter.defaults.repositoryExtends and is ready to hold
+            the search methods of the model.
+
+            Example:
+              crafter:make:repository --extension budget_manager Contact
+            HELP
+        );
         $this->addFileOptions();
         $this->addArgument(
             self::ARGUMENT_NAME,

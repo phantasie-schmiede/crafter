@@ -51,6 +51,17 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Copies a skeleton into an overriding root path for customization. Without --priority
+            the extension root path is targeted when --extension is given, otherwise the project
+            root path. The priorities are configured under crafter.skeletonRootPaths. With
+            --dry-run the copy is only reported, with --force an existing override is replaced.
+
+            Example:
+              crafter:skeleton:publish Php/FileHeader --extension budget_manager
+            HELP
+        );
         $this->addFileOptions();
         $this->addArgument(
             self::ARGUMENT_IDENTIFIER,

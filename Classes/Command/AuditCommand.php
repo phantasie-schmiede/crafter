@@ -48,6 +48,19 @@ class AuditCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Checks an extension against the conventions Crafter generates by and reports every
+            deviation with a severity, grouped by category. The findings do not modify any file.
+
+            The extension is given as argument or via --extension. The repeatable option
+            --category limits the audit to specific categories. With --strict, warnings fail the
+            run, not only errors.
+
+            Example:
+              crafter:audit budget_manager --category model --strict
+            HELP
+        );
         $this->addArgument(
             self::ARGUMENT_EXTENSION_KEY,
             InputArgument::OPTIONAL,

@@ -35,6 +35,21 @@ class SkeletonListCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
+    protected function configure(): void
+    {
+        parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Lists all available skeletons and the root path each one is currently loaded from,
+            in priority order. Skeletons that are overridden by a project or extension root path
+            are marked.
+
+            Example:
+              crafter:skeleton:list --extension budget_manager
+            HELP
+        );
+    }
+
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);

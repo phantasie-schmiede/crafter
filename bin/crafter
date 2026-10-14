@@ -1,0 +1,183 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of PSBits Crafter.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
+ */
+
+use PSBits\Crafter\Utility\CommandInventory;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+/**
+ * Entry point for the crafter commands without booting the whole TYPO3 console for help purposes.
+ *
+ * Known commands are delegated to the regular "typo3" CLI, unknown ones produce the list of available
+ * crafter commands including a short description.
+ */
+
+$vendorDir = locateVendorDir();
+require $vendorDir . '/autoload.php';
+
+$io        = new SymfonyStyle(new ArrayInput([]), new ConsoleOutput());
+$inventory = (new CommandInventory())->find();
+$arguments = array_slice($_SERVER['argv'] ?? [], 1);
+$key       = $arguments[0] ?? null;
+
+if (null === $key || in_array($key, ['list', 'help', '-h', '--help'], true)) {
+    if ('help' === $key && isset($arguments[1])) {
+        $target = resolveTarget($arguments[1], $inventory);
+
+        if (null === $target) {
+            renderUnknown($io, $arguments[1], $inventory);
+            exit(1);
+        }
+
+        delegate($vendorDir, $target, ['--help']);
+    }
+
+    renderList($io, $inventory);
+    exit(0);
+}
+
+$target = resolveTarget($key, $inventory);
+
+if (null === $target) {
+    renderUnknown($io, $key, $inventory);
+    exit(1);
+}
+
+delegate($vendorDir, $target, array_slice($arguments, 1));
+
+function locateVendorDir(): string
+{
+    $candidates = [
+        dirname(__DIR__, 2), // installed as a package: <project>/vendor
+        dirname(__DIR__) . '/.Build/vendor', // repository local build
+    ];
+
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate . '/autoload.php') && is_file($candidate . '/typo3/cms-cli/typo3')) {
+            return $candidate;
+        }
+    }
+
+    fwrite(STDERR, 'Crafter could not locate the vendor directory of a TYPO3 project.' . PHP_EOL);
+    exit(1);
+}
+
+/**
+ * @param array<string, array{description: string}> $inventory
+ */
+function resolveTarget(?string $key, array $inventory): ?string
+{
+    if (null === $key) {
+        return null;
+    }
+
+    $candidates = [$key];
+
+    if (true !== str_starts_with($key, 'crafter:')) {
+        $candidates[] = 'crafter:' . $key;
+    }
+
+    foreach ($candidates as $candidate) {
+        if (isset($inventory[$candidate])) {
+            return $candidate;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * @param array<string, array{description: string}> $inventory
+ */
+function renderList(SymfonyStyle $io, array $inventory): void
+{
+    $io->title('PSBits Crafter');
+    $io->writeln([
+        'Usage:',
+        '  crafter <command> [arguments] [options]',
+        '  crafter help <command>',
+        '',
+    ]);
+
+    $rows = [];
+
+    foreach ($inventory as $name => $details) {
+        $rows[] = [$name, $details['description']];
+    }
+
+    $io->table(['Command', 'Description'], $rows);
+    $io->writeln('Every command delegates to "vendor/bin/typo3 <command>".');
+    $io->writeln('Run "crafter help <command>" for the options of a single command.');
+}
+
+/**
+ * @param array<string, array{description: string}> $inventory
+ */
+function renderUnknown(SymfonyStyle $io, string $key, array $inventory): void
+{
+    $io->error(sprintf('Unknown command "%s".', $key));
+
+    $suggestions = suggest($key, $inventory);
+
+    if ([] !== $suggestions) {
+        $io->writeln('Did you mean one of these?');
+
+        foreach ($suggestions as $suggestion) {
+            $io->writeln('  ' . $suggestion);
+        }
+
+        $io->writeln('');
+    }
+
+    $rows = [];
+
+    foreach ($inventory as $name => $details) {
+        $rows[] = [$name, $details['description']];
+    }
+
+    $io->table(['Command', 'Description'], $rows);
+}
+
+/**
+ * @param array<string, array{description: string}> $inventory
+ */
+function suggest(string $key, array $inventory): array
+{
+    $suggestions = [];
+
+    foreach (array_keys($inventory) as $name) {
+        if (3 >= levenshtein($key, $name)) {
+            $suggestions[] = [$name, levenshtein($key, $name)];
+        }
+    }
+
+    usort(
+        $suggestions,
+        static fn (array $left, array $right): int => [$left[1], $left[0]] <=> [$right[1], $right[0]]
+    );
+
+    $names = [];
+
+    foreach (array_slice($suggestions, 0, 5) as $pair) {
+        $names[] = $pair[0];
+    }
+
+    return array_values($names);
+}
+
+function delegate(string $vendorDir, string $command, array $arguments): void
+{
+    $_SERVER['argv'] = $GLOBALS['argv'] = array_merge(['typo3', $command], $arguments);
+    require $vendorDir . '/typo3/cms-cli/typo3';
+    // The CLI script terminates on its own, this line is never reached.
+}

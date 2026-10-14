@@ -41,6 +41,19 @@ class ConfigDumpCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Shows the effective Crafter configuration for an extension as merged YAML, including
+            the fieldTypes and classTypes catalogues and the skeleton root paths. The configuration
+            is resolved from the five layers: the shipped defaults, the project Crafter.yaml, the
+            extension Crafter.yaml, the command line and events.
+
+            With --origins every single value is listed together with the layer that provided it.
+
+            Example:
+              crafter:config:dump --extension budget_manager --origins
+            HELP
+        );
         $this->addOption(
             self::OPTION_ORIGINS,
             'o',

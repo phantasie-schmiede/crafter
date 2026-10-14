@@ -52,6 +52,20 @@ class MakeEventListenerCommand extends AbstractMakeClassCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a PSR-14 event listener registered via the AsEventListener attribute, with an
+            invoke() method that receives the event class.
+
+            The event class is given with --event as a fully qualified class name or asked
+            interactively. Constructor dependencies can be added with the repeatable option
+            --dependency.
+
+            Example:
+              crafter:make:event-listener --extension budget_manager BeforeFileWriteListener \
+                  --event PSBits\Crafter\Event\BeforeFileWriteEvent
+            HELP
+        );
         $this->addDependencyOption();
         $this->addOption(
             self::OPTION_EVENT,

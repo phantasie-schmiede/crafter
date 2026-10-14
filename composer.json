@@ -28,6 +28,9 @@
             "TYPO3\\CMS\\Core\\Tests\\": ".Build/vendor/typo3/cms-core/Tests"
         }
     },
+    "bin": [
+        "bin/crafter"
+    ],
     "require": {
         "ext-fileinfo": "*",
         "ext-intl": "*",

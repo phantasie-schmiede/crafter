@@ -50,6 +50,20 @@ class SyncCommand extends AbstractCrafterCommand
     protected function configure(): void
     {
         parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Brings the toolchain of an existing extension in line with crafter.tools: quality
+            configuration, workflow and agent instructions are renewed according to the policies
+            configured under crafter.sync.renewable, and the managed keys of composer.json and
+            package.json are re-merged.
+
+            Each renewable file is renewed according to its policy (overwrite, merge or create
+            if missing), manual entries survive. With --dry-run the run is only reported.
+
+            Example:
+              crafter:sync budget_manager --dry-run
+            HELP
+        );
         $this->addOption(
             self::OPTION_DRY_RUN,
             null,
