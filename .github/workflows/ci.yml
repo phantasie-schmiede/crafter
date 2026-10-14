@@ -13,6 +13,11 @@ permissions:
   contents: read
   pull-requests: read
 
+env:
+  # The core 14.3 `asset:publish` composer script needs a `typo3` binary from
+  # .Build/bin; the suites boot no TYPO3 instance, so it is skipped.
+  TYPO3_SKIP_ASSET_PUBLISH: '1'
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -91,7 +96,9 @@ jobs:
       - name: Cache Composer
         uses: actions/cache@v4
         with:
-          path: .Build/vendor
+          path: |
+            .Build/vendor
+            .Build/bin
           key: vendor-${{ runner.os }}-t3${{ matrix.typo3 }}-p${{ matrix.php }}-${{ matrix.lowest }}-${{ hashFiles('composer.json') }}
           restore-keys: |
             vendor-${{ runner.os }}-t3${{ matrix.typo3 }}-p${{ matrix.php }}-${{ matrix.lowest }}-
@@ -134,7 +141,9 @@ jobs:
       - name: Cache Composer
         uses: actions/cache@v4
         with:
-          path: .Build/vendor
+          path: |
+            .Build/vendor
+            .Build/bin
           key: vendor-${{ runner.os }}-coverage-t313.4-p8.4-${{ hashFiles('composer.json') }}
           restore-keys: |
             vendor-${{ runner.os }}-coverage-
@@ -190,7 +199,9 @@ jobs:
       - name: Cache Composer
         uses: actions/cache@v4
         with:
-          path: .Build/vendor
+          path: |
+            .Build/vendor
+            .Build/bin
           key: vendor-${{ runner.os }}-qa-t313.4-${{ hashFiles('composer.json') }}
           restore-keys: |
             vendor-${{ runner.os }}-qa-t313.4-
@@ -257,7 +268,9 @@ jobs:
       - name: Cache Composer
         uses: actions/cache@v4
         with:
-          path: .Build/vendor
+          path: |
+            .Build/vendor
+            .Build/bin
           key: vendor-${{ runner.os }}-qa-t314.3-${{ hashFiles('composer.json') }}
           restore-keys: |
             vendor-${{ runner.os }}-qa-t314.3-
