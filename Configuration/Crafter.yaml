@@ -182,6 +182,11 @@ crafter:
         - 'IllegalObjectTypeException'
         - 'UnknownObjectException'
 
+  # File permissions (octal) applied after a skeleton file is written.
+  # Key is the skeleton identifier, value the mode (e.g. 0o755 for executable hooks).
+  filePermissions:
+    'Extension/Quality/PreCommit': 0o755
+
   # Files created by crafter:make:extension, grouped by feature.
   # Key is the skeleton identifier, value the target path relative to the extension directory.
   # Entries can be removed, retargeted or extended. The group "core" is always created.

@@ -151,4 +151,24 @@ final class FileWriterTest extends AbstractCrafterTestCase
         $this->fileWriter->reset();
         self::assertSame([], $this->fileWriter->getResults());
     }
+
+    #[Test]
+    public function theFileModeIsAppliedWhenProvided(): void
+    {
+        $path = $this->getExtensionFilePath('Build/GitHooks/pre-commit');
+
+        $this->fileWriter->write($path, 'content', 0755);
+
+        self::assertSame(0755, fileperms($path) & 0777);
+    }
+
+    #[Test]
+    public function withoutAModeTheFileIsNotExecutable(): void
+    {
+        $path = $this->getExtensionFilePath('Build/GitHooks/pre-commit');
+
+        $this->fileWriter->write($path, 'content');
+
+        self::assertSame(0, fileperms($path) & 0111);
+    }
 }

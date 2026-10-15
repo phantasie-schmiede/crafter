@@ -408,6 +408,15 @@ Which files are managed and how is defined in `crafter.sync.renewable`:
 - `merge` (`composer.json`, `package.json`): the managed keys are merged, user owned scripts and dependencies survive
 - `overwrite` (`Build/*`, workflow files): always brought back to the current generator output
 
+Written files default to standard permissions. `crafter.filePermissions` assigns a specific mode to individual
+skeleton files, e.g. the executable pre-commit hook:
+
+```yaml
+crafter:
+  filePermissions:
+    'Extension/Quality/PreCommit': 0o755
+```
+
 Merge files are compared semantically, so reformatting or reordering an existing `composer.json` or `package.json`
 never counts as drift. The toolchain is also kept in sync automatically: every `crafter:make:*` command aligns
 these files after writing, and `crafter:audit -c toolchain` reports missing or outdated toolchain files.

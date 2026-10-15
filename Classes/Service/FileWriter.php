@@ -19,6 +19,8 @@ use PSBits\Crafter\Exception\CrafterException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function chmod;
+use function clearstatcache;
 use function dirname;
 use function sprintf;
 
@@ -65,9 +67,9 @@ class FileWriter
      * Writes a modification of an existing file. In contrast to write() the file is always updated, because the
      * content is derived from the file itself and adding something twice is prevented by the caller.
      */
-    public function modify(string $absoluteFilePath, string $content): WriteResult
+    public function modify(string $absoluteFilePath, string $content, int $mode = 0): WriteResult
     {
-        return $this->process($absoluteFilePath, $content, true);
+        return $this->process($absoluteFilePath, $content, true, $mode);
     }
 
     public function reset(bool $dryRun = false, bool $force = false): void
@@ -77,9 +79,9 @@ class FileWriter
         $this->results = [];
     }
 
-    public function write(string $absoluteFilePath, string $content): WriteResult
+    public function write(string $absoluteFilePath, string $content, int $mode = 0): WriteResult
     {
-        return $this->process($absoluteFilePath, $content, false);
+        return $this->process($absoluteFilePath, $content, false, $mode);
     }
 
     private function determineStatus(string $absoluteFilePath, string $content, bool $modification): WriteStatus
@@ -100,7 +102,7 @@ class FileWriter
         return true === $this->force ? WriteStatus::overwritten : WriteStatus::skipped;
     }
 
-    private function process(string $absoluteFilePath, string $content, bool $modification): WriteResult
+    private function process(string $absoluteFilePath, string $content, bool $modification, int $mode = 0): WriteResult
     {
         $event = new BeforeFileWriteEvent(
             $absoluteFilePath,
@@ -117,7 +119,7 @@ class FileWriter
             : $this->determineStatus($absoluteFilePath, $content, $modification);
 
         if (false === $this->dryRun && true === $status->hasChangedFile()) {
-            $this->putContents($absoluteFilePath, $content);
+            $this->putContents($absoluteFilePath, $content, $mode);
         }
 
         $result          = new WriteResult($absoluteFilePath, $status, $this->dryRun);
@@ -126,7 +128,7 @@ class FileWriter
         return $result;
     }
 
-    private function putContents(string $absoluteFilePath, string $content): void
+    private function putContents(string $absoluteFilePath, string $content, int $mode): void
     {
         $directory = dirname($absoluteFilePath);
 
@@ -139,6 +141,11 @@ class FileWriter
                 sprintf('File "%s" could not be written.', $absoluteFilePath),
                 1757426408
             );
+        }
+
+        if (0 !== $mode) {
+            chmod($absoluteFilePath, $mode);
+            clearstatcache(true, $absoluteFilePath);
         }
     }
 }

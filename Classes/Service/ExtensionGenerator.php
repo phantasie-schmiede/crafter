@@ -17,6 +17,7 @@ use PSBits\Crafter\Exception\CrafterException;
 
 use function in_array;
 use function is_array;
+use function is_int;
 use function sprintf;
 use function str_starts_with;
 use function strlen;
@@ -63,10 +64,17 @@ readonly class ExtensionGenerator
             $this->toolchainGenerator->getVariables($profile, $blueprint->extensionKey)
         );
 
+        $permissions = $this->configurationService->getValue('filePermissions', $blueprint->extensionKey, []);
+
         foreach ($files as $identifier => $relativePath) {
+            $mode = is_array($permissions) && is_int($permissions[$identifier] ?? null)
+                ? $permissions[$identifier]
+                : 0;
+
             $this->fileWriter->write(
                 $extensionPath . ltrim($relativePath, '/'),
-                $this->skeletonRenderer->render($identifier, $variables, $blueprint->extensionKey)
+                $this->skeletonRenderer->render($identifier, $variables, $blueprint->extensionKey),
+                $mode
             );
         }
 

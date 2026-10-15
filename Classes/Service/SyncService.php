@@ -27,6 +27,7 @@ use function in_array;
 use function is_array;
 use function is_dir;
 use function is_file;
+use function is_int;
 use function is_string;
 use function json_decode;
 use function json_encode;
@@ -91,6 +92,8 @@ final class SyncService
 
         $profile = $this->extensionProfileService->fromDirectory($extensionPath);
 
+        $permissions = $this->configurationService->getValue('filePermissions', $extensionKey, []);
+
         foreach ($this->getRenewableEntries($extensionKey) as $identifier => $entry) {
             if (!$this->isApplicable($identifier, $profile, $extensionKey)) {
                 continue;
@@ -105,7 +108,11 @@ final class SyncService
             $expected = $this->getExpectedContent($identifier, $extensionKey, $profile);
 
             if (null !== $expected) {
-                $this->fileWriter->write($target, $expected);
+                $mode = is_array($permissions) && is_int($permissions[$identifier] ?? null)
+                    ? $permissions[$identifier]
+                    : 0;
+
+                $this->fileWriter->write($target, $expected, $mode);
             }
         }
 
@@ -535,10 +542,9 @@ final class SyncService
 
     private function resolvePackageTitle(string $namespace): string
     {
-        $segments  = explode('\\', $namespace);
-        $extension = implode(' ', preg_split('/(?<!^)[A-Z]/', end($segments) ?: ''));
+        $segments = explode('\\', $namespace);
 
-        return trim($extension);
+        return trim(preg_replace('/(?<!^)[A-Z]/', ' $0', end($segments) ?: ''));
     }
 
     /**
