@@ -95,10 +95,10 @@
         ],
         "qa": [
             "@fix:all",
+            "@lint:all",
             "@test:all"
         ],
         "test:all": [
-            "@lint:all",
             "@test:unit"
         ],
         "test:coverage": "sh Build/Scripts/runCoverage.sh",

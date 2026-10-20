@@ -108,60 +108,10 @@ domain models, controllers, services, event listeners, and view helpers. PHP nam
   `xs < sm < md < lg < xl < xxl`.
 - Constructor promotion with `protected readonly` is the default for service dependencies.
 
-### Quick reference: Generator service pattern
+### Pattern quick reference
 
-```php
-readonly class SomeGenerator
-{
-    public function __construct(
-        protected ConfigurationService $configurationService,
-        protected FileWriter           $fileWriter,
-        protected PathResolver         $pathResolver,
-        protected SkeletonRenderer     $skeletonRenderer,
-    ) {
-    }
-
-    public function generate(SomeBlueprint $blueprint): array
-    {
-        // resolve paths, render skeletons, write files
-        return $this->fileWriter->getResults();
-    }
-}
-```
-
-### Quick reference: Command pattern
-
-```php
-final class SomeCommand extends AbstractCrafterCommand
-{
-    protected function configure(): void
-    {
-        parent::configure();
-        $this->addFileOptions();
-        // add command-specific options
-    }
-
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $io   = $this->getIo($input, $output);
-        // ... orchestrate generators, show results
-        return Command::SUCCESS;
-    }
-}
-```
-
-### Quick reference: Data blueprint pattern
-
-```php
-readonly class SomeBlueprint
-{
-    public function __construct(
-        public readonly string $name,
-        // ...plain data, no logic beyond what's needed
-    ) {
-    }
-}
-```
+The generator service, command, and data blueprint patterns are documented in the
+`crafter-patterns` skill (`.opencode/skills/crafter-patterns/SKILL.md`).
 
 ## Safe change workflow
 
