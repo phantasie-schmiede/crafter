@@ -1,8 +1,8 @@
 {
     "authors": [
         {
-            "name": "Daniel Ablass",
             "email": "dn@phantasie-schmiede.de",
+            "name": "Daniel Ablass",
             "role": "Developer"
         }
     ],
@@ -61,6 +61,7 @@
         "friendsofphp/php-cs-fixer": "^3.95",
         "phpstan/phpstan": "^2.2",
         "phpunit/phpunit": "^11",
+        "psbits/qa": "@dev",
         "roave/security-advisories": "dev-latest",
         "saschaegerer/phpstan-typo3": "^2.1 || ^3.0",
         "typo3/testing-framework": "^9.5"
@@ -88,10 +89,13 @@
         "lint:classes": "npm run lint:classes",
         "lint:htmlxml": "npm run lint:htmlxml",
         "lint:php": "php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --dry-run --diff --verbose",
-        "lint:yaml": "yamllint -c Build/Quality/.yamllint.yml Build/Quality Configuration",
+        "lint:yaml": "yamllint -c .Build/vendor/psbits/qa/Resources/Quality/yamllint.yml Build/Quality Configuration",
         "post-install-cmd": [
             "npm install",
-            "cp Build/GitHooks/pre-commit .git/hooks/pre-commit"
+            ".Build/bin/qa link"
+        ],
+        "post-update-cmd": [
+            ".Build/bin/qa link"
         ],
         "qa": [
             "@fix:all",
@@ -101,10 +105,16 @@
         "test:all": [
             "@test:unit"
         ],
-        "test:coverage": "sh Build/Testing/Scripts/runCoverage.sh",
-        "test:coverage:update-baseline": "sh Build/Testing/Scripts/runCoverage.sh --update-baseline",
-        "test:unit": "php -d memory_limit=1G .Build/bin/phpunit -c Build/Testing/UnitTests.xml",
-        "test:unit:update-fixtures": "CRAFTER_UPDATE_FIXTURES=1 php -d memory_limit=1G .Build/bin/phpunit -c Build/Testing/UnitTests.xml",
+        "test:coverage": "sh .Build/vendor/psbits/qa/Resources/Testing/Scripts/runCoverage.sh",
+        "test:coverage:update-baseline": "sh .Build/vendor/psbits/qa/Resources/Testing/Scripts/runCoverage.sh --update-baseline",
+        "test:unit": [
+            "php .Build/vendor/psbits/qa/Resources/Testing/renderPhpunitXml.php unit",
+            "php -d memory_limit=1G .Build/bin/phpunit -c .Build/phpunit/UnitTests.xml"
+        ],
+        "test:unit:update-fixtures": [
+            "php .Build/vendor/psbits/qa/Resources/Testing/renderPhpunitXml.php unit",
+            "CRAFTER_UPDATE_FIXTURES=1 php -d memory_limit=1G .Build/bin/phpunit -c .Build/phpunit/UnitTests.xml"
+        ],
         "validate:composer": "composer validate --no-check-publish"
     },
     "type": "typo3-cms-extension"

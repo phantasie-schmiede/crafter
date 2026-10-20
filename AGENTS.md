@@ -134,7 +134,7 @@ Repository quality checks are defined in `composer.json`, `package.json`, and `B
 
 - `fix:all` **rewrites source files** (runs class attribute linting, Prettier for XML/XLF, php-cs-fixer);
   `lint:all` is the read-only verification.
-- A pre-commit hook (`Build/GitHooks/pre-commit`, auto-installed by `composer post-install-cmd`) runs `composer lint:all`.
+- A pre-commit hook (installed by `.Build/bin/qa link` from the psbits/qa package) runs `composer lint:all`.
 - Individual checks: `lint:php`, `analyze:php` (PHPStan), `lint:classes`, `lint:htmlxml`, `lint:yaml`,
   `audit:composer`, `validate:composer`.
 - Unit tests: `composer test:unit` (golden master tests, no database needed).

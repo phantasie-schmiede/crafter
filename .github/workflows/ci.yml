@@ -119,7 +119,7 @@ jobs:
           ${{ matrix.lowest && '--prefer-lowest --prefer-stable' || '' }}
 
       - name: Run unit tests
-        run: php -d memory_limit=1G .Build/bin/phpunit -c Build/Testing/UnitTests.xml
+        run: php .Build/vendor/psbits/qa/Resources/Testing/renderPhpunitXml.php unit && php -d memory_limit=1G .Build/bin/phpunit -c .Build/phpunit/UnitTests.xml
 
   coverage:
     name: 'Code coverage (TYPO3 13.4 / PHP 8.4)'
@@ -156,7 +156,7 @@ jobs:
       - name: Run coverage
         # Enforces the unit suite baseline from Build/Quality/coverage-baseline.json
         # and writes clover/cobertura/html reports to .Build/coverage/.
-        run: sh Build/Testing/Scripts/runCoverage.sh
+        run: sh .Build/vendor/psbits/qa/Resources/Testing/Scripts/runCoverage.sh
 
       - name: Upload coverage reports
         if: always()

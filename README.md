@@ -65,7 +65,7 @@ configuration value. The group `core` is always created:
 | `core`       | `composer.json`, `ext_emconf.php`, `ExtensionInformation`, `AGENTS.md`, `CLAUDE.md`, `Services.yaml`, … |
 | `license`    | `LICENSE.txt`                                                                                           |
 | `typoScript` | `Configuration/TypoScript/constants.typoscript` and `setup.typoscript`                                  |
-| `quality`    | `Build/Quality/*`, `Build/GitHooks/pre-commit`, `package.json`                                          |
+| `quality`    | `Build/Quality/*`, `package.json`                                                                       |
 | `ci`         | `.github/workflows/quality.yml` (toolchain checks, support matrix, TER publishing)                      |
 
 New extensions are written to `crafter.extensionRootPath` (`packages/` by default).
