@@ -156,7 +156,7 @@ jobs:
       - name: Run coverage
         # Enforces the unit suite baseline from Build/Quality/coverage-baseline.json
         # and writes clover/cobertura/html reports to .Build/coverage/.
-        run: sh Build/Scripts/runCoverage.sh
+        run: sh Build/Testing/Scripts/runCoverage.sh
 
       - name: Upload coverage reports
         if: always()

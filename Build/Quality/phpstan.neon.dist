@@ -2,9 +2,13 @@ parameters:
   level: 6
   paths:
     - ../../Classes
-    - ../../Tests
+    - ../../Tests/Unit
   excludePaths:
-    - ../../Tests/Fixtures/Expected/*
+    # Static analysis covers the shipped code and the unit tests. The functional tests need a booted
+    # testing framework instance (database, instance path, container) and are verified by the
+    # test:functional matrix jobs instead, so they are deliberately out of the analyser's scope.
+    # The (?) marks the path as optional: this repository has no functional suite.
+    - ../../Tests/Functional (?)
   tmpDir: .phpstan
 
 includes:

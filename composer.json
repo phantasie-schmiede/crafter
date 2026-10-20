@@ -101,8 +101,8 @@
         "test:all": [
             "@test:unit"
         ],
-        "test:coverage": "sh Build/Scripts/runCoverage.sh",
-        "test:coverage:update-baseline": "sh Build/Scripts/runCoverage.sh --update-baseline",
+        "test:coverage": "sh Build/Testing/Scripts/runCoverage.sh",
+        "test:coverage:update-baseline": "sh Build/Testing/Scripts/runCoverage.sh --update-baseline",
         "test:unit": "php -d memory_limit=1G .Build/bin/phpunit -c Build/Testing/UnitTests.xml",
         "test:unit:update-fixtures": "CRAFTER_UPDATE_FIXTURES=1 php -d memory_limit=1G .Build/bin/phpunit -c Build/Testing/UnitTests.xml",
         "validate:composer": "composer validate --no-check-publish"
