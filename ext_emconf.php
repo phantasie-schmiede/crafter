@@ -17,5 +17,5 @@ $EM_CONF[$_EXTKEY] = [
     'description'      => 'Code and file generator for TYPO3 extensions',
     'state'            => 'stable',
     'title'            => 'PSBits | Crafter',
-    'version'          => '1.0.0',
+    'version'          => '1.1.0',
 ];
