@@ -52,7 +52,7 @@
         "ext-simplexml": "*",
         "nikic/php-parser": "^5.0",
         "php": "^8.3",
-        "psbits/foundation": "^4.0",
+        "psbits/foundation": "^4.1",
         "symfony/console": "^7.0",
         "symfony/yaml": "^7.0",
         "typo3/cms-core": "^13.4 || ^14.3"
