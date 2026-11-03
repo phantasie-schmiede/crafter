@@ -89,6 +89,20 @@ domain models, controllers, services, event listeners, and view helpers. PHP nam
 - `Tests/Fixtures/Expected/` — Golden master fixtures for generator output.
 - `Tests/Unit/` — Unit tests wiring the real service graph against throwaway project directories.
 
+## Foundation integration
+
+Crafter scaffolds foundation-based extensions, so generated code deliberately deviates from the
+standard TYPO3 layout. Full conventions: `psbits-foundation` skill
+(`.opencode/skills/psbits-foundation/SKILL.md`).
+
+- Generated extensions carry TCA attributes (`#[Ctrl]`/`#[Column]`) on their domain models and
+  register plugins/modules/page types in `Classes/Data/ExtensionInformation.php` - the skeleton
+  `.stub` files (incl. `AgentsMd.stub`, which ships this documentation) reference the Foundation
+  classes. When changing skeletons, keep them in sync with the installed `psbits/foundation`
+  version (`.Build/vendor/psbits/foundation/`).
+- This repo itself ships no domain models, so there is no generated TCA and no `ext_tables.sql`
+  here; do not create either.
+
 ## Architecture and conventions
 
 - Strongly typed PHP (`declare(strict_types=1);`) is standard for classes. Every class file starts with the
