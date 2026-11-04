@@ -71,12 +71,12 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
     public function missingToolchainFileIsReported(): void
     {
         $this->generateExtension();
-        unlink($this->getExtensionFilePath('Build/Quality/.yamllint.yml'));
+        unlink($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
         $findings = $this->auditCategory('toolchain');
 
         self::assertCount(1, $findings);
         self::assertSame(AuditSeverity::warning, $findings[0]->severity);
-        self::assertSame('Build/Quality/.yamllint.yml', $findings[0]->path);
+        self::assertSame('Build/Quality/.php-cs-fixer.dist.php', $findings[0]->path);
     }
 
     #[Test]

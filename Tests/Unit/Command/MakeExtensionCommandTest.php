@@ -46,7 +46,7 @@ final class MakeExtensionCommandTest extends AbstractCommandTestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertFileExists($this->pathOf('budget_tracker', 'composer.json'));
         self::assertFileExists($this->pathOf('budget_tracker', 'ext_emconf.php'));
-        self::assertFileExists($this->pathOf('budget_tracker', '.github/workflows/quality.yml'));
+        self::assertFileExists($this->pathOf('budget_tracker', '.github/workflows/ci.yml'));
         $composer = json_decode((string)file_get_contents($this->pathOf('budget_tracker', 'composer.json')), true, 512, JSON_THROW_ON_ERROR);
         self::assertSame('acme/budget-tracker', $composer['name']);
         self::assertSame('Classes', $composer['autoload']['psr-4']['Acme\BudgetTracker\\']);

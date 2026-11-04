@@ -61,7 +61,7 @@ final class AuditCommandTest extends AbstractCommandTestCase
     public function warningsAreNotFatalWithoutStrict(): void
     {
         $this->generateCompleteExtension();
-        unlink($this->getExtensionFilePath('Build/Quality/.yamllint.yml'));
+        unlink($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
 
         $tester = $this->runCommand($this->auditCommand, ['extensionKey' => self::EXTENSION_KEY]);
 
@@ -73,7 +73,7 @@ final class AuditCommandTest extends AbstractCommandTestCase
     public function strictFailsOnWarningFindings(): void
     {
         $this->generateCompleteExtension();
-        unlink($this->getExtensionFilePath('Build/Quality/.yamllint.yml'));
+        unlink($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
 
         $tester = $this->runCommand($this->auditCommand, ['extensionKey' => self::EXTENSION_KEY, '--strict' => true]);
 

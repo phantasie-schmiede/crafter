@@ -42,7 +42,7 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         $profile = $this->extensionProfileService->fromPlannedFiles(['Classes/Domain/Model/Product.php']);
 
         self::assertSame(
-            ['composerAudit', 'phpCsFixer', 'phpStan'],
+            ['composerAudit', 'phpCsFixer', 'phpUnit', 'phpStan'],
             $this->toolchainGenerator->getEnabledTools($profile)
         );
         self::assertSame(
@@ -53,7 +53,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
                 'fix:php'           => 'php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --verbose',
                 'lint:all'          => ['@analyze:php', '@audit:composer', '@lint:php', '@validate:composer'],
                 'lint:php'          => 'php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --dry-run --diff --verbose',
-                'post-install-cmd'  => ['cp Build/GitHooks/pre-commit .git/hooks/pre-commit'],
+                'post-install-cmd'  => ['.Build/bin/qa link'],
+                'post-update-cmd'   => ['.Build/bin/qa link'],
+                'qa'                => ['@fix:all', '@lint:all', '@test:all'],
+                'test:all'          => [],
                 'validate:composer' => 'composer validate --no-check-publish',
             ],
             $this->toolchainGenerator->getManagedComposerScripts($profile)
@@ -61,8 +64,6 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertSame(
             [
                 'Extension/Quality/PhpCsFixer',
-                'Extension/Quality/PhpCsFixerClassBlockSeparation',
-                'Extension/Quality/PhpCsFixerPropertyNamesAlignment',
                 'Extension/Quality/PhpStan',
             ],
             array_keys($this->toolchainGenerator->getConfigFiles($profile))
@@ -78,8 +79,11 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
             [
                 'friendsofphp/php-cs-fixer'     => '^3.95',
                 'phpstan/phpstan'               => '^2.2',
+                'phpunit/phpunit'               => '^11',
+                'psbits/qa'                     => '@dev',
                 'roave/security-advisories'     => 'dev-latest',
-                'saschaegerer/phpstan-typo3'    => '^2.1',
+                'saschaegerer/phpstan-typo3'    => '^2.1 || ^3.0',
+                'typo3/testing-framework'       => '^9.5',
             ],
             $this->toolchainGenerator->getManagedComposerRequireDev($profile)
         );
@@ -88,19 +92,16 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
     #[Test]
     public function htmlProfileTurnsTheClassLinterAndPrettierOn(): void
     {
-        $profile   = $this->extensionProfileService->fromPlannedFiles(['Resources/Private/Templates/Product/List.html']);
-        $enabled   = $this->toolchainGenerator->getEnabledTools($profile);
-        $variables = $this->toolchainGenerator->getVariables($profile);
+        $profile = $this->extensionProfileService->fromPlannedFiles(['Resources/Private/Templates/Product/List.html']);
 
-        self::assertSame(['classLint', 'composerAudit', 'prettier'], $enabled);
+        self::assertSame(['classLint', 'composerAudit', 'prettier'], $this->toolchainGenerator->getEnabledTools($profile));
         self::assertTrue($this->toolchainGenerator->needsNode($profile));
-        self::assertStringContainsString('Setup Node.js', $variables['workflowNode']);
         self::assertSame(
             [
-                'fix:classes'  => 'node Build/Quality/lint-class-attributes.mjs',
-                'fix:htmlxml'  => 'prettier --config Build/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "**/*.{html,xml,xlf}"',
-                'lint:classes' => 'node Build/Quality/lint-class-attributes.mjs --dry-run',
-                'lint:htmlxml' => 'prettier --config Build/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"',
+                'fix:classes'  => 'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs',
+                'fix:htmlxml'  => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "**/*.{html,xml,xlf}"',
+                'lint:classes' => 'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs --dry-run',
+                'lint:htmlxml' => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"',
             ],
             $this->toolchainGenerator->getManagedPackageScripts($profile)
         );
@@ -112,29 +113,30 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
             ],
             $this->toolchainGenerator->getManagedPackageDevDependencies($profile)
         );
-        self::assertContains(
-            'Extension/Quality/LintClassAttributes',
-            array_keys($this->toolchainGenerator->getConfigFiles($profile))
+        self::assertSame(
+            ['Extension/Quality/PrettierIgnore' => 'Build/Quality/.prettierignore'],
+            $this->toolchainGenerator->getConfigFiles($profile)
         );
     }
 
     #[Test]
-    public function typoScriptProfileKeepsNodeOutOfTheWorkflow(): void
+    public function typoScriptProfileDoesNotRequireNode(): void
     {
-        $profile   = $this->extensionProfileService->fromPlannedFiles(['Configuration/TypoScript/setup.typoscript']);
-        $variables = $this->toolchainGenerator->getVariables($profile);
+        $profile = $this->extensionProfileService->fromPlannedFiles(['Configuration/TypoScript/setup.typoscript']);
 
         self::assertSame(['composerAudit', 'typoScriptLint'], $this->toolchainGenerator->getEnabledTools($profile));
         self::assertFalse($this->toolchainGenerator->needsNode($profile));
-        self::assertSame('', $variables['workflowNode']);
         self::assertSame(
             [
-                        'audit:composer'    => 'composer audit --abandoned=report',
-                        'lint:all'          => ['@audit:composer', '@lint:typoscript', '@validate:composer'],
-                        'lint:typoscript'   => 'typoscript-lint --config=Build/Quality/typoscript-lint.yml --ansi Configuration/TypoScript',
-                        'post-install-cmd'  => ['cp Build/GitHooks/pre-commit .git/hooks/pre-commit'],
-                        'validate:composer' => 'composer validate --no-check-publish',
-                    ],
+                'audit:composer'    => 'composer audit --abandoned=report',
+                'lint:all'          => ['@audit:composer', '@lint:typoscript', '@validate:composer'],
+                'lint:typoscript'   => 'typoscript-lint --config=.Build/vendor/psbits/qa/Resources/Quality/typoscript-lint.yml --ansi Configuration/TypoScript',
+                'post-install-cmd'  => ['.Build/bin/qa link'],
+                'post-update-cmd'   => ['.Build/bin/qa link'],
+                'qa'                => ['@lint:all', '@test:all'],
+                'test:all'          => [],
+                'validate:composer' => 'composer validate --no-check-publish',
+            ],
             $this->toolchainGenerator->getManagedComposerScripts($profile)
         );
     }
@@ -157,64 +159,6 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertStringContainsString('- `lint:htmlxml`', $variables['agentsToolChecks']);
         self::assertStringContainsString('- `audit:composer`', $variables['agentsToolChecks']);
         self::assertStringNotContainsString('lint:php', $variables['agentsToolChecks']);
-        self::assertStringContainsString('Class attribute lint', $variables['workflowSteps']);
-        self::assertStringContainsString('HTML/XML/XLF lint', $variables['workflowSteps']);
-        self::assertStringNotContainsString('PHP CS check', $variables['workflowSteps']);
-        self::assertStringNotContainsString('TypoScript lint', $variables['workflowSteps']);
-    }
-
-    #[Test]
-    public function theSupportMatrixAndTerPublishJobAreRenderedForTheWorkflow(): void
-    {
-        $profile   = $this->extensionProfileService->fromPlannedFiles([]);
-        $variables = $this->toolchainGenerator->getVariables($profile, self::EXTENSION_KEY);
-
-        self::assertStringContainsString('support-matrix:', $variables['workflowMatrix']);
-        self::assertStringContainsString('lowest: true', $variables['workflowMatrix']);
-        self::assertStringContainsString("php: '8.3'", $variables['workflowMatrix']);
-        self::assertStringContainsString("typo3: '13.4'", $variables['workflowMatrix']);
-        self::assertStringContainsString("php: '8.5'", $variables['workflowMatrix']);
-        self::assertStringContainsString("typo3: '14.3'", $variables['workflowMatrix']);
-        self::assertStringContainsString('--prefer-lowest --prefer-stable', $variables['workflowMatrix']);
-        self::assertStringContainsString('needs.support-matrix.result', $variables['workflowPublish']);
-        self::assertStringContainsString('needs: [quality, support-matrix]', $variables['workflowPublish']);
-        self::assertStringContainsString('publish-to-ter:', $variables['workflowPublish']);
-        self::assertStringContainsString(
-            '$_EXTKEY="' . self::EXTENSION_KEY . '"',
-            $variables['workflowPublish']
-        );
-    }
-
-    #[Test]
-    public function theTerPublishJobDependsOnlyOnQualityWithoutASupportMatrix(): void
-    {
-        $this->writeProjectConfiguration(<<<'YAML'
-            crafter:
-              ci:
-                matrix: []
-            YAML);
-        $profile   = $this->extensionProfileService->fromPlannedFiles([]);
-        $variables = $this->toolchainGenerator->getVariables($profile, self::EXTENSION_KEY);
-
-        self::assertSame('', $variables['workflowMatrix']);
-        self::assertStringContainsString('needs: [quality]', $variables['workflowPublish']);
-        self::assertStringNotContainsString('support-matrix', $variables['workflowPublish']);
-    }
-
-    #[Test]
-    public function theSupportMatrixAndTerPublishCanBeDisabled(): void
-    {
-        $this->writeProjectConfiguration(<<<'YAML'
-            crafter:
-              ci:
-                matrix: []
-                publishToTer: false
-            YAML);
-        $profile   = $this->extensionProfileService->fromPlannedFiles([]);
-        $variables = $this->toolchainGenerator->getVariables($profile, self::EXTENSION_KEY);
-
-        self::assertSame('', $variables['workflowMatrix']);
-        self::assertSame('', $variables['workflowPublish']);
     }
 
     #[Test]

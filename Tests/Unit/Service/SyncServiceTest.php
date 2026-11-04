@@ -62,10 +62,10 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         );
         self::assertFileExists($this->getExtensionFilePath('Build/Quality/phpstan.neon.dist'));
         self::assertFileExists($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
-        self::assertFileExists($this->getExtensionFilePath('Build/Quality/php-cs-fixer/ClassBlockSeparationFixer.php'));
-        self::assertFileExists($this->getExtensionFilePath('Build/Quality/php-cs-fixer/PropertyNamesAlignmentFixer.php'));
+        self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/php-cs-fixer/ClassBlockSeparationFixer.php'));
+        self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/php-cs-fixer/PropertyNamesAlignmentFixer.php'));
         self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/lint-class-attributes.mjs'));
-        self::assertFileExists($this->getExtensionFilePath('Build/GitHooks/pre-commit'));
+        self::assertFileDoesNotExist($this->getExtensionFilePath('Build/GitHooks/pre-commit'));
         self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/.yamllint.yml'));
         self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/prettier.config.mjs'));
 
@@ -89,7 +89,7 @@ final class SyncServiceTest extends AbstractCrafterTestCase
 
         $this->syncService->sync(self::EXTENSION_KEY);
 
-        self::assertFileExists($this->getExtensionFilePath('Build/Quality/lint-class-attributes.mjs'));
+        self::assertFileExists($this->getExtensionFilePath('Build/Quality/.prettierignore'));
         self::assertStringContainsString(
             '- `lint:classes`',
             (string)file_get_contents($this->getExtensionFilePath('AGENTS.md'))
@@ -97,6 +97,11 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         $composer = $this->readComposer();
         self::assertSame('npm run lint:classes', $composer['scripts']['lint:classes']);
         self::assertContains('@lint:classes', $composer['scripts']['lint:all']);
+        $packageJson = json_decode((string)file_get_contents($this->getExtensionFilePath('package.json')), true);
+        self::assertSame(
+            'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs --dry-run',
+            $packageJson['scripts']['lint:classes']
+        );
     }
 
     #[Test]
@@ -160,15 +165,15 @@ final class SyncServiceTest extends AbstractCrafterTestCase
     #[Test]
     public function overwriteRestoresADriftedQualityConfig(): void
     {
-        $this->createExtensionFile('Configuration/Settings.yaml', "foo: bar\n");
+        $this->createExtensionFile('Classes/Domain/Model/Product.php', "<?php\n");
         $this->createExtensionFile('composer.json', '{"name":"acme/demo-shop","license":"proprietary"}');
-        $this->createExtensionFile('Build/Quality/.yamllint.yml', '# broken');
+        $this->createExtensionFile('Build/Quality/.php-cs-fixer.dist.php', '// drifted');
 
         $this->syncService->sync(self::EXTENSION_KEY);
 
         self::assertSame(
-            "extends: default\n\nrules:\n  line-length:\n    max: 140\n    level: warning\n  comments: disable\n  document-start: disable\n  truthy: disable\n",
-            (string)file_get_contents($this->getExtensionFilePath('Build/Quality/.yamllint.yml'))
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn PSBits\Qa\Quality\CsFixerFactory::create([\n    'Classes',\n    'Configuration',\n]);\n",
+            (string)file_get_contents($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'))
         );
     }
 

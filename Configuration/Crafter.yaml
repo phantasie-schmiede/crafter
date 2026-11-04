@@ -182,11 +182,6 @@ crafter:
         - 'IllegalObjectTypeException'
         - 'UnknownObjectException'
 
-  # File permissions (octal) applied after a skeleton file is written.
-  # Key is the skeleton identifier, value the mode (e.g. 0o755 for executable hooks).
-  filePermissions:
-    'Extension/Quality/PreCommit': 0o755
-
   # Files created by crafter:make:extension, grouped by feature.
   # Key is the skeleton identifier, value the target path relative to the extension directory.
   # Entries can be removed, retargeted or extended. The group "core" is always created.
@@ -210,18 +205,11 @@ crafter:
       'Extension/TypoScript/Setup': 'Configuration/TypoScript/setup.typoscript'
     quality:
       'Extension/PackageJson': 'package.json'
-      'Extension/Quality/LintClassAttributes': 'Build/Quality/lint-class-attributes.mjs'
       'Extension/Quality/PhpCsFixer': 'Build/Quality/.php-cs-fixer.dist.php'
-      'Extension/Quality/PhpCsFixerClassBlockSeparation': 'Build/Quality/php-cs-fixer/ClassBlockSeparationFixer.php'
-      'Extension/Quality/PhpCsFixerPropertyNamesAlignment': 'Build/Quality/php-cs-fixer/PropertyNamesAlignmentFixer.php'
       'Extension/Quality/PhpStan': 'Build/Quality/phpstan.neon.dist'
-      'Extension/Quality/PreCommit': 'Build/GitHooks/pre-commit'
-      'Extension/Quality/Prettier': 'Build/Quality/prettier.config.mjs'
       'Extension/Quality/PrettierIgnore': 'Build/Quality/.prettierignore'
-      'Extension/Quality/TypoScriptLint': 'Build/Quality/typoscript-lint.yml'
-      'Extension/Quality/YamlLint': 'Build/Quality/.yamllint.yml'
     ci:
-      'Extension/Workflow/Quality': '.github/workflows/quality.yml'
+      'Extension/Workflow/Ci': '.github/workflows/ci.yml'
 
   # Tooling of the quality group. A tool is enabled when the extension profile contains one of the signals of its
   # "when" list; an empty list enables it always. Each tool contributes its own composer/npm scripts, require-dev
@@ -232,17 +220,12 @@ crafter:
       composerScripts:
         fix:classes: 'npm run fix:classes'
         lint:classes: 'npm run lint:classes'
-      configFiles:
-        'Extension/Quality/LintClassAttributes': 'Build/Quality/lint-class-attributes.mjs'
       needsNode: true
       packageScripts:
-        fix:classes: 'node Build/Quality/lint-class-attributes.mjs'
-        lint:classes: 'node Build/Quality/lint-class-attributes.mjs --dry-run'
+        fix:classes: 'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs'
+        lint:classes: 'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs --dry-run'
       when:
         - 'html'
-      workflowSteps:
-        - name: 'Class attribute lint'
-          run: 'composer lint:classes'
     composerAudit:
       agentsBullet: '`audit:composer` checks against known security advisories.'
       composerScripts:
@@ -250,9 +233,6 @@ crafter:
       requireDev:
         roave/security-advisories: 'dev-latest'
       when: []
-      workflowSteps:
-        - name: 'Composer security audit'
-          run: 'composer audit:composer'
     phpCsFixer:
       agentsBullet: '`lint:php`/`fix:php` run PHP-CS-Fixer.'
       composerScripts:
@@ -260,15 +240,16 @@ crafter:
         lint:php: 'php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --dry-run --diff --verbose'
       configFiles:
         'Extension/Quality/PhpCsFixer': 'Build/Quality/.php-cs-fixer.dist.php'
-        'Extension/Quality/PhpCsFixerClassBlockSeparation': 'Build/Quality/php-cs-fixer/ClassBlockSeparationFixer.php'
-        'Extension/Quality/PhpCsFixerPropertyNamesAlignment': 'Build/Quality/php-cs-fixer/PropertyNamesAlignmentFixer.php'
       requireDev:
         'friendsofphp/php-cs-fixer': '^3.95'
       when:
         - 'php'
-      workflowSteps:
-        - name: 'PHP CS check'
-          run: 'composer lint:php'
+    phpUnit:
+      requireDev:
+        'phpunit/phpunit': '^11'
+        'typo3/testing-framework': '^9.5'
+      when:
+        - 'php'
     phpStan:
       agentsBullet: '`analyze:php` runs PHPStan.'
       composerScripts:
@@ -277,19 +258,15 @@ crafter:
         'Extension/Quality/PhpStan': 'Build/Quality/phpstan.neon.dist'
       requireDev:
         'phpstan/phpstan': '^2.2'
-        'saschaegerer/phpstan-typo3': '^2.1'
+        'saschaegerer/phpstan-typo3': '^2.1 || ^3.0'
       when:
         - 'php'
-      workflowSteps:
-        - name: 'PHPStan'
-          run: 'composer analyze:php'
     prettier:
       agentsBullet: '`lint:htmlxml`/`fix:htmlxml` format HTML, XML and XLIF files with Prettier.'
       composerScripts:
         fix:htmlxml: 'npm run fix:htmlxml'
         lint:htmlxml: 'npm run lint:htmlxml'
       configFiles:
-        'Extension/Quality/Prettier': 'Build/Quality/prettier.config.mjs'
         'Extension/Quality/PrettierIgnore': 'Build/Quality/.prettierignore'
       needsNode: true
       packageDevDependencies:
@@ -297,52 +274,26 @@ crafter:
         prettier: '^3.6.2'
         prettier-plugin-organize-attributes: '^1.0.0'
       packageScripts:
-        fix:htmlxml: 'prettier --config Build/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "**/*.{html,xml,xlf}"'
-        lint:htmlxml: 'prettier --config Build/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"'
+        fix:htmlxml: 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "**/*.{html,xml,xlf}"'
+        lint:htmlxml: 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"'
       when:
         - 'html'
         - 'xml'
         - 'xlf'
-      workflowSteps:
-        - name: 'HTML/XML/XLF lint'
-          run: 'composer lint:htmlxml'
     typoScriptLint:
       agentsBullet: '`lint:typoscript` lints the TypoScript configuration.'
       composerScripts:
-        lint:typoscript: 'typoscript-lint --config=Build/Quality/typoscript-lint.yml --ansi Configuration/TypoScript'
-      configFiles:
-        'Extension/Quality/TypoScriptLint': 'Build/Quality/typoscript-lint.yml'
+        lint:typoscript: 'typoscript-lint --config=.Build/vendor/psbits/qa/Resources/Quality/typoscript-lint.yml --ansi Configuration/TypoScript'
       requireDev:
         'helmich/typo3-typoscript-lint': '^3.3'
       when:
         - 'typoscript'
-      workflowSteps:
-        - name: 'TypoScript lint'
-          run: 'composer lint:typoscript'
     yamlLint:
       agentsBullet: '`lint:yaml` lints YAML files with yamllint.'
       composerScripts:
-        lint:yaml: 'yamllint -c Build/Quality/.yamllint.yml Configuration'
-      configFiles:
-        'Extension/Quality/YamlLint': 'Build/Quality/.yamllint.yml'
+        lint:yaml: 'yamllint -c .Build/vendor/psbits/qa/Resources/Quality/yamllint.yml Configuration'
       when:
         - 'yaml'
-      workflowSteps:
-        - name: 'Install yamllint'
-          run: 'python -m pip install --user yamllint'
-        - name: 'YAML lint'
-          run: 'composer lint:yaml'
-
-  # Support matrix and TER publishing of the generated `quality.yml` workflow. Every matrix leg pins one core
-  # major and one PHP version and runs a dependency install; `lowest` additionally installs the lowest allowed
-  # dependencies. Setting the matrix to an empty list disables the job.
-  ci:
-    matrix:
-      - {lowest: true, php: '8.3', typo3: '13.4'}
-      - {php: '8.5', typo3: '14.3'}
-    # Adds the publish-to-ter job, which publishes the extension on semver tags. The publishing repository needs
-    # the TYPO3_API_TOKEN repository secret.
-    publishToTer: true
 
   # Files crafter:sync and the toolchain audit keep aligned with the generators.
   # policy:
@@ -351,17 +302,9 @@ crafter:
   #   overwrite       - always brought back to the current skeleton output
   sync:
     renewable:
-      - 'Extension/Workflow/Quality'
-      - 'Extension/Quality/YamlLint'
-      - 'Extension/Quality/TypoScriptLint'
       - 'Extension/Quality/PrettierIgnore'
-      - 'Extension/Quality/Prettier'
-      - 'Extension/Quality/PreCommit'
       - 'Extension/Quality/PhpStan'
       - 'Extension/Quality/PhpCsFixer'
-      - 'Extension/Quality/PhpCsFixerPropertyNamesAlignment'
-      - 'Extension/Quality/PhpCsFixerClassBlockSeparation'
-      - 'Extension/Quality/LintClassAttributes'
       - {identifier: 'Extension/PackageJson', policy: 'merge'}
       - {identifier: 'Extension/Composer', policy: 'merge'}
       - {identifier: 'Extension/ClaudeMd', policy: 'createIfMissing'}
@@ -648,10 +591,10 @@ crafter:
     authorEmail: 'dn@phantasie-schmiede.de'
     composerRequire:
       php: '^8.3'
-      psbits/foundation: '^4.0'
+      psbits/foundation: '^4.2.2'
       typo3/cms-core: '^13.4 || ^14.3'
     composerRequireDev:
-      {}
+      psbits/qa: '@dev'
     controllerExtends: 'TYPO3\CMS\Extbase\Mvc\Controller\ActionController'
     copyrightHolder: 'phantasie-schmiede'
     crudActions:
@@ -665,8 +608,8 @@ crafter:
     defaultLanguage: 'en'
     emConfCategory: 'plugin'
     emConfDepends:
-      foundation: '4.0'
-      php: '8.3'
+      foundation: '4.2.2'
+      php: '8.3.0-8.5.99'
       typo3: '13.4.0-14.99.99'
     emConfState: 'alpha'
     extensionFileGroups:

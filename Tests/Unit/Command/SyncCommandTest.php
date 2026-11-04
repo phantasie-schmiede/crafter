@@ -56,24 +56,24 @@ final class SyncCommandTest extends AbstractCommandTestCase
     }
 
     #[Test]
-    public function renewsADriftedWorkflowFile(): void
+    public function renewsADriftedQualityConfig(): void
     {
         $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
-        $path = $this->getExtensionFilePath('.github/workflows/quality.yml');
-        file_put_contents($path, file_get_contents($path) . "# drift\n");
+        $path = $this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php');
+        file_put_contents($path, file_get_contents($path) . "// drift\n");
 
         $tester = $this->runCommand($this->syncCommand, ['extensionKey' => self::EXTENSION_KEY]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame($this->getFixtureContent('Workflow/Quality.yml'), (string)file_get_contents($path));
+        self::assertStringContainsString('CsFixerFactory', (string)file_get_contents($path));
     }
 
     #[Test]
     public function dryRunLeavesDriftedFilesUntouched(): void
     {
         $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
-        $path    = $this->getExtensionFilePath('.github/workflows/quality.yml');
-        $drifted = file_get_contents($path) . "# drift\n";
+        $path    = $this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php');
+        $drifted = file_get_contents($path) . "// drift\n";
         file_put_contents($path, $drifted);
 
         $tester = $this->runCommand($this->syncCommand, ['extensionKey' => self::EXTENSION_KEY, '--dry-run' => true]);
