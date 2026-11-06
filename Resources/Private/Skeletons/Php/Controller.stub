@@ -8,11 +8,6 @@ namespace {{ controllerNamespace }};
 
 {{ imports }}
 
-/**
- * Class {{ className }}Controller
- *
- * @package {{ controllerNamespace }}
- */
 class {{ className }}Controller extends {{ parentClass }}
 {
     {{ classBody }}

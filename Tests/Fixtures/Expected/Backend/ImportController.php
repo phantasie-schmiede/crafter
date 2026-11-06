@@ -18,11 +18,6 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 
-/**
- * Class ImportController
- *
- * @package PSBits\DemoShop\Controller\Backend
- */
 #[AsController]
 class ImportController extends AbstractModuleController
 {

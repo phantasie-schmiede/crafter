@@ -17,11 +17,6 @@ use PSBits\Foundation\Data\MainModuleConfiguration;
 use PSBits\Foundation\Data\ModuleConfiguration;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-/**
- * Class ExtensionInformation
- *
- * @package PSBits\DemoShop\Data
- */
 class ExtensionInformation extends AbstractExtensionInformation
 {
     public function __construct()

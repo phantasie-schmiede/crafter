@@ -14,11 +14,6 @@ namespace PSBits\DemoShop\EventListener;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-/**
- * Class ProductUpdate
- *
- * @package PSBits\DemoShop\EventListener
- */
 #[AsEventListener(identifier: 'demo_shop/productUpdate')]
 class ProductUpdate
 {

@@ -26,11 +26,6 @@ use TYPO3\CMS\Extbase\Annotation\Validate;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
-/**
- * Class Product
- *
- * @package PSBits\DemoShop\Domain\Model
- */
 #[Ctrl(label: 'title')]
 class Product extends AbstractEntity
 {
