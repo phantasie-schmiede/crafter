@@ -15,11 +15,9 @@ use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
 use TYPO3\CMS\Core\Core\Environment;
 
-/**
- * Class SkeletonListCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
+use function file_put_contents;
+use function mkdir;
+
 final class SkeletonListCommandTest extends AbstractCommandTestCase
 {
     #[Test]

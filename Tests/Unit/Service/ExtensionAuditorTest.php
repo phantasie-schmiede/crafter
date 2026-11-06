@@ -21,13 +21,14 @@ use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ExtensionAuditor;
 use PSBits\Crafter\Tests\Unit\AbstractGeneratorTestCase;
 
+use function file_get_contents;
+use function file_put_contents;
+use function str_replace;
+use function unlink;
+
 /**
- * Class ExtensionAuditorTest
- *
  * Builds a complete extension with the generators and then breaks it on purpose, so every category is verified
  * against output the generators really produce instead of a hand written fixture.
- *
- * @package PSBits\Crafter\Tests\Unit\Service
  */
 final class ExtensionAuditorTest extends AbstractGeneratorTestCase
 {
@@ -51,32 +52,6 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         $this->generateExtension();
 
         self::assertSame([], $this->extensionAuditor->audit(self::EXTENSION_KEY));
-    }
-
-    #[Test]
-    public function outdatedToolchainFileIsReported(): void
-    {
-        $this->generateExtension();
-        $path = $this->getExtensionFilePath('Build/Quality/phpstan.neon.dist');
-        file_put_contents($path, (string)file_get_contents($path) . "\n# drift");
-        $findings = $this->auditCategory('toolchain');
-
-        self::assertCount(1, $findings);
-        self::assertSame(AuditSeverity::notice, $findings[0]->severity);
-        self::assertSame('Build/Quality/phpstan.neon.dist', $findings[0]->path);
-        self::assertSame('crafter:sync demo_shop', $findings[0]->hint);
-    }
-
-    #[Test]
-    public function missingToolchainFileIsReported(): void
-    {
-        $this->generateExtension();
-        unlink($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
-        $findings = $this->auditCategory('toolchain');
-
-        self::assertCount(1, $findings);
-        self::assertSame(AuditSeverity::warning, $findings[0]->severity);
-        self::assertSame('Build/Quality/.php-cs-fixer.dist.php', $findings[0]->path);
     }
 
     #[Test]
@@ -138,6 +113,18 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
     }
 
     #[Test]
+    public function missingToolchainFileIsReported(): void
+    {
+        $this->generateExtension();
+        unlink($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
+        $findings = $this->auditCategory('toolchain');
+
+        self::assertCount(1, $findings);
+        self::assertSame(AuditSeverity::warning, $findings[0]->severity);
+        self::assertSame('Build/Quality/.php-cs-fixer.dist.php', $findings[0]->path);
+    }
+
+    #[Test]
     public function orphanedTemplateIsReported(): void
     {
         $this->generateExtension();
@@ -149,6 +136,20 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
 
         self::assertCount(1, $findings);
         self::assertStringContainsString('Archive.html', $findings[0]->path);
+    }
+
+    #[Test]
+    public function outdatedToolchainFileIsReported(): void
+    {
+        $this->generateExtension();
+        $path = $this->getExtensionFilePath('Build/Quality/phpstan.neon.dist');
+        file_put_contents($path, (string)file_get_contents($path) . "\n# drift");
+        $findings = $this->auditCategory('toolchain');
+
+        self::assertCount(1, $findings);
+        self::assertSame(AuditSeverity::notice, $findings[0]->severity);
+        self::assertSame('Build/Quality/phpstan.neon.dist', $findings[0]->path);
+        self::assertSame('crafter:sync demo_shop', $findings[0]->hint);
     }
 
     #[Test]

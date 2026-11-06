@@ -18,15 +18,12 @@ use PSBits\Crafter\Service\ModelPropertyReader;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function array_map;
 use function dirname;
 
 /**
- * Class ModelPropertyReaderTest
- *
  * Feeds the reader with the real output of the model generator and with hand written sources, so the attribute
  * patterns of every configured field type are verified.
- *
- * @package PSBits\Crafter\Tests\Unit\Service
  */
 final class ModelPropertyReaderTest extends AbstractCrafterTestCase
 {
@@ -37,6 +34,26 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         parent::setUp();
 
         $this->modelPropertyReader = new ModelPropertyReader(new FieldTypeRegistry($this->configurationService));
+    }
+
+    #[Test]
+    public function fallsBackToStringForAnUnknownAttribute(): void
+    {
+        $path = $this->writeModelSource(
+            <<<'PHP'
+                <?php
+
+                class Source
+                {
+                    #[SomethingWeird]
+                    protected string $mystery = '';
+                }
+                PHP
+        );
+        $byName = $this->readByProperty($path);
+
+        self::assertSame('string', $byName['mystery']->type);
+        self::assertFalse($byName['mystery']->required);
     }
 
     #[Test]
@@ -58,6 +75,89 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         );
         self::assertTrue($byName['title']->required);
         self::assertFalse($byName['price']->required);
+    }
+
+    #[Test]
+    public function requiresEveryAttributeOfAType(): void
+    {
+        $path = $this->writeModelSource(
+            <<<'PHP'
+                <?php
+
+                class Source
+                {
+                    #[Inline(foreignField: 'category', linkedModel: Category::class)]
+                    protected ObjectStorage $items;
+
+                    protected string $label = '';
+                }
+                PHP
+        );
+        $byName = $this->readByProperty($path);
+
+        // The Cascade attribute is missing, so the inline type does not match. Both properties fall back to string.
+        self::assertSame('string', $byName['items']->type);
+        self::assertSame('string', $byName['label']->type);
+    }
+
+    #[Test]
+    public function resolvesEveryConfiguredAttributePattern(): void
+    {
+        $path = $this->writeModelSource(
+            <<<'PHP'
+                <?php
+
+                class Source
+                {
+                    #[Color]
+                    protected string $accent = '';
+
+                    #[File]
+                    protected ObjectStorage $attachment;
+
+                    #[Text(enableRichText: true)]
+                    protected string $body = '';
+
+                    #[Input(eval: 'trim,email')]
+                    protected string $contactEmail = '';
+
+                    #[Check]
+                    protected bool $flag = false;
+
+                    #[Slug]
+                    protected string $slug = '';
+
+                    #[Enum(enumClass: ProductStatus::class)]
+                    protected ?ProductStatus $status = null;
+
+                    #[Number]
+                    protected int $stock = 0;
+
+                    #[Datetime]
+                    protected ?\DateTime $updatedAt = null;
+
+                    #[Link]
+                    protected string $website = '';
+                }
+                PHP
+        );
+        $byName = $this->readByProperty($path);
+
+        self::assertSame(
+            [
+                'accent'       => 'color',
+                'attachment'   => 'file',
+                'body'         => 'richText',
+                'contactEmail' => 'email',
+                'flag'         => 'boolean',
+                'slug'         => 'slug',
+                'status'       => 'enum',
+                'stock'        => 'integer',
+                'updatedAt'    => 'dateTime',
+                'website'      => 'link',
+            ],
+            array_map(static fn(PropertyDefinition $property): string => $property->type, $byName)
+        );
     }
 
     #[Test]
@@ -86,109 +186,6 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         );
 
         self::assertSame([], $this->modelPropertyReader->read($path));
-    }
-
-    #[Test]
-    public function resolvesEveryConfiguredAttributePattern(): void
-    {
-        $path = $this->writeModelSource(
-            <<<'PHP'
-                <?php
-
-                class Source
-                {
-                    #[Check]
-                    protected bool $flag = false;
-
-                    #[Color]
-                    protected string $accent = '';
-
-                    #[Datetime]
-                    protected ?\DateTime $updatedAt = null;
-
-                    #[Input(eval: 'trim,email')]
-                    protected string $contactEmail = '';
-
-                    #[Enum(enumClass: ProductStatus::class)]
-                    protected ?ProductStatus $status = null;
-
-                    #[File]
-                    protected ObjectStorage $attachment;
-
-                    #[Number]
-                    protected int $stock = 0;
-
-                    #[Link]
-                    protected string $website = '';
-
-                    #[Text(enableRichText: true)]
-                    protected string $body = '';
-
-                    #[Slug]
-                    protected string $slug = '';
-                }
-                PHP
-        );
-        $byName = $this->readByProperty($path);
-
-        self::assertSame(
-            [
-                'flag'         => 'boolean',
-                'accent'       => 'color',
-                'updatedAt'    => 'dateTime',
-                'contactEmail' => 'email',
-                'status'       => 'enum',
-                'attachment'   => 'file',
-                'stock'        => 'integer',
-                'website'      => 'link',
-                'body'         => 'richText',
-                'slug'         => 'slug',
-            ],
-            array_map(static fn(PropertyDefinition $property): string => $property->type, $byName)
-        );
-    }
-
-    #[Test]
-    public function requiresEveryAttributeOfAType(): void
-    {
-        $path = $this->writeModelSource(
-            <<<'PHP'
-                <?php
-
-                class Source
-                {
-                    #[Inline(foreignField: 'category', linkedModel: Category::class)]
-                    protected ObjectStorage $items;
-
-                    protected string $label = '';
-                }
-                PHP
-        );
-        $byName = $this->readByProperty($path);
-
-        // The Cascade attribute is missing, so the inline type does not match. Both properties fall back to string.
-        self::assertSame('string', $byName['items']->type);
-        self::assertSame('string', $byName['label']->type);
-    }
-
-    #[Test]
-    public function fallsBackToStringForAnUnknownAttribute(): void
-    {
-        $path = $this->writeModelSource(
-            <<<'PHP'
-                <?php
-
-                class Source
-                {
-                    #[SomethingWeird]
-                    protected string $mystery = '';
-                }
-                PHP
-        );
-        $byName = $this->readByProperty($path);
-
-        self::assertSame('string', $byName['mystery']->type);
-        self::assertFalse($byName['mystery']->required);
     }
 
     /**

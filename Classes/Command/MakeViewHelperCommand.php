@@ -21,8 +21,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_values;
+use function implode;
 use function in_array;
 use function sprintf;
+use function trim;
 
 /**
  * Class MakeViewHelperCommand
@@ -53,6 +59,40 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
         protected readonly SkeletonRenderer     $skeletonRenderer,
     ) {
         parent::__construct($classGenerator, $fileWriter);
+    }
+
+    protected function buildBlueprint(
+        InputInterface $input,
+        SymfonyStyle   $io,
+        string         $extensionKey,
+        string         $name,
+    ): ?ClassBlueprint {
+        $subPath = $this->getSubPath($input, $io);
+
+        if (null === $subPath) {
+            return null;
+        }
+
+        $arguments = $this->renderArguments($input, $io, $extensionKey);
+
+        if (null === $arguments) {
+            return null;
+        }
+
+        $render = $this->renderRenderMethod($input, $io, $extensionKey);
+
+        if (null === $render) {
+            return null;
+        }
+
+        return new ClassBlueprint(
+            extensionKey: $extensionKey,
+            name        : $name,
+            type        : self::CLASS_TYPE,
+            dependencies: $this->getDependencies($input, $extensionKey),
+            methods     : array_values(array_filter([$arguments, $render])),
+            subPath     : $subPath
+        );
     }
 
     protected function configure(): void
@@ -87,40 +127,6 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
             InputOption::VALUE_REQUIRED,
             'Return type of the render method',
             'string'
-        );
-    }
-
-    protected function buildBlueprint(
-        InputInterface $input,
-        SymfonyStyle   $io,
-        string         $extensionKey,
-        string         $name,
-    ): ?ClassBlueprint {
-        $subPath = $this->getSubPath($input, $io);
-
-        if (null === $subPath) {
-            return null;
-        }
-
-        $arguments = $this->renderArguments($input, $io, $extensionKey);
-
-        if (null === $arguments) {
-            return null;
-        }
-
-        $render = $this->renderRenderMethod($input, $io, $extensionKey);
-
-        if (null === $render) {
-            return null;
-        }
-
-        return new ClassBlueprint(
-            extensionKey: $extensionKey,
-            name        : $name,
-            type        : self::CLASS_TYPE,
-            dependencies: $this->getDependencies($input, $extensionKey),
-            methods     : array_values(array_filter([$arguments, $render])),
-            subPath     : $subPath
         );
     }
 

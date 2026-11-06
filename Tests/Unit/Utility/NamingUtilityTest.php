@@ -16,11 +16,6 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use PSBits\Crafter\Utility\NamingUtility;
 
-/**
- * Class NamingUtilityTest
- *
- * @package PSBits\Crafter\Tests\Unit\Utility
- */
 final class NamingUtilityTest extends TestCase
 {
     /**
@@ -88,13 +83,6 @@ final class NamingUtilityTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('pluralDataProvider')]
-    public function toPluralAppliesTheExpectedRule(string $value, string $expected): void
-    {
-        self::assertSame($expected, NamingUtility::toPlural($value));
-    }
-
-    #[Test]
     public function toExtensionKeyUnderscoresCamelCase(): void
     {
         self::assertSame('demo_shop', NamingUtility::toExtensionKey('DemoShop'));
@@ -104,6 +92,13 @@ final class NamingUtilityTest extends TestCase
     public function toLowerCamelCaseLowercasesTheFirstLetter(): void
     {
         self::assertSame('demoShop', NamingUtility::toLowerCamelCase('demo_shop'));
+    }
+
+    #[Test]
+    #[DataProvider('pluralDataProvider')]
+    public function toPluralAppliesTheExpectedRule(string $value, string $expected): void
+    {
+        self::assertSame($expected, NamingUtility::toPlural($value));
     }
 
     #[Test]

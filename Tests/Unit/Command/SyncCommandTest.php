@@ -15,23 +15,10 @@ use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
+use function file_put_contents;
 
-/**
- * Class SyncCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class SyncCommandTest extends AbstractCommandTestCase
 {
-    #[Test]
-    public function requiresAnExtension(): void
-    {
-        $tester = $this->runCommand($this->syncCommand);
-
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('No extension given', $tester->getDisplay());
-    }
-
     #[Test]
     public function acceptsTheExtensionViaOption(): void
     {
@@ -45,14 +32,18 @@ final class SyncCommandTest extends AbstractCommandTestCase
     }
 
     #[Test]
-    public function reportsNothingToDoForAnInSyncExtension(): void
+    public function dryRunLeavesDriftedFilesUntouched(): void
     {
         $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
+        $path    = $this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php');
+        $drifted = file_get_contents($path) . "// drift\n";
+        file_put_contents($path, $drifted);
 
-        $tester = $this->runCommand($this->syncCommand, ['extensionKey' => self::EXTENSION_KEY]);
+        $tester = $this->runCommand($this->syncCommand, ['--dry-run' => true, 'extensionKey' => self::EXTENSION_KEY]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Nothing to do', $tester->getDisplay());
+        self::assertStringContainsString('Dry run - no file has been written.', $tester->getDisplay());
+        self::assertSame($drifted, (string)file_get_contents($path));
     }
 
     #[Test]
@@ -69,17 +60,22 @@ final class SyncCommandTest extends AbstractCommandTestCase
     }
 
     #[Test]
-    public function dryRunLeavesDriftedFilesUntouched(): void
+    public function reportsNothingToDoForAnInSyncExtension(): void
     {
         $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
-        $path    = $this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php');
-        $drifted = file_get_contents($path) . "// drift\n";
-        file_put_contents($path, $drifted);
 
-        $tester = $this->runCommand($this->syncCommand, ['extensionKey' => self::EXTENSION_KEY, '--dry-run' => true]);
+        $tester = $this->runCommand($this->syncCommand, ['extensionKey' => self::EXTENSION_KEY]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Dry run - no file has been written.', $tester->getDisplay());
-        self::assertSame($drifted, (string)file_get_contents($path));
+        self::assertStringContainsString('Nothing to do', $tester->getDisplay());
+    }
+
+    #[Test]
+    public function requiresAnExtension(): void
+    {
+        $tester = $this->runCommand($this->syncCommand);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('No extension given', $tester->getDisplay());
     }
 }

@@ -17,24 +17,29 @@ use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
 
-/**
- * Class MakeModelCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class MakeModelCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @return iterable<array{string}>
+     */
+    public static function incompleteProperties(): iterable
+    {
+        yield 'missing name' => ['type=string'];
+        yield 'missing type' => ['name=title'];
+        yield 'missing both' => ['required=1'];
+    }
+
     #[Test]
     public function createsAModelWithParsedPropertiesAndRepository(): void
     {
         $tester = $this->runCommand($this->makeModelCommand, [
-            'name'              => 'Product',
             '--extension'       => self::EXTENSION_KEY,
             '--property'        => [
                 'name=title,type=string,required=1',
                 'name=price,type=decimal',
             ],
             '--with-repository' => true,
+            'name'              => 'Product',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -48,48 +53,12 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
     }
 
     #[Test]
-    #[DataProvider('incompleteProperties')]
-    public function rejectsAPropertyWithoutNameOrType(string $property): void
-    {
-        $tester = $this->runCommand($this->makeModelCommand, [
-            'name'        => 'Product',
-            '--extension' => self::EXTENSION_KEY,
-            '--property'  => [$property],
-        ]);
-
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('must at least define "name" and "type"', $tester->getDisplay());
-    }
-
-    #[Test]
-    public function rejectsAnUnknownPropertyType(): void
-    {
-        $tester = $this->runCommand($this->makeModelCommand, [
-            'name'        => 'Product',
-            '--extension' => self::EXTENSION_KEY,
-            '--property'  => ['name=title,type=bogus'],
-        ]);
-
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('Unknown field type "bogus"', $tester->getDisplay());
-    }
-
-    #[Test]
-    public function rejectsAnInvalidName(): void
-    {
-        $tester = $this->runCommand($this->makeModelCommand, ['name' => 'product', '--extension' => self::EXTENSION_KEY]);
-
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('UpperCamelCase', $tester->getDisplay());
-    }
-
-    #[Test]
     public function createsOnlyTheModelWithoutFollowUpFlags(): void
     {
         $tester = $this->runCommand($this->makeModelCommand, [
-            'name'        => 'Product',
             '--extension' => self::EXTENSION_KEY,
             '--property'  => ['name=title,type=string'],
+            'name'        => 'Product',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -99,21 +68,47 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
     }
 
     #[Test]
+    public function rejectsAnInvalidName(): void
+    {
+        $tester = $this->runCommand($this->makeModelCommand, ['--extension' => self::EXTENSION_KEY, 'name' => 'product']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('UpperCamelCase', $tester->getDisplay());
+    }
+
+    #[Test]
+    public function rejectsAnUnknownPropertyType(): void
+    {
+        $tester = $this->runCommand($this->makeModelCommand, [
+            '--extension' => self::EXTENSION_KEY,
+            '--property'  => ['name=title,type=bogus'],
+            'name'        => 'Product',
+        ]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Unknown field type "bogus"', $tester->getDisplay());
+    }
+
+    #[Test]
+    #[DataProvider('incompleteProperties')]
+    public function rejectsAPropertyWithoutNameOrType(string $property): void
+    {
+        $tester = $this->runCommand($this->makeModelCommand, [
+            '--extension' => self::EXTENSION_KEY,
+            '--property'  => [$property],
+            'name'        => 'Product',
+        ]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('must at least define "name" and "type"', $tester->getDisplay());
+    }
+
+    #[Test]
     public function requiresTheExtensionOption(): void
     {
         $tester = $this->runCommand($this->makeModelCommand, ['name' => 'Product']);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('The option --extension is required.', $tester->getDisplay());
-    }
-
-    /**
-     * @return iterable<array{string}>
-     */
-    public static function incompleteProperties(): iterable
-    {
-        yield 'missing name' => ['type=string'];
-        yield 'missing type' => ['name=title'];
-        yield 'missing both' => ['required=1'];
     }
 }

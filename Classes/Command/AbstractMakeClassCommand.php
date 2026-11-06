@@ -22,14 +22,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function is_string;
 use function sprintf;
+use function str_replace;
+use function trim;
 
 /**
- * Class AbstractMakeClassCommand
- *
  * Shared skeleton of all commands that create a single PHP class of the crafter.classTypes catalogue. Subclasses
  * only describe the class by building a ClassBlueprint.
- *
- * @package PSBits\Crafter\Command
  */
 abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
 {
@@ -45,13 +43,6 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
     ) {
         parent::__construct();
     }
-
-    abstract protected function buildBlueprint(
-        InputInterface $input,
-        SymfonyStyle   $io,
-        string         $extensionKey,
-        string         $name,
-    ): ?ClassBlueprint;
 
     protected function addDependencyOption(): static
     {
@@ -77,11 +68,59 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
         return $this;
     }
 
+    abstract protected function buildBlueprint(
+        InputInterface $input,
+        SymfonyStyle   $io,
+        string         $extensionKey,
+        string         $name,
+    ): ?ClassBlueprint;
+
     protected function configure(): void
     {
         parent::configure();
         $this->addFileOptions();
         $this->addArgument(self::ARGUMENT_NAME, InputArgument::OPTIONAL, $this->getNameDescription());
+    }
+
+    abstract protected function getArtifactLabel(): string;
+
+    /**
+     * @return string[] fully qualified class names
+     */
+    protected function getDependencies(InputInterface $input, string $extensionKey): array
+    {
+        $dependencies = [];
+
+        foreach ((array)$input->getOption(self::OPTION_DEPENDENCY) as $dependency) {
+            $dependency = trim((string)$dependency);
+
+            if ('' !== $dependency) {
+                $dependencies[] = $this->classGenerator->resolveDependency($dependency, $extensionKey);
+            }
+        }
+
+        return $dependencies;
+    }
+
+    abstract protected function getNameDescription(): string;
+
+    protected function getSubPath(InputInterface $input, SymfonyStyle $io): ?string
+    {
+        $subPath = $input->getOption(self::OPTION_SUB_PATH);
+
+        if (!is_string($subPath) || '' === $subPath) {
+            return '';
+        }
+
+        $subPath = trim(str_replace('\\', '/', $subPath), '/');
+
+        if (1 !== preg_match(self::SUB_PATH_PATTERN, $subPath)) {
+            $io->error('The sub path must consist of UpperCamelCase segments, e.g. Contact/Address.');
+
+            return null;
+        }
+
+        return $subPath;
     }
 
     protected function handle(InputInterface $input, SymfonyStyle $io): int
@@ -137,47 +176,6 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
 
         return Command::SUCCESS;
     }
-
-    /**
-     * @return string[] fully qualified class names
-     */
-    protected function getDependencies(InputInterface $input, string $extensionKey): array
-    {
-        $dependencies = [];
-
-        foreach ((array)$input->getOption(self::OPTION_DEPENDENCY) as $dependency) {
-            $dependency = trim((string)$dependency);
-
-            if ('' !== $dependency) {
-                $dependencies[] = $this->classGenerator->resolveDependency($dependency, $extensionKey);
-            }
-        }
-
-        return $dependencies;
-    }
-
-    protected function getSubPath(InputInterface $input, SymfonyStyle $io): ?string
-    {
-        $subPath = $input->getOption(self::OPTION_SUB_PATH);
-
-        if (!is_string($subPath) || '' === $subPath) {
-            return '';
-        }
-
-        $subPath = trim(str_replace('\\', '/', $subPath), '/');
-
-        if (1 !== preg_match(self::SUB_PATH_PATTERN, $subPath)) {
-            $io->error('The sub path must consist of UpperCamelCase segments, e.g. Contact/Address.');
-
-            return null;
-        }
-
-        return $subPath;
-    }
-
-    abstract protected function getArtifactLabel(): string;
-
-    abstract protected function getNameDescription(): string;
 
     private function determineName(InputInterface $input, SymfonyStyle $io): ?string
     {

@@ -17,17 +17,28 @@ use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Utility\NamingUtility;
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_values;
+use function implode;
 use function is_array;
+use function ksort;
+use function max;
+use function sort;
 use function sprintf;
+use function str_contains;
+use function str_repeat;
+use function str_replace;
+use function strcmp;
 use function strlen;
+use function trim;
+use function usort;
 
 /**
- * Class ModelGenerator
- *
  * Assembles a domain model from the small stubs under Php/. Ordering and repetition happen here, the stubs stay
  * free of logic and therefore easy to override.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ModelGenerator
 {
@@ -38,8 +49,8 @@ readonly class ModelGenerator
     public const string SKELETON_MODEL           = 'Php/Model';
     public const string SKELETON_MODEL_CONSTRUCT = 'Php/ModelConstructor';
     public const string SKELETON_PROPERTY        = 'Php/Property';
-    public const string SKELETON_STORAGE_METHOD  = 'Php/ObjectStorageMethod';
     public const string SKELETON_SETTER          = 'Php/Setter';
+    public const string SKELETON_STORAGE_METHOD  = 'Php/ObjectStorageMethod';
 
     public function __construct(
         protected ConfigurationService $configurationService,
@@ -187,6 +198,27 @@ readonly class ModelGenerator
         ];
     }
 
+    private function determineLabelProperty(ModelBlueprint $blueprint, string $extensionKey): string
+    {
+        $fallback = '';
+
+        foreach ($this->sortProperties($blueprint->properties) as $property) {
+            if ('string' !== $this->fieldTypeRegistry->getPhpType($property->type, $extensionKey)) {
+                continue;
+            }
+
+            if (true === $property->required) {
+                return $property->name;
+            }
+
+            if ('' === $fallback) {
+                $fallback = $property->name;
+            }
+        }
+
+        return $fallback;
+    }
+
     /**
      * Reads the type out of a doc block line, example: '@var ObjectStorage<Contact>' => 'ObjectStorage<Contact>'
      */
@@ -230,24 +262,6 @@ readonly class ModelGenerator
     }
 
     /**
-     * @param string[]              $values
-     * @param array<string, string> $replacements
-     *
-     * @return string[]
-     */
-    private function replace(array $values, array $replacements): array
-    {
-        return array_map(
-            static fn(string $value): string => str_replace(
-                array_keys($replacements),
-                array_values($replacements),
-                $value
-            ),
-            $values
-        );
-    }
-
-    /**
      * @param string[] $imports
      */
     private function renderClassAttributes(
@@ -280,27 +294,6 @@ readonly class ModelGenerator
             ) . ']',
             (array)$configuration['attributes']
         ));
-    }
-
-    private function determineLabelProperty(ModelBlueprint $blueprint, string $extensionKey): string
-    {
-        $fallback = '';
-
-        foreach ($this->sortProperties($blueprint->properties) as $property) {
-            if ('string' !== $this->fieldTypeRegistry->getPhpType($property->type, $extensionKey)) {
-                continue;
-            }
-
-            if (true === $property->required) {
-                return $property->name;
-            }
-
-            if ('' === $fallback) {
-                $fallback = $property->name;
-            }
-        }
-
-        return $fallback;
     }
 
     /**
@@ -437,6 +430,24 @@ readonly class ModelGenerator
             ],
             $extensionKey
         ));
+    }
+
+    /**
+     * @param string[]              $values
+     * @param array<string, string> $replacements
+     *
+     * @return string[]
+     */
+    private function replace(array $values, array $replacements): array
+    {
+        return array_map(
+            static fn(string $value): string => str_replace(
+                array_keys($replacements),
+                array_values($replacements),
+                $value
+            ),
+            $values
+        );
     }
 
     /**

@@ -16,21 +16,16 @@ use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
 
-/**
- * Class MakeViewHelperCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class MakeViewHelperCommandTest extends AbstractCommandTestCase
 {
     #[Test]
     public function createsAViewHelperWithArgumentRegistrationInASubPath(): void
     {
         $tester = $this->runCommand($this->makeViewHelperCommand, [
-            'name'        => 'Price',
+            '--argument'  => ['price:integer:1:The price to format'],
             '--extension' => self::EXTENSION_KEY,
             '--sub-path'  => 'Format',
-            '--argument'  => ['price:integer:1:The price to format'],
+            'name'        => 'Price',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -44,9 +39,9 @@ final class MakeViewHelperCommandTest extends AbstractCommandTestCase
     public function rejectsAnUnknownArgumentType(): void
     {
         $tester = $this->runCommand($this->makeViewHelperCommand, [
-            'name'        => 'Price',
-            '--extension' => self::EXTENSION_KEY,
             '--argument'  => ['price:bogus'],
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'Price',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
@@ -57,9 +52,9 @@ final class MakeViewHelperCommandTest extends AbstractCommandTestCase
     public function rejectsAnUnknownReturnType(): void
     {
         $tester = $this->runCommand($this->makeViewHelperCommand, [
-            'name'          => 'Price',
             '--extension'   => self::EXTENSION_KEY,
             '--return-type' => 'bogus',
+            'name'          => 'Price',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());

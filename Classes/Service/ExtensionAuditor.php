@@ -15,25 +15,36 @@ use PSBits\Crafter\Data\AuditFinding;
 use PSBits\Crafter\Enum\AuditSeverity;
 use PSBits\Crafter\Exception\CrafterException;
 
+use function array_filter;
 use function array_key_exists;
+use function array_map;
+use function array_unique;
+use function array_values;
+use function basename;
 use function count;
 use function dirname;
+use function file_get_contents;
+use function glob;
+use function implode;
 use function in_array;
 use function is_array;
+use function is_dir;
+use function is_file;
 use function is_string;
+use function ksort;
 use function ltrim;
+use function sort;
 use function sprintf;
+use function str_contains;
+use function str_replace;
+use function usort;
 
 /**
- * Class ExtensionAuditor
- *
  * Compares an existing extension against the conventions Crafter generates by. Every check derives its expected
  * paths from the very same `paths` configuration the generators use, so a project with an own directory layout is
  * audited against its own layout instead of the shipped defaults.
  *
  * The auditor never writes anything. Each finding carries the command that resolves it.
- *
- * @package PSBits\Crafter\Service
  */
 class ExtensionAuditor
 {

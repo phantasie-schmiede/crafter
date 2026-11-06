@@ -14,11 +14,6 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Utility\PhpUtility;
 
-/**
- * Class RepositoryGenerator
- *
- * @package PSBits\Crafter\Service
- */
 readonly class RepositoryGenerator
 {
     public const string REPOSITORY_SUB_NAMESPACE = 'Domain\Repository';

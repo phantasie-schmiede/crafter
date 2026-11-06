@@ -14,11 +14,6 @@ namespace PSBits\Crafter\Tests\Unit\Command;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
 
-/**
- * Class MakeBackendControllerCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class MakeBackendControllerCommandTest extends AbstractCommandTestCase
 {
     #[Test]
@@ -27,9 +22,9 @@ final class MakeBackendControllerCommandTest extends AbstractCommandTestCase
         $this->generateBaseExtension();
 
         $tester = $this->runCommand($this->makeBackendControllerCommand, [
-            'name'        => 'Import',
-            '--extension' => self::EXTENSION_KEY,
             '--actions'   => 'index,run',
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'Import',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -44,10 +39,10 @@ final class MakeBackendControllerCommandTest extends AbstractCommandTestCase
         $this->generateBaseExtension();
 
         $tester = $this->runCommand($this->makeBackendControllerCommand, [
-            'name'        => 'Import',
-            '--extension' => self::EXTENSION_KEY,
             '--actions'   => 'index',
+            '--extension' => self::EXTENSION_KEY,
             '--no-module' => true,
+            'name'        => 'Import',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());

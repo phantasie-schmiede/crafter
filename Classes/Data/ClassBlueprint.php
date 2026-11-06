@@ -13,14 +13,12 @@ namespace PSBits\Crafter\Data;
 
 use PSBits\Crafter\Utility\NamingUtility;
 
+use function str_ends_with;
+
 /**
- * Class ClassBlueprint
- *
  * Everything crafter:make:service, crafter:make:view-helper, crafter:make:event-listener and
  * crafter:make:backend-controller need to describe a single PHP class. What a class type looks like by default is
  * defined in crafter.classTypes, this blueprint only carries the answers of the developer.
- *
- * @package PSBits\Crafter\Data
  */
 readonly class ClassBlueprint
 {

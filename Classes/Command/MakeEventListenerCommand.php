@@ -22,6 +22,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function is_string;
+use function str_contains;
+use function trim;
 
 /**
  * Class MakeEventListenerCommand
@@ -47,32 +49,6 @@ class MakeEventListenerCommand extends AbstractMakeClassCommand
         protected readonly SkeletonRenderer $skeletonRenderer,
     ) {
         parent::__construct($classGenerator, $fileWriter);
-    }
-
-    protected function configure(): void
-    {
-        parent::configure();
-        $this->setHelp(
-            <<<'HELP'
-            Creates a PSR-14 event listener registered via the AsEventListener attribute, with an
-            invoke() method that receives the event class.
-
-            The event class is given with --event as a fully qualified class name or asked
-            interactively. Constructor dependencies can be added with the repeatable option
-            --dependency.
-
-            Example:
-              crafter:make:event-listener --extension budget_manager BeforeFileWriteListener \
-                  --event PSBits\Crafter\Event\BeforeFileWriteEvent
-            HELP
-        );
-        $this->addDependencyOption();
-        $this->addOption(
-            self::OPTION_EVENT,
-            'E',
-            InputOption::VALUE_REQUIRED,
-            'Fully qualified class name of the event to listen to'
-        );
     }
 
     protected function buildBlueprint(
@@ -103,6 +79,32 @@ class MakeEventListenerCommand extends AbstractMakeClassCommand
                     $extensionKey
                 )),
             ]
+        );
+    }
+
+    protected function configure(): void
+    {
+        parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a PSR-14 event listener registered via the AsEventListener attribute, with an
+            invoke() method that receives the event class.
+
+            The event class is given with --event as a fully qualified class name or asked
+            interactively. Constructor dependencies can be added with the repeatable option
+            --dependency.
+
+            Example:
+              crafter:make:event-listener --extension budget_manager BeforeFileWriteListener \
+                  --event PSBits\Crafter\Event\BeforeFileWriteEvent
+            HELP
+        );
+        $this->addDependencyOption();
+        $this->addOption(
+            self::OPTION_EVENT,
+            'E',
+            InputOption::VALUE_REQUIRED,
+            'Fully qualified class name of the event to listen to'
         );
     }
 

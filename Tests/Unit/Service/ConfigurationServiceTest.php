@@ -19,11 +19,6 @@ use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
 use Psr\Log\NullLogger;
 use TYPO3\CMS\Core\Configuration\Loader\YamlFileLoader;
 
-/**
- * Class ConfigurationServiceTest
- *
- * @package PSBits\Crafter\Tests\Unit\Service
- */
 final class ConfigurationServiceTest extends AbstractCrafterTestCase
 {
     #[Test]

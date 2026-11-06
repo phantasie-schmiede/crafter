@@ -14,13 +14,16 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Data\ClassBlueprint;
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function array_merge;
+use function implode;
+use function ksort;
+use function lcfirst;
+use function sort;
+use function str_replace;
+
 /**
- * Class BackendControllerGenerator
- *
  * Assembles a backend module controller together with its Fluid templates, its language files and the module
  * registration inside the ExtensionInformation of the extension.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class BackendControllerGenerator
 {
@@ -41,6 +44,37 @@ readonly class BackendControllerGenerator
         protected PathResolver          $pathResolver,
         protected SkeletonRenderer      $skeletonRenderer,
     ) {
+    }
+
+    /**
+     * @param string[] $actions
+     * @param string[] $dependencies
+     */
+    public function buildBlueprint(
+        string $extensionKey,
+        string $name,
+        array  $actions,
+        array  $dependencies = [],
+    ): ClassBlueprint {
+        $defaultAction = (string)reset($actions);
+        sort($actions);
+        $methods = [$this->renderConstructor($extensionKey, $dependencies)];
+
+        foreach ($actions as $action) {
+            $methods[] = $this->renderAction($extensionKey, $action, $action === $defaultAction);
+        }
+
+        return new ClassBlueprint(
+            extensionKey: $extensionKey,
+            name        : $name,
+            type        : self::CLASS_TYPE,
+            imports     : array_merge($dependencies, [
+                self::MODULE_ACTION_ATTRIBUTE,
+                self::MODULE_TEMPLATE_FACTORY,
+                self::RESPONSE_INTERFACE,
+            ]),
+            methods     : $methods
+        );
     }
 
     /**
@@ -79,37 +113,6 @@ readonly class BackendControllerGenerator
                 $this->generateModuleLanguageFiles($extensionKey, $name, $moduleName);
             }
         }
-    }
-
-    /**
-     * @param string[] $actions
-     * @param string[] $dependencies
-     */
-    public function buildBlueprint(
-        string $extensionKey,
-        string $name,
-        array  $actions,
-        array  $dependencies = [],
-    ): ClassBlueprint {
-        $defaultAction = (string)reset($actions);
-        sort($actions);
-        $methods = [$this->renderConstructor($extensionKey, $dependencies)];
-
-        foreach ($actions as $action) {
-            $methods[] = $this->renderAction($extensionKey, $action, $action === $defaultAction);
-        }
-
-        return new ClassBlueprint(
-            extensionKey: $extensionKey,
-            name        : $name,
-            type        : self::CLASS_TYPE,
-            imports     : array_merge($dependencies, [
-                self::MODULE_ACTION_ATTRIBUTE,
-                self::MODULE_TEMPLATE_FACTORY,
-                self::RESPONSE_INTERFACE,
-            ]),
-            methods     : $methods
-        );
     }
 
     /**

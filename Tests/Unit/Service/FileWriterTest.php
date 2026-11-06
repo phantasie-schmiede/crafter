@@ -19,11 +19,6 @@ use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Tests\Fixtures\CallbackEventDispatcher;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
 
-/**
- * Class FileWriterTest
- *
- * @package PSBits\Crafter\Tests\Unit\Service
- */
 final class FileWriterTest extends AbstractCrafterTestCase
 {
     #[Test]

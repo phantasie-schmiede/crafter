@@ -11,14 +11,18 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Utility;
 
+use function array_map;
+use function implode;
+use function max;
+use function str_repeat;
+use function str_replace;
 use function strlen;
+use function strrpos;
+use function substr;
+use function trim;
 
 /**
- * Class PhpUtility
- *
  * Helpers for assembling PHP source code that are shared by all class generators.
- *
- * @package PSBits\Crafter\Utility
  */
 class PhpUtility
 {

@@ -24,11 +24,20 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_filter;
+use function array_map;
+use function array_values;
 use function count;
+use function explode;
+use function implode;
 use function in_array;
+use function is_dir;
 use function is_scalar;
 use function is_string;
 use function sprintf;
+use function str_replace;
+use function strtolower;
+use function trim;
 
 /**
  * Class MakeExtensionCommand
@@ -156,6 +165,26 @@ class MakeExtensionCommand extends AbstractCrafterCommand
         return Command::SUCCESS;
     }
 
+    private function ask(
+        InputInterface $input,
+        SymfonyStyle   $io,
+        string         $option,
+        string         $question,
+        string         $default,
+    ): string {
+        $value = $input->getOption($option);
+
+        if (is_string($value) && '' !== $value) {
+            return $value;
+        }
+
+        if (false === $input->isInteractive()) {
+            return $default;
+        }
+
+        return (string)$io->ask($question, '' === $default ? null : $default);
+    }
+
     private function buildBlueprint(
         InputInterface $input,
         SymfonyStyle   $io,
@@ -242,26 +271,6 @@ class MakeExtensionCommand extends AbstractCrafterCommand
                 $this->getDefault($extensionKey, 'gitHubOrganization', '')
             ),
         );
-    }
-
-    private function ask(
-        InputInterface $input,
-        SymfonyStyle   $io,
-        string         $option,
-        string         $question,
-        string         $default,
-    ): string {
-        $value = $input->getOption($option);
-
-        if (is_string($value) && '' !== $value) {
-            return $value;
-        }
-
-        if (false === $input->isInteractive()) {
-            return $default;
-        }
-
-        return (string)$io->ask($question, '' === $default ? null : $default);
     }
 
     private function determineExtensionKey(InputInterface $input, SymfonyStyle $io): ?string

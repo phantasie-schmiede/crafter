@@ -12,12 +12,8 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Event;
 
 /**
- * Class BeforeFileWriteEvent
- *
  * Last chance to influence a generated file. Listeners can rewrite the content, redirect it to another target path
  * or skip it entirely, e.g. to keep a file out of a specific extension.
- *
- * @package PSBits\Crafter\Event
  */
 final class BeforeFileWriteEvent
 {

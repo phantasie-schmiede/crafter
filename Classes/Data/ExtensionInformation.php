@@ -13,11 +13,6 @@ namespace PSBits\Crafter\Data;
 
 use PSBits\Foundation\Data\AbstractExtensionInformation;
 
-/**
- * Class ExtensionInformation
- *
- * @package PSBits\Crafter\Data
- */
 class ExtensionInformation extends AbstractExtensionInformation
 {
 }

@@ -15,28 +15,37 @@ use PSBits\Crafter\Data\ExtensionBlueprint;
 use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Exception\CrafterException;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_unique;
+use function array_values;
+use function implode;
 use function in_array;
 use function is_array;
 use function is_int;
+use function ksort;
+use function ltrim;
+use function max;
+use function sort;
 use function sprintf;
+use function str_repeat;
+use function str_replace;
 use function str_starts_with;
 use function strlen;
 
 /**
- * Class ExtensionGenerator
- *
  * Creates the base structure of a new extension. Which files belong to which feature group is defined in
  * `crafter.extensionFiles` and therefore fully configurable without touching this class.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ExtensionGenerator
 {
     public const string CORE_GROUP                     = 'core';
+    public const string QUALITY_GROUP                  = 'quality';
     public const string SKELETON_COMPOSER_DEV_SECTION  = 'Extension/ComposerDevSection';
     public const string SKELETON_EXTENSION_INFORMATION = 'Extension/ExtensionInformation';
     public const string SKELETON_PACKAGE_JSON          = 'Extension/PackageJson';
-    public const string QUALITY_GROUP                  = 'quality';
 
     public function __construct(
         protected ConfigurationService    $configurationService,
@@ -46,6 +55,13 @@ readonly class ExtensionGenerator
         protected SkeletonRenderer        $skeletonRenderer,
         protected ToolchainGenerator      $toolchainGenerator,
     ) {
+    }
+
+    private static function isToolchainFile(string $identifier): bool
+    {
+        return str_starts_with($identifier, 'Extension/Quality/')
+            || str_starts_with($identifier, 'Extension/Workflow/')
+            || self::SKELETON_PACKAGE_JSON === $identifier;
     }
 
     /**
@@ -154,52 +170,6 @@ readonly class ExtensionGenerator
     }
 
     /**
-     * Configuration files of a tool are only created when the extension profile enables that tool. The remaining
-     * quality group files need at least one enabled tool, otherwise no tooling would be configured at all.
-     *
-     * @param array<string, string> $files
-     *
-     * @return array<string, string>
-     */
-    private function pruneFiles(array $files, ?string $extensionKey): array
-    {
-        $profile            = $this->extensionProfileService->fromPlannedFiles(array_values($files));
-        $enabledConfigFiles = $this->toolchainGenerator->getConfigFiles($profile, $extensionKey);
-        $enabledTools       = $this->toolchainGenerator->getEnabledTools($profile, $extensionKey);
-        $toolConfigFiles    = [];
-        $toolsConfiguration = $this->configurationService->getValue('tools', $extensionKey, []);
-
-        if (is_array($toolsConfiguration)) {
-            foreach ($toolsConfiguration as $tool) {
-                $configFiles = is_array($tool) && is_array($tool['configFiles'] ?? null) ? $tool['configFiles'] : [];
-
-                foreach (array_keys($configFiles) as $identifier) {
-                    $toolConfigFiles[(string)$identifier] = true;
-                }
-            }
-        }
-
-        foreach ($files as $identifier => $relativePath) {
-            if (isset($enabledConfigFiles[$identifier])) {
-                continue;
-            }
-
-            if (isset($toolConfigFiles[$identifier]) || (self::isToolchainFile($identifier) && [] === $enabledTools)) {
-                unset($files[$identifier]);
-            }
-        }
-
-        return $files;
-    }
-
-    private static function isToolchainFile(string $identifier): bool
-    {
-        return str_starts_with($identifier, 'Extension/Quality/')
-            || str_starts_with($identifier, 'Extension/Workflow/')
-            || self::SKELETON_PACKAGE_JSON === $identifier;
-    }
-
-    /**
      * @param string[]              $groups
      * @param array<string, string> $toolchainVariables
      *
@@ -281,6 +251,45 @@ readonly class ExtensionGenerator
         $map = $this->configurationService->getValue($path, $extensionKey, []);
 
         return is_array($map) ? $map : [];
+    }
+
+    /**
+     * Configuration files of a tool are only created when the extension profile enables that tool. The remaining
+     * quality group files need at least one enabled tool, otherwise no tooling would be configured at all.
+     *
+     * @param array<string, string> $files
+     *
+     * @return array<string, string>
+     */
+    private function pruneFiles(array $files, ?string $extensionKey): array
+    {
+        $profile            = $this->extensionProfileService->fromPlannedFiles(array_values($files));
+        $enabledConfigFiles = $this->toolchainGenerator->getConfigFiles($profile, $extensionKey);
+        $enabledTools       = $this->toolchainGenerator->getEnabledTools($profile, $extensionKey);
+        $toolConfigFiles    = [];
+        $toolsConfiguration = $this->configurationService->getValue('tools', $extensionKey, []);
+
+        if (is_array($toolsConfiguration)) {
+            foreach ($toolsConfiguration as $tool) {
+                $configFiles = is_array($tool) && is_array($tool['configFiles'] ?? null) ? $tool['configFiles'] : [];
+
+                foreach (array_keys($configFiles) as $identifier) {
+                    $toolConfigFiles[(string)$identifier] = true;
+                }
+            }
+        }
+
+        foreach ($files as $identifier => $relativePath) {
+            if (isset($enabledConfigFiles[$identifier])) {
+                continue;
+            }
+
+            if (isset($toolConfigFiles[$identifier]) || (self::isToolchainFile($identifier) && [] === $enabledTools)) {
+                unset($files[$identifier]);
+            }
+        }
+
+        return $files;
     }
 
     /**

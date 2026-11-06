@@ -23,12 +23,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use function dirname;
 
 /**
- * Class SkeletonRendererTest
- *
  * The stubs used here are written into the project wide skeleton root path, which is the very mechanism a project
  * uses to override a shipped stub.
- *
- * @package PSBits\Crafter\Tests\Unit\Service
  */
 final class SkeletonRendererTest extends AbstractCrafterTestCase
 {

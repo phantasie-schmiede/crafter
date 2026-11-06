@@ -14,15 +14,16 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Data\ClassBlueprint;
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function file_get_contents;
+use function is_file;
+use function str_replace;
+use function strtolower;
+
 /**
- * Class ModuleRegistrar
- *
  * Adds a backend module of a generated module controller to the ExtensionInformation of the extension and makes
  * sure Configuration/Backend/Modules.php exists, because TYPO3 only picks up modules that are returned by that
  * file. Foundation builds the actual configuration from the ExtensionInformation, so the file itself stays a
  * one-liner that never has to be touched again.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ModuleRegistrar
 {

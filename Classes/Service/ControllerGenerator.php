@@ -15,18 +15,24 @@ use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function array_filter;
 use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_unique;
+use function array_values;
+use function implode;
 use function is_array;
+use function ksort;
+use function sort;
 use function sprintf;
+use function str_contains;
 
 /**
- * Class ControllerGenerator
- *
  * Assembles a frontend controller together with its Fluid templates, form fields partial and language files.
  * Which actions exist and what they do is defined in crafter.controllerActions, so the whole behaviour can be
  * changed without touching this class.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ControllerGenerator
 {
@@ -53,6 +59,46 @@ readonly class ControllerGenerator
         protected PluginRegistrar       $pluginRegistrar,
         protected SkeletonRenderer      $skeletonRenderer,
     ) {
+    }
+
+    /**
+     * Collects the label identifiers a rendered Fluid file asks for, so the language files always match the
+     * templates, even when those have been overridden.
+     *
+     * @return string[]
+     */
+    public static function extractLabelIds(string $content): array
+    {
+        preg_match_all(
+            '/<foundation:translate\s+id="([^"]+)"|translate\(id:\s*\\\\?\'([^\'\\\\]+)/',
+            $content,
+            $matches
+        );
+
+        return array_values(array_unique(array_filter(array_merge($matches[1], $matches[2]))));
+    }
+
+    /**
+     * Placeholders shared by all controller, template and language file skeletons.
+     *
+     * @return array<string, string>
+     */
+    public function buildVariables(ControllerBlueprint $blueprint): array
+    {
+        $modelVariable = $blueprint->getModelVariable();
+
+        return [
+            'controllerName'     => $blueprint->name,
+            'labelExpression'    => $this->getLabelExpression($blueprint),
+            'modelArguments'     => sprintf('{%s: %s}', $modelVariable, $modelVariable),
+            'modelName'          => $blueprint->getModelName(),
+            'modelObject'        => sprintf('{%s}', $modelVariable),
+            'modelVariable'      => $modelVariable,
+            'partialName'        => $blueprint->getModelName(),
+            'pluralObject'       => sprintf('{%s}', $blueprint->getPluralVariable()),
+            'pluralVariable'     => $blueprint->getPluralVariable(),
+            'repositoryProperty' => $modelVariable . 'Repository',
+        ];
     }
 
     public function generate(ControllerBlueprint $blueprint): void
@@ -82,23 +128,6 @@ readonly class ControllerGenerator
         if (true === $blueprint->withPlugin) {
             $this->pluginRegistrar->register($blueprint);
         }
-    }
-
-    /**
-     * Collects the label identifiers a rendered Fluid file asks for, so the language files always match the
-     * templates, even when those have been overridden.
-     *
-     * @return string[]
-     */
-    public static function extractLabelIds(string $content): array
-    {
-        preg_match_all(
-            '/<foundation:translate\s+id="([^"]+)"|translate\(id:\s*\\\\?\'([^\'\\\\]+)/',
-            $content,
-            $matches
-        );
-
-        return array_values(array_unique(array_filter(array_merge($matches[1], $matches[2]))));
     }
 
     /**
@@ -176,29 +205,6 @@ readonly class ControllerGenerator
             ],
             $extensionKey
         );
-    }
-
-    /**
-     * Placeholders shared by all controller, template and language file skeletons.
-     *
-     * @return array<string, string>
-     */
-    public function buildVariables(ControllerBlueprint $blueprint): array
-    {
-        $modelVariable = $blueprint->getModelVariable();
-
-        return [
-            'controllerName'     => $blueprint->name,
-            'labelExpression'    => $this->getLabelExpression($blueprint),
-            'modelArguments'     => sprintf('{%s: %s}', $modelVariable, $modelVariable),
-            'modelName'          => $blueprint->getModelName(),
-            'modelObject'        => sprintf('{%s}', $modelVariable),
-            'modelVariable'      => $modelVariable,
-            'partialName'        => $blueprint->getModelName(),
-            'pluralObject'       => sprintf('{%s}', $blueprint->getPluralVariable()),
-            'pluralVariable'     => $blueprint->getPluralVariable(),
-            'repositoryProperty' => $modelVariable . 'Repository',
-        ];
     }
 
     /**
@@ -406,6 +412,20 @@ readonly class ControllerGenerator
         ));
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function renderFieldAttributes(array $attributes): string
+    {
+        $rendered = [];
+
+        foreach ($attributes as $name => $value) {
+            $rendered[] = sprintf('%s="%s"', $name, (string)$value);
+        }
+
+        return implode("\n    ", $rendered);
+    }
+
     private function renderFormFields(ControllerBlueprint $blueprint): string
     {
         $extensionKey = $blueprint->extensionKey;
@@ -454,20 +474,6 @@ readonly class ControllerGenerator
         }
 
         return implode("\n\n", $fields);
-    }
-
-    /**
-     * @param array<string, mixed> $attributes
-     */
-    private function renderFieldAttributes(array $attributes): string
-    {
-        $rendered = [];
-
-        foreach ($attributes as $name => $value) {
-            $rendered[] = sprintf('%s="%s"', $name, (string)$value);
-        }
-
-        return implode("\n    ", $rendered);
     }
 
     /**

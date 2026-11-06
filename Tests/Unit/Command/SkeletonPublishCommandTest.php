@@ -15,11 +15,6 @@ use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
 use TYPO3\CMS\Core\Core\Environment;
 
-/**
- * Class SkeletonPublishCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class SkeletonPublishCommandTest extends AbstractCommandTestCase
 {
     private string $projectRoot;
@@ -42,23 +37,24 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
     }
 
     #[Test]
-    public function reportsAnAlreadyPublishedSkeleton(): void
+    public function dryRunWritesNoFile(): void
     {
         $tester = $this->runCommand($this->skeletonPublishCommand, [
+            '--dry-run'  => true,
             'identifier' => 'Php/FileHeader',
-            '--priority' => '0',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('is already published at priority 0', $tester->getDisplay());
+        self::assertStringContainsString('Dry run - no file has been written.', $tester->getDisplay());
+        self::assertFileDoesNotExist($this->projectRoot . 'Php/FileHeader.stub');
     }
 
     #[Test]
     public function rejectsAnUnknownPriority(): void
     {
         $tester = $this->runCommand($this->skeletonPublishCommand, [
-            'identifier' => 'Php/FileHeader',
             '--priority' => '99',
+            'identifier' => 'Php/FileHeader',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
@@ -67,15 +63,14 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
     }
 
     #[Test]
-    public function dryRunWritesNoFile(): void
+    public function reportsAnAlreadyPublishedSkeleton(): void
     {
         $tester = $this->runCommand($this->skeletonPublishCommand, [
+            '--priority' => '0',
             'identifier' => 'Php/FileHeader',
-            '--dry-run'  => true,
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Dry run - no file has been written.', $tester->getDisplay());
-        self::assertFileDoesNotExist($this->projectRoot . 'Php/FileHeader.stub');
+        self::assertStringContainsString('is already published at priority 0', $tester->getDisplay());
     }
 }

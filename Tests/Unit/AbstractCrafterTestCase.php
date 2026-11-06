@@ -32,19 +32,23 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 use function dirname;
+use function explode;
+use function file_get_contents;
+use function is_dir;
+use function ltrim;
 use function sprintf;
+use function str_replace;
+use function str_starts_with;
+use function substr;
+use function sys_get_temp_dir;
 
 /**
- * Class AbstractCrafterTestCase
- *
  * Wires the real service graph against a throwaway project directory. Only the PackageManager is mocked, because
  * everything else has to behave exactly as it does in a running installation: the configuration is read from the
  * shipped Crafter.yaml and the stubs are read from the shipped skeleton directory.
  *
  * The generated extension ends up in <tmp>/packages/<extensionKey>/, which is what the `extensionRootPath` default
  * resolves to once the project path points to the temporary directory.
- *
- * @package PSBits\Crafter\Tests\Unit
  */
 abstract class AbstractCrafterTestCase extends UnitTestCase
 {
@@ -62,6 +66,48 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
     protected SkeletonRenderer   $skeletonRenderer;
     protected SyncService        $syncService;
     protected ToolchainGenerator $toolchainGenerator;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->projectPath = $this->createTemporaryDirectory();
+        $this->initializeEnvironment();
+        $this->initializePackageManager();
+
+        $this->eventDispatcher      = new NoopEventDispatcher();
+        $this->configurationService = new ConfigurationService(
+            $this->eventDispatcher,
+            new YamlFileLoader(new NullLogger())
+        );
+        $this->extensionProfileService = new ExtensionProfileService();
+        $this->pathResolver            = new PathResolver($this->configurationService, $this->packageManager);
+        $this->fileWriter              = new FileWriter($this->eventDispatcher);
+        $this->skeletonRenderer        = new SkeletonRenderer(
+            $this->configurationService,
+            $this->eventDispatcher,
+            $this->pathResolver
+        );
+        $this->toolchainGenerator = new ToolchainGenerator($this->configurationService);
+        $this->syncService        = new SyncService(
+            $this->configurationService,
+            $this->extensionProfileService,
+            $this->fileWriter,
+            $this->pathResolver,
+            $this->skeletonRenderer,
+            $this->toolchainGenerator
+        );
+        $this->fileWriter->reset();
+    }
+
+    protected function tearDown(): void
+    {
+        if ('' !== $this->projectPath && is_dir($this->projectPath)) {
+            GeneralUtility::rmdir($this->projectPath, true);
+        }
+
+        parent::tearDown();
+    }
 
     private static function getFixturePath(string $name): string
     {
@@ -126,48 +172,6 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         self::assertFileExists($path, sprintf('Fixture "%s" is missing.', $name));
 
         return (string)file_get_contents($path);
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->projectPath = $this->createTemporaryDirectory();
-        $this->initializeEnvironment();
-        $this->initializePackageManager();
-
-        $this->eventDispatcher      = new NoopEventDispatcher();
-        $this->configurationService = new ConfigurationService(
-            $this->eventDispatcher,
-            new YamlFileLoader(new NullLogger())
-        );
-        $this->extensionProfileService = new ExtensionProfileService();
-        $this->pathResolver            = new PathResolver($this->configurationService, $this->packageManager);
-        $this->fileWriter              = new FileWriter($this->eventDispatcher);
-        $this->skeletonRenderer        = new SkeletonRenderer(
-            $this->configurationService,
-            $this->eventDispatcher,
-            $this->pathResolver
-        );
-        $this->toolchainGenerator = new ToolchainGenerator($this->configurationService);
-        $this->syncService        = new SyncService(
-            $this->configurationService,
-            $this->extensionProfileService,
-            $this->fileWriter,
-            $this->pathResolver,
-            $this->skeletonRenderer,
-            $this->toolchainGenerator
-        );
-        $this->fileWriter->reset();
-    }
-
-    protected function tearDown(): void
-    {
-        if ('' !== $this->projectPath && is_dir($this->projectPath)) {
-            GeneralUtility::rmdir($this->projectPath, true);
-        }
-
-        parent::tearDown();
     }
 
     /**

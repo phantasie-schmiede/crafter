@@ -18,18 +18,27 @@ use TYPO3\CMS\Core\Package\Exception\UnknownPackageException;
 use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function file_get_contents;
+use function implode;
 use function is_array;
+use function is_dir;
+use function is_file;
 use function is_string;
+use function json_decode;
+use function ksort;
+use function ltrim;
 use function sprintf;
+use function str_contains;
+use function str_ends_with;
+use function str_replace;
+use function str_starts_with;
 use function strlen;
+use function substr;
+use function trim;
 
 /**
- * Class PathResolver
- *
  * Resolves skeleton files via the prioritised `skeletonRootPaths` cascade and builds target file paths from the
  * configurable `paths` map. Generators must never concatenate paths themselves.
- *
- * @package PSBits\Crafter\Service
  */
 class PathResolver
 {

@@ -21,7 +21,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Environment;
 
+use function array_keys;
+use function file_get_contents;
+use function implode;
+use function ltrim;
 use function sprintf;
+use function str_replace;
 
 /**
  * Class SkeletonPublishCommand

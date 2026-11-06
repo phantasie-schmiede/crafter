@@ -18,12 +18,17 @@ use PSBits\Crafter\Utility\NamingUtility;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function file_get_contents;
+use function implode;
 use function is_scalar;
+use function sort;
 use function sprintf;
+use function trim;
 
 /**
- * Class SkeletonRenderer
- *
  * Renders `.stub` files by replacing `{{ placeholder }}` markers. Stubs contain no logic on purpose: loops and
  * ordering happen in PHP, every repeatable block is a stub of its own. This keeps stubs readable and overridable.
  *
@@ -34,8 +39,6 @@ use function sprintf;
  * Inline placeholders may carry a leading "$" (e.g. ${{ propertyName }}) to render a PHP variable. A "$" before
  * a name that is not a known variable is left untouched, which is how GitHub Actions expressions such as
  * ${{ matrix.php }} survive the rendering.
- *
- * @package PSBits\Crafter\Service
  */
 class SkeletonRenderer
 {
@@ -132,6 +135,20 @@ class SkeletonRenderer
         return $afterEvent->getContent();
     }
 
+    private function indent(string $value, string $indentation): string
+    {
+        if ('' === $indentation) {
+            return rtrim($value, "\r\n");
+        }
+
+        $lines = preg_split('/\r?\n/', rtrim($value, "\r\n")) ?: [];
+
+        return implode("\n", array_map(
+            static fn(string $line): string => '' === trim($line) ? '' : $indentation . $line,
+            $lines
+        ));
+    }
+
     /**
      * @param array<string, string> $variables
      */
@@ -166,20 +183,6 @@ class SkeletonRenderer
             },
             (string)$skeleton
         );
-    }
-
-    private function indent(string $value, string $indentation): string
-    {
-        if ('' === $indentation) {
-            return rtrim($value, "\r\n");
-        }
-
-        $lines = preg_split('/\r?\n/', rtrim($value, "\r\n")) ?: [];
-
-        return implode("\n", array_map(
-            static fn(string $line): string => '' === trim($line) ? '' : $indentation . $line,
-            $lines
-        ));
     }
 
     /**

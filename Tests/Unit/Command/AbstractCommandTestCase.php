@@ -39,14 +39,13 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function dirname;
+use function ltrim;
+
 /**
- * Class AbstractCommandTestCase
- *
  * Runs the real commands against the real service graph of a throwaway project, non-interactively by default, so
  * the CLI contract - options, validation, orchestration and exit codes - is verified without a running TYPO3
  * installation.
- *
- * @package PSBits\Crafter\Tests\Unit\Command
  */
 abstract class AbstractCommandTestCase extends AbstractGeneratorTestCase
 {
@@ -129,14 +128,6 @@ abstract class AbstractCommandTestCase extends AbstractGeneratorTestCase
     }
 
     /**
-     * Absolute path inside a generated extension under the throwaway project.
-     */
-    protected function pathOf(string $extensionKey, string $relativePath): string
-    {
-        return $this->projectPath . '/packages/' . $extensionKey . '/' . ltrim($relativePath, '/');
-    }
-
-    /**
      * Creates a hand written file in the generated extension, mirroring an extension a developer owns.
      */
     protected function createExtensionFile(string $relativePath, string $content): void
@@ -168,6 +159,14 @@ abstract class AbstractCommandTestCase extends AbstractGeneratorTestCase
             properties: $properties
         ));
         $this->syncService->sync(self::EXTENSION_KEY);
+    }
+
+    /**
+     * Absolute path inside a generated extension under the throwaway project.
+     */
+    protected function pathOf(string $extensionKey, string $relativePath): string
+    {
+        return $this->projectPath . '/packages/' . $extensionKey . '/' . ltrim($relativePath, '/');
     }
 
     /**

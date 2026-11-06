@@ -25,12 +25,8 @@ use PSBits\Crafter\Service\PluginRegistrar;
 use PSBits\Crafter\Service\RepositoryGenerator;
 
 /**
- * Class AbstractGeneratorTestCase
- *
  * Adds the generator layer on top of the base service graph. The services are wired manually instead of via the
  * container, so the tests stay independent of a running TYPO3 installation.
- *
- * @package PSBits\Crafter\Tests\Unit
  */
 abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
 {

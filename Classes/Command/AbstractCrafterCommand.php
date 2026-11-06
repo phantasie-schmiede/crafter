@@ -21,20 +21,35 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Environment;
 
 use function is_string;
+use function str_replace;
 
 /**
- * Class AbstractCrafterCommand
- *
  * Every command implements handle(). The final execute() wrapper catches CrafterException and reports it via
  * $io->error() with a failure exit code, so validation errors never surface as uncaught exceptions.
- *
- * @package PSBits\Crafter\Command
  */
 abstract class AbstractCrafterCommand extends Command
 {
     public const string OPTION_DRY_RUN   = 'dry-run';
     public const string OPTION_EXTENSION = 'extension';
     public const string OPTION_FORCE     = 'force';
+
+    protected function addFileOptions(): static
+    {
+        $this->addOption(
+            self::OPTION_DRY_RUN,
+            null,
+            InputOption::VALUE_NONE,
+            'Show what would be written without touching any file'
+        );
+        $this->addOption(
+            self::OPTION_FORCE,
+            'f',
+            InputOption::VALUE_NONE,
+            'Overwrite existing files'
+        );
+
+        return $this;
+    }
 
     protected function configure(): void
     {
@@ -59,26 +74,6 @@ abstract class AbstractCrafterCommand extends Command
         }
     }
 
-    abstract protected function handle(InputInterface $input, SymfonyStyle $io): int;
-
-    protected function addFileOptions(): static
-    {
-        $this->addOption(
-            self::OPTION_DRY_RUN,
-            null,
-            InputOption::VALUE_NONE,
-            'Show what would be written without touching any file'
-        );
-        $this->addOption(
-            self::OPTION_FORCE,
-            'f',
-            InputOption::VALUE_NONE,
-            'Overwrite existing files'
-        );
-
-        return $this;
-    }
-
     protected function getExtensionKey(InputInterface $input): ?string
     {
         $extensionKey = $input->getOption(self::OPTION_EXTENSION);
@@ -90,6 +85,8 @@ abstract class AbstractCrafterCommand extends Command
     {
         return new SymfonyStyle($input, $output);
     }
+
+    abstract protected function handle(InputInterface $input, SymfonyStyle $io): int;
 
     /**
      * @param WriteResult[] $results

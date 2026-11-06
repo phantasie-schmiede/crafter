@@ -13,13 +13,12 @@ namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Data\ControllerBlueprint;
 
+use function file_get_contents;
+use function is_file;
+
 /**
- * Class PluginRegistrar
- *
  * Adds the plugin of a generated controller to the ExtensionInformation of the extension. Foundation derives the
  * whole plugin configuration from there and from the PluginAction attributes, so no further registration is needed.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class PluginRegistrar
 {

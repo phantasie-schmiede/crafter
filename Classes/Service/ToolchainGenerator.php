@@ -14,7 +14,10 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Data\ContentProfile;
 
 use function array_key_last;
+use function array_keys;
+use function array_map;
 use function array_merge;
+use function implode;
 use function in_array;
 use function is_array;
 use function json_encode;
@@ -24,8 +27,6 @@ use function sprintf;
 use function str_starts_with;
 
 /**
- * Class ToolchainGenerator
- *
  * Assembles the quality tooling from `crafter.tools`. Every tool declares the composer and npm scripts it needs,
  * its require-dev packages and the configuration skeletons it owns. The tool selection is derived from the
  * content profile, so the generated composer.json, package.json and AGENTS.md always match what a given
@@ -39,36 +40,12 @@ use function str_starts_with;
  * (except the coverage runs) of `test:all`, and `qa` chains `fix:all`, `lint:all` and `test:all`. The
  * pre-commit hook and the caller CI workflow are installed by `.Build/bin/qa link` on every composer
  * install/update, so the generator only provides that script.
- *
- * @package PSBits\Crafter\Service
  */
 final class ToolchainGenerator
 {
     public function __construct(
         protected readonly ConfigurationService $configurationService,
     ) {
-    }
-
-    /**
-     * Names of the tools that apply to the given profile, in configuration order.
-     *
-     * @return string[]
-     */
-    public function getEnabledTools(ContentProfile $profile, ?string $extensionKey = null): array
-    {
-        $enabledTools = [];
-
-        foreach ($this->getTools($extensionKey) as $name => $tool) {
-            $when = is_array($tool['when'] ?? null) ? $tool['when'] : [];
-
-            if ([] !== $when && !$this->matchesProfile($when, $profile)) {
-                continue;
-            }
-
-            $enabledTools[] = (string)$name;
-        }
-
-        return $enabledTools;
     }
 
     /**
@@ -91,6 +68,28 @@ final class ToolchainGenerator
         }
 
         return $configFiles;
+    }
+
+    /**
+     * Names of the tools that apply to the given profile, in configuration order.
+     *
+     * @return string[]
+     */
+    public function getEnabledTools(ContentProfile $profile, ?string $extensionKey = null): array
+    {
+        $enabledTools = [];
+
+        foreach ($this->getTools($extensionKey) as $name => $tool) {
+            $when = is_array($tool['when'] ?? null) ? $tool['when'] : [];
+
+            if ([] !== $when && !$this->matchesProfile($when, $profile)) {
+                continue;
+            }
+
+            $enabledTools[] = (string)$name;
+        }
+
+        return $enabledTools;
     }
 
     /**
@@ -159,28 +158,6 @@ final class ToolchainGenerator
     /**
      * @return array<string, string>
      */
-    public function getManagedPackageScripts(ContentProfile $profile, ?string $extensionKey = null): array
-    {
-        $scripts = [];
-
-        foreach ($this->getEnabledTools($profile, $extensionKey) as $toolName) {
-            $toolScripts = is_array($this->getTools($extensionKey)[$toolName]['packageScripts'] ?? null)
-                ? $this->getTools($extensionKey)[$toolName]['packageScripts']
-                : [];
-
-            foreach ($toolScripts as $name => $command) {
-                $scripts[(string)$name] = (string)$command;
-            }
-        }
-
-        ksort($scripts);
-
-        return $scripts;
-    }
-
-    /**
-     * @return array<string, string>
-     */
     public function getManagedPackageDevDependencies(ContentProfile $profile, ?string $extensionKey = null): array
     {
         $dependencies = [];
@@ -200,15 +177,26 @@ final class ToolchainGenerator
         return $dependencies;
     }
 
-    public function needsNode(ContentProfile $profile, ?string $extensionKey = null): bool
+    /**
+     * @return array<string, string>
+     */
+    public function getManagedPackageScripts(ContentProfile $profile, ?string $extensionKey = null): array
     {
+        $scripts = [];
+
         foreach ($this->getEnabledTools($profile, $extensionKey) as $toolName) {
-            if (true === ($this->getTools($extensionKey)[$toolName]['needsNode'] ?? false)) {
-                return true;
+            $toolScripts = is_array($this->getTools($extensionKey)[$toolName]['packageScripts'] ?? null)
+                ? $this->getTools($extensionKey)[$toolName]['packageScripts']
+                : [];
+
+            foreach ($toolScripts as $name => $command) {
+                $scripts[(string)$name] = (string)$command;
             }
         }
 
-        return false;
+        ksort($scripts);
+
+        return $scripts;
     }
 
     /**
@@ -235,6 +223,72 @@ final class ToolchainGenerator
                 $this->getManagedPackageScripts($profile, $extensionKey)
             ),
         ];
+    }
+
+    public function needsNode(ContentProfile $profile, ?string $extensionKey = null): bool
+    {
+        foreach ($this->getEnabledTools($profile, $extensionKey) as $toolName) {
+            if (true === ($this->getTools($extensionKey)[$toolName]['needsNode'] ?? false)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Renders a composer "scripts" map with 8 space indentation, exactly as ComposerDevSection.stub expects it.
+     *
+     * @param array<string, mixed> $scripts
+     */
+    public function renderComposerScripts(array $scripts): string
+    {
+        $lines = [];
+
+        foreach ($scripts as $name => $value) {
+            if (is_array($value)) {
+                if ([] === $value) {
+                    $lines[] = sprintf('        "%s": [],', $name);
+
+                    continue;
+                }
+
+                $lines[] = sprintf('        "%s": [', $name);
+                $lines[] = '            "' . implode("\",\n            \"", $value) . '"';
+                $lines[] = '        ],';
+
+                continue;
+            }
+
+            $lines[] = sprintf('        "%s": "%s",', $name, $value);
+        }
+
+        $lastLineIndex         = array_key_last($lines);
+        $lines[$lastLineIndex] = rtrim($lines[$lastLineIndex], ',');
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Renders a simple key/value JSON map, e.g. for require-dev or package.json scripts.
+     *
+     * @param array<string, string> $map
+     */
+    public function renderJsonMap(array $map): string
+    {
+        $lines = [];
+
+        foreach ($map as $key => $value) {
+            $lines[] = sprintf('%s: %s,', json_encode($key), json_encode($value));
+        }
+
+        $lastLineIndex = array_key_last($lines);
+
+        if (null !== $lastLineIndex) {
+            $lines[$lastLineIndex] = rtrim($lines[$lastLineIndex], ',');
+        }
+
+        return implode("\n", $lines);
     }
 
     /**
@@ -350,60 +404,5 @@ final class ToolchainGenerator
         }
 
         return implode("\n", $bullets);
-    }
-
-    /**
-     * Renders a composer "scripts" map with 8 space indentation, exactly as ComposerDevSection.stub expects it.
-     *
-     * @param array<string, mixed> $scripts
-     */
-    public function renderComposerScripts(array $scripts): string
-    {
-        $lines = [];
-
-        foreach ($scripts as $name => $value) {
-            if (is_array($value)) {
-                if ([] === $value) {
-                    $lines[] = sprintf('        "%s": [],', $name);
-
-                    continue;
-                }
-
-                $lines[] = sprintf('        "%s": [', $name);
-                $lines[] = '            "' . implode("\",\n            \"", $value) . '"';
-                $lines[] = '        ],';
-
-                continue;
-            }
-
-            $lines[] = sprintf('        "%s": "%s",', $name, $value);
-        }
-
-        $lastLineIndex         = array_key_last($lines);
-        $lines[$lastLineIndex] = rtrim($lines[$lastLineIndex], ',');
-
-        return implode("\n", $lines);
-    }
-
-    /**
-     * Renders a simple key/value JSON map, e.g. for require-dev or package.json scripts.
-     *
-     * @param array<string, string> $map
-     */
-    public function renderJsonMap(array $map): string
-    {
-        $lines = [];
-
-        foreach ($map as $key => $value) {
-            $lines[] = sprintf('%s: %s,', json_encode($key), json_encode($value));
-        }
-
-        $lastLineIndex = array_key_last($lines);
-
-        if (null !== $lastLineIndex) {
-            $lines[$lastLineIndex] = rtrim($lines[$lastLineIndex], ',');
-        }
-
-        return implode("\n", $lines);
     }
 }

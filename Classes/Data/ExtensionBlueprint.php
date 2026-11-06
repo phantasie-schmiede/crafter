@@ -11,13 +11,11 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Data;
 
+use function str_replace;
+
 /**
- * Class ExtensionBlueprint
- *
  * Immutable description of the extension that is about to be created. Commands collect the values, generators
  * consume them. Passing this object around keeps follow-up commands independent of console input.
- *
- * @package PSBits\Crafter\Data
  */
 readonly class ExtensionBlueprint
 {

@@ -13,13 +13,16 @@ namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Data\PropertyDefinition;
 
+use function array_map;
+use function file_get_contents;
+use function implode;
+use function is_file;
+use function str_contains;
+use function trim;
+
 /**
- * Class ModelPropertyReader
- *
  * Recovers the property definitions of an already generated domain model by reading its source file. The file is
  * parsed instead of reflected, because a freshly created extension is not autoloadable yet.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ModelPropertyReader
 {
@@ -61,6 +64,20 @@ readonly class ModelPropertyReader
     }
 
     /**
+     * Turns an attribute template into a regular expression. Placeholders such as {linkedClass} become wildcards,
+     * everything else is matched literally.
+     */
+    private function buildAttributePattern(string $attribute): string
+    {
+        $parts = preg_split('/\{\w+}/', '#[' . $attribute . ']') ?: [];
+
+        return implode('.*', array_map(
+            static fn(string $part): string => preg_quote($part, '/'),
+            $parts
+        ));
+    }
+
+    /**
      * Turns the configured attribute templates into regular expressions, so that variants of the same attribute,
      * e.g. Number(format: NumberFormat::decimal) and a plain Number, stay distinguishable. All attributes of a type
      * have to be present for it to match.
@@ -84,20 +101,6 @@ readonly class ModelPropertyReader
         }
 
         return $patterns;
-    }
-
-    /**
-     * Turns an attribute template into a regular expression. Placeholders such as {linkedClass} become wildcards,
-     * everything else is matched literally.
-     */
-    private function buildAttributePattern(string $attribute): string
-    {
-        $parts = preg_split('/\{\w+}/', '#[' . $attribute . ']') ?: [];
-
-        return implode('.*', array_map(
-            static fn(string $part): string => preg_quote($part, '/'),
-            $parts
-        ));
     }
 
     /**

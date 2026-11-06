@@ -21,8 +21,15 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_filter;
+use function array_map;
+use function array_unique;
+use function array_values;
+use function explode;
 use function is_string;
+use function lcfirst;
 use function sprintf;
+use function trim;
 
 /**
  * Class MakeBackendControllerCommand

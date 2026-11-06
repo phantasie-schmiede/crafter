@@ -13,12 +13,11 @@ namespace PSBits\Crafter\Data;
 
 use PSBits\Crafter\Utility\NamingUtility;
 
+use function str_ends_with;
+use function substr;
+
 /**
- * Class PropertyDefinition
- *
  * A single property of a domain model, described independently of its rendering.
- *
- * @package PSBits\Crafter\Data
  */
 readonly class PropertyDefinition
 {
@@ -29,6 +28,14 @@ readonly class PropertyDefinition
         public string $linkedClass = '',
         public string $foreignField = '',
     ) {
+    }
+
+    /**
+     * Database column name, example: 'contactGroups' => 'contact_groups'
+     */
+    public function getColumnName(): string
+    {
+        return NamingUtility::toLowerCaseUnderscored($this->name);
     }
 
     /**
@@ -59,13 +66,5 @@ readonly class PropertyDefinition
         }
 
         return $suffix;
-    }
-
-    /**
-     * Database column name, example: 'contactGroups' => 'contact_groups'
-     */
-    public function getColumnName(): string
-    {
-        return NamingUtility::toLowerCaseUnderscored($this->name);
     }
 }

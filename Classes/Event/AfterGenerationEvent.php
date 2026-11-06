@@ -14,12 +14,8 @@ namespace PSBits\Crafter\Event;
 use PSBits\Crafter\Data\WriteResult;
 
 /**
- * Class AfterGenerationEvent
- *
  * Dispatched when a command has written all its files. Typical listeners run a code formatter over the created
  * files, add them to the index of a version control system or trigger a cache flush.
- *
- * @package PSBits\Crafter\Event
  */
 final class AfterGenerationEvent
 {

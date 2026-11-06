@@ -13,8 +13,6 @@ namespace PSBits\Crafter\Enum;
 
 /**
  * Enum WriteStatus
- *
- * @package PSBits\Crafter\Enum
  */
 enum WriteStatus: string
 {

@@ -14,11 +14,6 @@ namespace PSBits\Crafter\Tests\Unit\Command;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
 
-/**
- * Class ConfigDumpCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class ConfigDumpCommandTest extends AbstractCommandTestCase
 {
     #[Test]

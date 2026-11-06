@@ -15,11 +15,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use PSBits\Crafter\Utility\PhpUtility;
 
-/**
- * Class PhpUtilityTest
- *
- * @package PSBits\Crafter\Tests\Unit\Utility
- */
+use function implode;
+
 final class PhpUtilityTest extends TestCase
 {
     #[Test]
@@ -38,18 +35,18 @@ final class PhpUtilityTest extends TestCase
     }
 
     #[Test]
+    public function getShortClassNameReturnsGlobalClassesUnchanged(): void
+    {
+        self::assertSame('DateTime', PhpUtility::getShortClassName('\DateTime'));
+    }
+
+    #[Test]
     public function getShortClassNameReturnsTheLastSegment(): void
     {
         self::assertSame(
             'AbstractEntity',
             PhpUtility::getShortClassName('TYPO3\CMS\Extbase\DomainObject\AbstractEntity')
         );
-    }
-
-    #[Test]
-    public function getShortClassNameReturnsGlobalClassesUnchanged(): void
-    {
-        self::assertSame('DateTime', PhpUtility::getShortClassName('\DateTime'));
     }
 
     #[Test]

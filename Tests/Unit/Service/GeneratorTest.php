@@ -18,16 +18,45 @@ use PSBits\Crafter\Data\ModelBlueprint;
 use PSBits\Crafter\Data\PropertyDefinition;
 use PSBits\Crafter\Tests\Unit\AbstractGeneratorTestCase;
 
+use function file_get_contents;
+use function file_put_contents;
+use function implode;
+use function json_encode;
+
 /**
- * Class GeneratorTest
- *
  * Golden master tests: every generator writes into a throwaway project and the result is compared byte by byte with
  * a reviewed fixture. Run the suite with CRAFTER_UPDATE_FIXTURES=1 after an intended change of the output.
- *
- * @package PSBits\Crafter\Tests\Unit\Service
  */
 final class GeneratorTest extends AbstractGeneratorTestCase
 {
+    /**
+     * Covers every rendering branch of the model generator: scalars, dates, relations and enums.
+     *
+     * @return PropertyDefinition[]
+     */
+    private static function getProperties(): array
+    {
+        return [
+            new PropertyDefinition(name: 'title', type: 'string', required: true),
+            new PropertyDefinition(name: 'description', type: 'text'),
+            new PropertyDefinition(name: 'price', type: 'decimal'),
+            new PropertyDefinition(name: 'active', type: 'boolean'),
+            new PropertyDefinition(name: 'releaseDate', type: 'date'),
+            new PropertyDefinition(
+                name: 'category',
+                type: 'relationSingle',
+                linkedClass: 'PSBits\DemoShop\Domain\Model\Category'
+            ),
+            // The console passes short names, so both notations have to work.
+            new PropertyDefinition(
+                name: 'tags',
+                type: 'relationMultiple',
+                linkedClass: 'Tag',
+                foreignField: 'product'
+            ),
+        ];
+    }
+
     #[Test]
     public function backendControllerIsGeneratedWithTemplatesAndLanguageFiles(): void
     {
@@ -111,6 +140,14 @@ final class GeneratorTest extends AbstractGeneratorTestCase
     }
 
     #[Test]
+    public function extensionIsGeneratedWithTheCiWorkflow(): void
+    {
+        $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
+
+        $this->assertFileMatchesFixture('.github/workflows/ci.yml', 'Workflow/Ci.yml');
+    }
+
+    #[Test]
     public function modelIsGeneratedWithEveryRelevantPropertyType(): void
     {
         $this->modelGenerator->generate(new ModelBlueprint(
@@ -120,14 +157,6 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         ));
 
         $this->assertFileMatchesFixture('Classes/Domain/Model/Product.php', 'Product.php');
-    }
-
-    #[Test]
-    public function extensionIsGeneratedWithTheCiWorkflow(): void
-    {
-        $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
-
-        $this->assertFileMatchesFixture('.github/workflows/ci.yml', 'Workflow/Ci.yml');
     }
 
     #[Test]
@@ -190,33 +219,5 @@ final class GeneratorTest extends AbstractGeneratorTestCase
             'Classes/ViewHelpers/Format/PriceViewHelper.php',
             'PriceViewHelper.php'
         );
-    }
-
-    /**
-     * Covers every rendering branch of the model generator: scalars, dates, relations and enums.
-     *
-     * @return PropertyDefinition[]
-     */
-    private static function getProperties(): array
-    {
-        return [
-            new PropertyDefinition(name: 'title', type: 'string', required: true),
-            new PropertyDefinition(name: 'description', type: 'text'),
-            new PropertyDefinition(name: 'price', type: 'decimal'),
-            new PropertyDefinition(name: 'active', type: 'boolean'),
-            new PropertyDefinition(name: 'releaseDate', type: 'date'),
-            new PropertyDefinition(
-                name: 'category',
-                type: 'relationSingle',
-                linkedClass: 'PSBits\DemoShop\Domain\Model\Category'
-            ),
-            // The console passes short names, so both notations have to work.
-            new PropertyDefinition(
-                name: 'tags',
-                type: 'relationMultiple',
-                linkedClass: 'Tag',
-                foreignField: 'product'
-            ),
-        ];
     }
 }

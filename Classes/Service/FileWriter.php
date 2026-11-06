@@ -22,15 +22,14 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use function chmod;
 use function clearstatcache;
 use function dirname;
+use function file_get_contents;
+use function is_dir;
+use function is_file;
 use function sprintf;
 
 /**
- * Class FileWriter
- *
  * Single point of file creation for all generators. Never overwrites silently and collects every result so commands
  * can print a summary and support --dry-run.
- *
- * @package PSBits\Crafter\Service
  */
 class FileWriter
 {

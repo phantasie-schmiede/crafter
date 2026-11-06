@@ -17,12 +17,8 @@ use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function dirname;
+use function json_encode;
 
-/**
- * Class PathResolverTest
- *
- * @package PSBits\Crafter\Tests\Unit\Service
- */
 final class PathResolverTest extends AbstractCrafterTestCase
 {
     #[Test]
@@ -58,6 +54,15 @@ final class PathResolverTest extends AbstractCrafterTestCase
     }
 
     #[Test]
+    public function namespaceFallsBackToTheVendorAndExtensionName(): void
+    {
+        self::assertSame(
+            'PSBits\DemoShop',
+            $this->pathResolver->resolveNamespace(self::EXTENSION_KEY, 'PSBits')
+        );
+    }
+
+    #[Test]
     public function namespaceIsReadFromComposerJson(): void
     {
         $path = $this->getExtensionFilePath('composer.json');
@@ -69,15 +74,6 @@ final class PathResolverTest extends AbstractCrafterTestCase
         );
 
         self::assertSame('Acme\Shop', $this->pathResolver->resolveNamespace(self::EXTENSION_KEY));
-    }
-
-    #[Test]
-    public function namespaceFallsBackToTheVendorAndExtensionName(): void
-    {
-        self::assertSame(
-            'PSBits\DemoShop',
-            $this->pathResolver->resolveNamespace(self::EXTENSION_KEY, 'PSBits')
-        );
     }
 
     #[Test]

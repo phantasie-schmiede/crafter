@@ -21,8 +21,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_values;
 use function is_string;
 use function sprintf;
+use function str_starts_with;
+use function substr;
 
 /**
  * Class AuditCommand

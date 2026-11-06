@@ -14,16 +14,17 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Exception\CrafterException;
 
 use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_values;
+use function implode;
 use function is_array;
+use function ksort;
 use function sprintf;
 
 /**
- * Class FieldTypeRegistry
- *
  * Read access to the configurable `fieldTypes` map. Keeping the field descriptions in configuration instead of PHP
  * allows projects to add own property types without extending any class.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class FieldTypeRegistry
 {

@@ -17,16 +17,25 @@ use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
 use PSBits\Crafter\Utility\PhpUtility;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_unique;
+use function array_values;
+use function explode;
+use function implode;
 use function is_array;
+use function sort;
 use function sprintf;
+use function str_contains;
+use function str_ends_with;
+use function str_replace;
+use function trim;
 
 /**
- * Class ClassGenerator
- *
  * Renders any plain PHP class of the crafter.classTypes catalogue. Services, view helpers, event listeners and
  * backend controllers only differ in configuration, so they all share this generator and the Php/Class skeleton.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ClassGenerator
 {
@@ -39,6 +48,14 @@ readonly class ClassGenerator
         protected PathResolver         $pathResolver,
         protected SkeletonRenderer     $skeletonRenderer,
     ) {
+    }
+
+    private static function indent(string $value): string
+    {
+        return implode("\n", array_map(
+            static fn(string $line): string => '' === trim($line) ? '' : '    ' . $line,
+            explode("\n", rtrim($value))
+        ));
     }
 
     /**
@@ -254,14 +271,6 @@ readonly class ClassGenerator
         }
 
         return $sections;
-    }
-
-    private static function indent(string $value): string
-    {
-        return implode("\n", array_map(
-            static fn(string $line): string => '' === trim($line) ? '' : '    ' . $line,
-            explode("\n", rtrim($value))
-        ));
     }
 
     /**

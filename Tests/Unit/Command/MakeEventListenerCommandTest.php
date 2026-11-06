@@ -16,20 +16,15 @@ use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
 
-/**
- * Class MakeEventListenerCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class MakeEventListenerCommandTest extends AbstractCommandTestCase
 {
     #[Test]
     public function createsAnEventListenerForTheGivenEvent(): void
     {
         $tester = $this->runCommand($this->makeEventListenerCommand, [
-            'name'        => 'ProductUpdate',
-            '--extension' => self::EXTENSION_KEY,
             '--event'     => 'TYPO3\CMS\Core\Database\Event\AfterFileOperationEvent',
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'ProductUpdate',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -42,9 +37,9 @@ final class MakeEventListenerCommandTest extends AbstractCommandTestCase
     public function rejectsAnEventWithoutNamespace(): void
     {
         $tester = $this->runCommand($this->makeEventListenerCommand, [
-            'name'        => 'ProductUpdate',
-            '--extension' => self::EXTENSION_KEY,
             '--event'     => 'AfterFileOperationEvent',
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'ProductUpdate',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
