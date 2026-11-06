@@ -228,6 +228,11 @@ crafter:
       requireDev:
         roave/security-advisories: 'dev-latest'
       when: []
+    composerNormalize:
+      agentsBullet: '`lint:composer`/`fix:composer` normalize the composer.json key order and formatting (ergebnis/composer-normalize).'
+      requireDev:
+        'ergebnis/composer-normalize': '^2.56'
+      when: []
     phpCsFixer:
       agentsBullet: '`lint:php`/`fix:php` run PHP-CS-Fixer.'
       configFiles:
@@ -252,7 +257,7 @@ crafter:
       when:
         - 'php'
     prettier:
-      agentsBullet: '`lint:htmlxml`/`fix:htmlxml` format HTML, XML and XLIF files with Prettier.'
+      agentsBullet: '`lint:htmlxml`/`fix:htmlxml` format the HTML, XML and XLIF files, `lint:json`/`fix:json` the package.json, with Prettier.'
       configFiles:
         'Extension/Quality/PrettierIgnore': 'Build/Quality/.prettierignore'
       needsNode: true
@@ -262,7 +267,9 @@ crafter:
         prettier-plugin-organize-attributes: '^1.0.0'
       packageScripts:
         fix:htmlxml: 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "**/*.{html,xml,xlf}"'
+        fix:json: 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "package.json"'
         lint:htmlxml: 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"'
+        lint:json: 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "package.json"'
       when:
         - 'html'
         - 'xml'

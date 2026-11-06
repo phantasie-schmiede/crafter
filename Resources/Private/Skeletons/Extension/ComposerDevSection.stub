@@ -1,6 +1,3 @@
     "require-dev": {
         {{ composerDevRequire }}
     },
-    "scripts": {
-{{ composerDevScripts }}
-    },

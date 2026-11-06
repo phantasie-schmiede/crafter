@@ -223,7 +223,8 @@ final class ToolchainGenerator
     }
 
     /**
-     * Renders a composer "scripts" map with 8 space indentation, exactly as ComposerDevSection.stub expects it.
+     * Renders a composer "scripts" map with 8 space indentation, exactly as the scripts block of Composer.stub
+     * expects it.
      *
      * @param array<string, mixed> $scripts
      */

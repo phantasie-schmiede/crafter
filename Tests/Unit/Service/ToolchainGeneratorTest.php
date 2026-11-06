@@ -33,6 +33,7 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertStringContainsString('- `lint:classes`', $variables['agentsToolChecks']);
         self::assertStringContainsString('- `lint:htmlxml`', $variables['agentsToolChecks']);
         self::assertStringContainsString('- `audit:composer`', $variables['agentsToolChecks']);
+        self::assertStringContainsString('- `lint:composer`', $variables['agentsToolChecks']);
         self::assertStringNotContainsString('lint:php', $variables['agentsToolChecks']);
     }
 
@@ -57,7 +58,7 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
     {
         $profile = $this->extensionProfileService->fromPlannedFiles([]);
 
-        self::assertSame(['composerAudit'], $this->toolchainGenerator->getEnabledTools($profile));
+        self::assertSame(['composerAudit', 'composerNormalize'], $this->toolchainGenerator->getEnabledTools($profile));
     }
 
     #[Test]
@@ -65,14 +66,16 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
     {
         $profile = $this->extensionProfileService->fromPlannedFiles(['Resources/Private/Templates/Product/List.html']);
 
-        self::assertSame(['classLint', 'composerAudit', 'prettier'], $this->toolchainGenerator->getEnabledTools($profile));
+        self::assertSame(['classLint', 'composerAudit', 'composerNormalize', 'prettier'], $this->toolchainGenerator->getEnabledTools($profile));
         self::assertTrue($this->toolchainGenerator->needsNode($profile));
         self::assertSame(
             [
                 'fix:classes'  => 'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs',
                 'fix:htmlxml'  => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "**/*.{html,xml,xlf}"',
+                'fix:json'     => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "package.json"',
                 'lint:classes' => 'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs --dry-run',
                 'lint:htmlxml' => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"',
+                'lint:json'    => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "package.json"',
             ],
             $this->toolchainGenerator->getManagedPackageScripts($profile)
         );
@@ -97,13 +100,14 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
 
         self::assertSame(
             [
-                'friendsofphp/php-cs-fixer'     => '^3.95',
-                'phpstan/phpstan'               => '^2.2',
-                'phpunit/phpunit'               => '^11',
-                'psbits/qa'                     => '@dev',
-                'roave/security-advisories'     => 'dev-latest',
-                'saschaegerer/phpstan-typo3'    => '^2.1 || ^3.0',
-                'typo3/testing-framework'       => '^9.5',
+                'ergebnis/composer-normalize'     => '^2.56',
+                'friendsofphp/php-cs-fixer'       => '^3.95',
+                'phpstan/phpstan'                 => '^2.2',
+                'phpunit/phpunit'                 => '^11',
+                'psbits/qa'                       => '@dev',
+                'roave/security-advisories'       => 'dev-latest',
+                'saschaegerer/phpstan-typo3'      => '^2.1 || ^3.0',
+                'typo3/testing-framework'         => '^9.5',
             ],
             $this->toolchainGenerator->getManagedComposerRequireDev($profile)
         );
@@ -115,7 +119,7 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         $profile = $this->extensionProfileService->fromPlannedFiles(['Classes/Domain/Model/Product.php']);
 
         self::assertSame(
-            ['composerAudit', 'phpCsFixer', 'phpUnit', 'phpStan', 'throwsFixer'],
+            ['composerAudit', 'composerNormalize', 'phpCsFixer', 'phpUnit', 'phpStan', 'throwsFixer'],
             $this->toolchainGenerator->getEnabledTools($profile)
         );
         self::assertSame(
@@ -153,7 +157,7 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
     {
         $profile = $this->extensionProfileService->fromPlannedFiles(['Configuration/TypoScript/setup.typoscript']);
 
-        self::assertSame(['composerAudit', 'typoScriptLint'], $this->toolchainGenerator->getEnabledTools($profile));
+        self::assertSame(['composerAudit', 'composerNormalize', 'typoScriptLint'], $this->toolchainGenerator->getEnabledTools($profile));
         self::assertFalse($this->toolchainGenerator->needsNode($profile));
         self::assertSame(
             [
@@ -170,6 +174,6 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
     {
         $profile = $this->extensionProfileService->fromPlannedFiles(['Configuration/Services.yaml']);
 
-        self::assertSame(['composerAudit', 'yamlLint'], $this->toolchainGenerator->getEnabledTools($profile));
+        self::assertSame(['composerAudit', 'composerNormalize', 'yamlLint'], $this->toolchainGenerator->getEnabledTools($profile));
     }
 }

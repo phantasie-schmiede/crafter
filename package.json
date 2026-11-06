@@ -5,8 +5,10 @@
   "scripts": {
     "fix:classes": "node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs",
     "fix:htmlxml": "prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write \"**/*.{xml,xlf}\"",
+    "fix:json": "prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write \"package.json\"",
     "lint:classes": "node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs --dry-run",
-    "lint:htmlxml": "prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check \"**/*.{xml,xlf}\""
+    "lint:htmlxml": "prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check \"**/*.{xml,xlf}\"",
+    "lint:json": "prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check \"package.json\""
   },
   "license": "GPL-3.0-or-later",
   "engines": {

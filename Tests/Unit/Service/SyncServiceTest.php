@@ -82,7 +82,7 @@ final class SyncServiceTest extends AbstractCrafterTestCase
 
         self::assertSame('demo-shop', $packageJson['name']);
         self::assertSame('>=24', $packageJson['engines']['node']);
-        self::assertSame(['fix:classes', 'fix:htmlxml', 'lint:classes', 'lint:htmlxml'], array_keys($packageScripts));
+        self::assertSame(['fix:classes', 'fix:htmlxml', 'fix:json', 'lint:classes', 'lint:htmlxml', 'lint:json'], array_keys($packageScripts));
         self::assertArrayHasKey('prettier', $packageDevDependencies);
     }
 
@@ -162,6 +162,7 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         self::assertArrayNotHasKey('fix:all', $composer['scripts']);
         self::assertArrayNotHasKey('qa', $composer['scripts']);
         self::assertSame('dev-latest', $composer['require-dev']['roave/security-advisories']);
+        self::assertSame('^2.56', $composer['require-dev']['ergebnis/composer-normalize']);
     }
 
     #[Test]
