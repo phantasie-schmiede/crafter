@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
 use PSBits\Crafter\Data\ClassBlueprint;
 use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Data\ModelBlueprint;
@@ -139,12 +140,16 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
-    public function extensionIsGeneratedWithTheCiWorkflow(): void
+    public function extensionIsGeneratedWithoutACiWorkflow(): void
     {
-        $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
+        // The caller CI workflow is installed by .Build/bin/qa link (psbits/qa), not by the crafter.
+        $this->generateBaseExtension(['core', 'typoScript', 'quality']);
 
-        $this->assertFileMatchesFixture('.github/workflows/ci.yml', 'Workflow/Ci.yml');
+        self::assertFileDoesNotExist($this->getExtensionFilePath('.github/workflows/ci.yml'));
     }
 
     #[Test]

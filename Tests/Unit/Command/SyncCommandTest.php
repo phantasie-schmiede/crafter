@@ -34,7 +34,7 @@ final class SyncCommandTest extends AbstractCommandTestCase
     #[Test]
     public function dryRunLeavesDriftedFilesUntouched(): void
     {
-        $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
+        $this->generateBaseExtension(['core', 'typoScript', 'quality']);
         $path    = $this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php');
         $drifted = file_get_contents($path) . "// drift\n";
         file_put_contents($path, $drifted);
@@ -49,7 +49,7 @@ final class SyncCommandTest extends AbstractCommandTestCase
     #[Test]
     public function renewsADriftedQualityConfig(): void
     {
-        $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
+        $this->generateBaseExtension(['core', 'typoScript', 'quality']);
         $path = $this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php');
         file_put_contents($path, file_get_contents($path) . "// drift\n");
 
@@ -62,7 +62,7 @@ final class SyncCommandTest extends AbstractCommandTestCase
     #[Test]
     public function reportsNothingToDoForAnInSyncExtension(): void
     {
-        $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
+        $this->generateBaseExtension(['core', 'typoScript', 'quality']);
 
         $tester = $this->runCommand($this->syncCommand, ['extensionKey' => self::EXTENSION_KEY]);
 

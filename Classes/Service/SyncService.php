@@ -59,7 +59,7 @@ use function trim;
  */
 final class SyncService
 {
-    public const array ALWAYS_MANAGED_COMPOSER_SCRIPTS = ['fix:all', 'lint:all', 'post-install-cmd', 'validate:composer'];
+    public const array ALWAYS_MANAGED_COMPOSER_SCRIPTS = ['post-install-cmd', 'post-update-cmd'];
     public const string POLICY_CREATE_IF_MISSING       = 'createIfMissing';
     public const string POLICY_MERGE                   = 'merge';
     public const string POLICY_OVERWRITE               = 'overwrite';
@@ -153,9 +153,7 @@ final class SyncService
             }
         }
 
-        if (str_starts_with($identifier, 'Extension/Quality/')
-            || str_starts_with($identifier, 'Extension/Workflow/')
-            || 'Extension/PackageJson' === $identifier) {
+        if (str_starts_with($identifier, 'Extension/Quality/') || 'Extension/PackageJson' === $identifier) {
             return [] !== $enabledTools;
         }
 
@@ -473,6 +471,11 @@ final class SyncService
     }
 
     /**
+     * Merges the generated entries into the existing map: the managed names take the generated value (or are
+     * dropped when the generator no longer provides them), every other existing entry survives as-is and
+     * generated names that are not managed are ignored, so the sync never injects entries it does not own
+     * (e.g. the repository-managed test:all aggregate).
+     *
      * @param array<string, string> $existing
      * @param array<string, mixed>  $generated
      * @param string[]              $managedNames
@@ -490,7 +493,9 @@ final class SyncService
         }
 
         foreach ($generated as $name => $value) {
-            $map[(string)$name] = $value;
+            if (in_array($name, $managedNames, true)) {
+                $map[$name] = $value;
+            }
         }
 
         ksort($map);
@@ -534,7 +539,7 @@ final class SyncService
             $indentation = strlen($line) - strlen(ltrim($line));
 
             if (0 < $indentation) {
-                $line = str_repeat(' ', (int)($indentation / 2)) . substr($line, $indentation);
+                $line = str_repeat(' ', ($indentation / 2)) . substr($line, $indentation);
             }
         }
 

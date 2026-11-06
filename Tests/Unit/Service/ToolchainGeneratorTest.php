@@ -110,27 +110,19 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
     }
 
     #[Test]
-    public function phpProfileEnablesThePhpToolsAndAssemblesTheirScripts(): void
+    public function phpProfileEnablesThePhpToolsAndManagesOnlyTheBootstrapScripts(): void
     {
         $profile = $this->extensionProfileService->fromPlannedFiles(['Classes/Domain/Model/Product.php']);
 
         self::assertSame(
-            ['composerAudit', 'phpCsFixer', 'phpUnit', 'phpStan'],
+            ['composerAudit', 'phpCsFixer', 'phpUnit', 'phpStan', 'throwsFixer'],
             $this->toolchainGenerator->getEnabledTools($profile)
         );
         self::assertSame(
             [
-                'analyze:php'       => 'phpstan analyse --configuration=Build/Quality/phpstan.neon.dist --no-progress',
-                'audit:composer'    => 'composer audit --abandoned=report',
-                'fix:all'           => ['@fix:php'],
-                'fix:php'           => 'php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --verbose',
-                'lint:all'          => ['@analyze:php', '@audit:composer', '@lint:php', '@validate:composer'],
-                'lint:php'          => 'php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --dry-run --diff --verbose',
-                'post-install-cmd'  => ['.Build/bin/qa link'],
-                'post-update-cmd'   => ['.Build/bin/qa link'],
-                'qa'                => ['@fix:all', '@lint:all', '@test:all'],
-                'test:all'          => [],
-                'validate:composer' => 'composer validate --no-check-publish',
+                'post-install-cmd' => ['.Build/bin/qa link'],
+                'post-update-cmd'  => ['.Build/bin/qa link'],
+                'test:all'         => [],
             ],
             $this->toolchainGenerator->getManagedComposerScripts($profile)
         );
@@ -165,14 +157,9 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertFalse($this->toolchainGenerator->needsNode($profile));
         self::assertSame(
             [
-                'audit:composer'    => 'composer audit --abandoned=report',
-                'lint:all'          => ['@audit:composer', '@lint:typoscript', '@validate:composer'],
-                'lint:typoscript'   => 'typoscript-lint --config=.Build/vendor/psbits/qa/Resources/Quality/typoscript-lint.yml --ansi Configuration/TypoScript',
-                'post-install-cmd'  => ['.Build/bin/qa link'],
-                'post-update-cmd'   => ['.Build/bin/qa link'],
-                'qa'                => ['@lint:all', '@test:all'],
-                'test:all'          => [],
-                'validate:composer' => 'composer validate --no-check-publish',
+                'post-install-cmd' => ['.Build/bin/qa link'],
+                'post-update-cmd'  => ['.Build/bin/qa link'],
+                'test:all'         => [],
             ],
             $this->toolchainGenerator->getManagedComposerScripts($profile)
         );

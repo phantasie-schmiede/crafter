@@ -15,10 +15,8 @@ use PSBits\Crafter\Data\ContentProfile;
 
 use function array_key_last;
 use function array_keys;
-use function array_map;
 use function array_merge;
 use function implode;
-use function in_array;
 use function is_array;
 use function json_encode;
 use function ksort;
@@ -27,19 +25,20 @@ use function sprintf;
 use function str_starts_with;
 
 /**
- * Assembles the quality tooling from `crafter.tools`. Every tool declares the composer and npm scripts it needs,
- * its require-dev packages and the configuration skeletons it owns. The tool selection is derived from the
- * content profile, so the generated composer.json, package.json and AGENTS.md always match what a given
- * extension actually contains.
+ * Assembles the quality tooling from `crafter.tools`. Every tool declares the npm scripts it needs, its
+ * require-dev packages and the configuration skeletons it owns. The tool selection is derived from the content
+ * profile, so the generated composer.json, package.json and AGENTS.md always match what a given extension
+ * actually contains.
  *
  * A tool is active when the profile contains one of the signals of its `when` list, e.g. Prettier for HTML, XML
  * or XLF files and PHP-CS-Fixer for PHP files. Tools without a `when` list are always active.
  *
- * Build commands are derived by script name: every enabled `fix:*` script is part of `fix:all`, every `lint:*`
- * script (plus `analyze:php`, `audit:composer` and `validate:composer`) of `lint:all`, every `test:*` script
- * (except the coverage runs) of `test:all`, and `qa` chains `fix:all`, `lint:all` and `test:all`. The
- * pre-commit hook and the caller CI workflow are installed by `.Build/bin/qa link` on every composer
- * install/update, so the generator only provides that script.
+ * The managed composer scripts are the bootstrap commands (the profile-dependent npm install and the `qa link`
+ * call) and the test:all aggregate, which collects every test:* script (except the coverage runs) the enabled
+ * tools declare. The shared QA scripts and the lint:all, fix:all and qa aggregates are owned by the psbits/qa
+ * package: `qa link` adds them to the caller composer.json on every composer install/update, so the generator
+ * does not duplicate them. The test scripts themselves (test:unit, test:coverage, ...) stay under repository
+ * management.
  */
 final class ToolchainGenerator
 {
@@ -122,33 +121,20 @@ final class ToolchainGenerator
     }
 
     /**
+     * The composer scripts the generator manages: the bootstrap commands and the test aggregate.
+     *
      * @return array<string, mixed>
      */
     public function getManagedComposerScripts(ContentProfile $profile, ?string $extensionKey = null): array
     {
-        $enabledTools = $this->getEnabledTools($profile, $extensionKey);
-        $scripts      = [];
-        $needsNode    = false;
-
-        foreach ($enabledTools as $toolName) {
-            $tool        = $this->getTools($extensionKey)[$toolName];
-            $toolScripts = is_array($tool['composerScripts'] ?? null) ? $tool['composerScripts'] : [];
-
-            foreach ($toolScripts as $name => $command) {
-                $scripts[(string)$name] = (string)$command;
-            }
-
-            $needsNode = $needsNode || true === ($tool['needsNode'] ?? false);
-        }
-
-        $this->addAggregateScripts($scripts, $enabledTools);
-
-        $scripts['post-install-cmd'] = array_merge(
-            $needsNode ? ['npm install'] : [],
-            ['.Build/bin/qa link']
-        );
-        $scripts['post-update-cmd']   = ['.Build/bin/qa link'];
-        $scripts['validate:composer'] = 'composer validate --no-check-publish';
+        $scripts = [
+            'post-install-cmd' => array_merge(
+                $this->needsNode($profile, $extensionKey) ? ['npm install'] : [],
+                ['.Build/bin/qa link']
+            ),
+            'post-update-cmd'  => ['.Build/bin/qa link'],
+            'test:all'         => $this->getTestMembers($profile, $extensionKey),
+        ];
 
         ksort($scripts);
 
@@ -292,69 +278,6 @@ final class ToolchainGenerator
     }
 
     /**
-     * @param array<string, mixed> $scripts
-     * @param string[]             $enabledTools
-     */
-    private function addAggregateScripts(array &$scripts, array $enabledTools): void
-    {
-        $fixMembers  = [];
-        $lintMembers = [];
-
-        foreach (array_keys($scripts) as $name) {
-            $name = (string)$name;
-
-            if (str_starts_with($name, 'fix:')) {
-                $fixMembers[] = $name;
-            }
-
-            if (str_starts_with($name, 'lint:')) {
-                $lintMembers[] = $name;
-            }
-        }
-
-        if (in_array('composerAudit', $enabledTools, true)) {
-            $lintMembers[] = 'audit:composer';
-        }
-
-        $testMembers = [];
-
-        foreach (array_keys($scripts) as $name) {
-            $name = (string)$name;
-
-            if (str_starts_with($name, 'test:') && !str_starts_with($name, 'test:coverage')) {
-                $testMembers[] = $name;
-            }
-        }
-
-        if (in_array('phpStan', $enabledTools, true)) {
-            $lintMembers[] = 'analyze:php';
-        }
-
-        $lintMembers[] = 'validate:composer';
-
-        sort($fixMembers);
-        sort($lintMembers);
-
-        if ([] !== $fixMembers) {
-            $scripts['fix:all'] = array_map(static fn(string $name): string => '@' . $name, $fixMembers);
-        }
-
-        $scripts['lint:all'] = array_map(static fn(string $name): string => '@' . $name, $lintMembers);
-
-        sort($testMembers);
-
-        $scripts['test:all'] = array_map(static fn(string $name): string => '@' . $name, $testMembers);
-
-        $qaMembers = ['@lint:all', '@test:all'];
-
-        if (isset($scripts['fix:all'])) {
-            array_unshift($qaMembers, '@fix:all');
-        }
-
-        $scripts['qa'] = $qaMembers;
-    }
-
-    /**
      * @return array<string, mixed>
      */
     private function getMap(string $path, ?string $extensionKey): array
@@ -362,6 +285,33 @@ final class ToolchainGenerator
         $map = $this->configurationService->getValue($path, $extensionKey, []);
 
         return is_array($map) ? $map : [];
+    }
+
+    /**
+     * The members of the test:all aggregate: every test:* script (except the coverage runs) the enabled tools
+     * declare as composer scripts.
+     *
+     * @return list<string>
+     */
+    private function getTestMembers(ContentProfile $profile, ?string $extensionKey): array
+    {
+        $members = [];
+
+        foreach ($this->getEnabledTools($profile, $extensionKey) as $toolName) {
+            $toolScripts = is_array($this->getTools($extensionKey)[$toolName]['composerScripts'] ?? null)
+                ? $this->getTools($extensionKey)[$toolName]['composerScripts']
+                : [];
+
+            foreach (array_keys($toolScripts) as $name) {
+                if (str_starts_with((string)$name, 'test:') && !str_starts_with((string)$name, 'test:coverage')) {
+                    $members[] = '@' . $name;
+                }
+            }
+        }
+
+        sort($members);
+
+        return $members;
     }
 
     /**

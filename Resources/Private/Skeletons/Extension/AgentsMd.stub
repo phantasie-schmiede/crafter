@@ -126,6 +126,9 @@ inconsistencies between the codebase and these instructions, mention them - don'
   the read-only verification.
 - A pre-commit hook (installed by `.Build/bin/qa link` from the psbits/qa package) runs `composer lint:all`.
 - The same checks run in the shared `CI` GitHub Actions workflow (`.github/workflows/ci.yml`).
+- The `scripts` section of `composer.json` is kept in sync by `.Build/bin/qa link` (composer
+  post-install/update, psbits/qa package); the shared QA protocol is documented in the `psbits-qa`
+  skill (`.opencode/skills/psbits-qa/SKILL.md`).
 {{ agentsToolChecks }}
 
 ## Do not modify

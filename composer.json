@@ -72,24 +72,30 @@
         "fix:all": [
             "@fix:classes",
             "@fix:htmlxml",
+            "@fix:throws",
+            "@fix:xlf",
             "@fix:php"
         ],
         "fix:classes": "npm run fix:classes",
         "fix:htmlxml": "npm run fix:htmlxml",
         "fix:php": "php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --verbose",
+        "fix:throws": ".Build/bin/qa throws-fix",
+        "fix:xlf": ".Build/bin/qa xlf-fix",
         "lint:all": [
             "@analyze:php",
-            "composer audit --abandoned=report || echo 'Warning: composer audit reported findings - run \"composer audit\" for details'",
+            "@audit:composer",
             "@lint:classes",
             "@lint:htmlxml",
             "@lint:php",
+            "@lint:xlf",
             "@lint:yaml",
             "@validate:composer"
         ],
         "lint:classes": "npm run lint:classes",
         "lint:htmlxml": "npm run lint:htmlxml",
         "lint:php": "php-cs-fixer fix --config=Build/Quality/.php-cs-fixer.dist.php --dry-run --diff --verbose",
-        "lint:yaml": "yamllint -c .Build/vendor/psbits/qa/Resources/Quality/yamllint.yml Build/Quality Configuration",
+        "lint:xlf": ".Build/bin/qa xlf-check",
+        "lint:yaml": "yamllint -c .Build/vendor/psbits/qa/Resources/Quality/yamllint.yml Configuration",
         "post-install-cmd": [
             "npm install",
             ".Build/bin/qa link"
@@ -116,6 +122,9 @@
             "CRAFTER_UPDATE_FIXTURES=1 php -d memory_limit=1G .Build/bin/phpunit -c .Build/phpunit/UnitTests.xml"
         ],
         "validate:composer": "composer validate --no-check-publish"
+    },
+    "suggest": {
+        "psbits/qa": "Shared QA tooling for the generated extensions: QA scripts, pre-commit hook and CI workflow (installed via qa link)"
     },
     "type": "typo3-cms-extension"
 }
