@@ -11,10 +11,14 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\PathResolver;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -29,11 +33,7 @@ use function sprintf;
 use function str_replace;
 
 /**
- * Class SkeletonPublishCommand
- *
  * Copies a shipped skeleton into an overriding root path so it can be adjusted without forking the extension.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:skeleton:publish',
@@ -46,6 +46,9 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
     public const string OPTION_PRIORITY     = 'priority';
     public const int PROJECT_PRIORITY       = 10;
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly FileWriter   $fileWriter,
         protected readonly PathResolver $pathResolver,
@@ -53,6 +56,9 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -81,6 +87,11 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
@@ -138,6 +149,9 @@ class SkeletonPublishCommand extends AbstractCrafterCommand
         return Command::SUCCESS;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determinePriority(InputInterface $input, ?string $extensionKey): int
     {
         $priority = $input->getOption(self::OPTION_PRIORITY);

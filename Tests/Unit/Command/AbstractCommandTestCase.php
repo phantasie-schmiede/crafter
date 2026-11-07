@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit\Command;
 
+use JsonException;
+use PHPUnit\Framework\MockObject\Exception;
 use PSBits\Crafter\Command\AuditCommand;
 use PSBits\Crafter\Command\ConfigDumpCommand;
 use PSBits\Crafter\Command\ListCommand;
@@ -35,9 +37,13 @@ use PSBits\Crafter\Service\FieldTypeRegistry;
 use PSBits\Crafter\Service\ModelPropertyReader;
 use PSBits\Crafter\Tests\Unit\AbstractGeneratorTestCase;
 use PSBits\Crafter\Utility\CommandInventory;
+use Random\RandomException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use ValueError;
 
 use function dirname;
 use function ltrim;
@@ -66,6 +72,12 @@ abstract class AbstractCommandTestCase extends AbstractGeneratorTestCase
     protected SkeletonWhereCommand         $skeletonWhereCommand;
     protected SyncCommand                  $syncCommand;
 
+    /**
+     * @throws Exception
+     * @throws LogicException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -128,7 +140,9 @@ abstract class AbstractCommandTestCase extends AbstractGeneratorTestCase
     }
 
     /**
-     * Creates a hand written file in the generated extension, mirroring an extension a developer owns.
+     * Creates a handwritten file in the generated extension, mirroring an extension a developer owns.
+     *
+     * @throws RuntimeException
      */
     protected function createExtensionFile(string $relativePath, string $content): void
     {
@@ -140,6 +154,10 @@ abstract class AbstractCommandTestCase extends AbstractGeneratorTestCase
     /**
      * Creates an extension that satisfies every audit category: base files, a model, its repository, a controller
      * including templates, language files and a registered plugin, plus the synced toolchain.
+     *
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
      */
     protected function generateCompleteExtension(): void
     {

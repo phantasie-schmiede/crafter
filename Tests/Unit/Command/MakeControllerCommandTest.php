@@ -12,10 +12,16 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 final class MakeControllerCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAControllerWithTheSelectedActionsOnly(): void
     {
@@ -33,6 +39,10 @@ final class MakeControllerCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Controller "ProductController" has been created.', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function crudKeywordGeneratesEveryConfiguredAction(): void
     {
@@ -49,6 +59,10 @@ final class MakeControllerCommandTest extends AbstractCommandTestCase
         }
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function noTemplatesFlagSkipsTheFluidTemplates(): void
     {
@@ -64,6 +78,10 @@ final class MakeControllerCommandTest extends AbstractCommandTestCase
         self::assertFileDoesNotExist($this->getExtensionFilePath('Resources/Private/Templates/Product/List.html'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnInvalidName(): void
     {

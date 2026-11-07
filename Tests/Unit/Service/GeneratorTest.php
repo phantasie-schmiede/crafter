@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit\Service;
 
+use JsonException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\ExpectationFailedException;
 use PSBits\Crafter\Data\ClassBlueprint;
@@ -18,6 +19,8 @@ use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Data\ModelBlueprint;
 use PSBits\Crafter\Data\PropertyDefinition;
 use PSBits\Crafter\Tests\Unit\AbstractGeneratorTestCase;
+use RuntimeException;
+use ValueError;
 
 use function file_get_contents;
 use function file_put_contents;
@@ -58,6 +61,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         ];
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function backendControllerIsGeneratedWithTemplatesAndLanguageFiles(): void
     {
@@ -93,6 +101,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function controllerIsGeneratedWithCrudActionsTemplatesAndLanguageFiles(): void
     {
@@ -124,6 +137,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function eventListenerIsGenerated(): void
     {
@@ -142,6 +160,7 @@ final class GeneratorTest extends AbstractGeneratorTestCase
 
     /**
      * @throws ExpectationFailedException
+     * @throws RuntimeException
      */
     #[Test]
     public function extensionIsGeneratedWithoutACiWorkflow(): void
@@ -152,6 +171,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         self::assertFileDoesNotExist($this->getExtensionFilePath('.github/workflows/ci.yml'));
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function modelIsGeneratedWithEveryRelevantPropertyType(): void
     {
@@ -164,6 +188,12 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         $this->assertFileMatchesFixture('Classes/Domain/Model/Product.php', 'Product.php');
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function moduleConfigurationImportsAreSortedForAnyVendor(): void
     {
@@ -186,6 +216,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function repositoryIsGenerated(): void
     {
@@ -194,6 +229,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         $this->assertFileMatchesFixture('Classes/Domain/Repository/ProductRepository.php', 'ProductRepository.php');
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function serviceIsGeneratedWithInjectedDependencies(): void
     {
@@ -210,6 +250,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         $this->assertFileMatchesFixture('Classes/Service/PriceService.php', 'PriceService.php');
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function viewHelperIsGeneratedInASubDirectory(): void
     {

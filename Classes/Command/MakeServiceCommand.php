@@ -11,17 +11,16 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Class MakeServiceCommand
- *
  * Creates a service class with its constructor dependencies.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:service',
@@ -31,6 +30,11 @@ class MakeServiceCommand extends AbstractMakeClassCommand
 {
     public const string CLASS_TYPE = 'service';
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     */
     protected function buildBlueprint(
         InputInterface $input,
         SymfonyStyle   $io,
@@ -52,6 +56,9 @@ class MakeServiceCommand extends AbstractMakeClassCommand
         );
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();

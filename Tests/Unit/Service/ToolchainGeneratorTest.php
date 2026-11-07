@@ -12,7 +12,10 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
+use UnexpectedValueException;
 
 use function array_keys;
 use function file_put_contents;
@@ -24,6 +27,10 @@ use function mkdir;
  */
 final class ToolchainGeneratorTest extends AbstractCrafterTestCase
 {
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function agentBulletsReflectTheEnabledTools(): void
     {
@@ -37,6 +44,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertStringNotContainsString('lint:php', $variables['agentsToolChecks']);
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     */
     #[Test]
     public function directoryProfileIgnoresBuildAndVendor(): void
     {
@@ -53,6 +64,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertSame(['php'], array_keys($profile->signals));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function emptyProfileEnablesOnlyTheAlwaysOnTools(): void
     {
@@ -61,6 +76,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertSame(['composerAudit', 'composerNormalize'], $this->toolchainGenerator->getEnabledTools($profile));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function htmlProfileTurnsTheClassLinterAndPrettierOn(): void
     {
@@ -93,6 +112,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function phpProfileContributesThePhpPackagesToRequireDev(): void
     {
@@ -113,6 +136,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function phpProfileEnablesThePhpToolsAndManagesOnlyTheBootstrapScripts(): void
     {
@@ -139,6 +166,9 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function renderHelpersFormatTheMapsAsTheStubsExpect(): void
     {
@@ -152,6 +182,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function typoScriptProfileDoesNotRequireNode(): void
     {
@@ -169,6 +203,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function yamlFilesEnableTheYamlLinter(): void
     {

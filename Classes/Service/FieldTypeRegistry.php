@@ -38,6 +38,7 @@ readonly class FieldTypeRegistry
 
     /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     public function get(string $type, ?string $extensionKey = null): array
     {
@@ -59,6 +60,7 @@ readonly class FieldTypeRegistry
 
     /**
      * @return array<string, array<string, mixed>>
+     * @throws CrafterException
      */
     public function getAll(?string $extensionKey = null): array
     {
@@ -75,12 +77,16 @@ readonly class FieldTypeRegistry
 
     /**
      * @return string[]
+     * @throws CrafterException
      */
     public function getAttributes(string $type, ?string $extensionKey = null): array
     {
         return $this->getList($this->get($type, $extensionKey), 'attributes');
     }
 
+    /**
+     * @throws CrafterException
+     */
     public function getDefaultValue(string $type, ?string $extensionKey = null): ?string
     {
         $fieldType = $this->get($type, $extensionKey);
@@ -88,6 +94,9 @@ readonly class FieldTypeRegistry
         return array_key_exists('defaultValue', $fieldType) ? (string)$fieldType['defaultValue'] : null;
     }
 
+    /**
+     * @throws CrafterException
+     */
     public function getDocBlock(string $type, ?string $extensionKey = null): string
     {
         return (string)($this->get($type, $extensionKey)['docBlock'] ?? '');
@@ -95,6 +104,7 @@ readonly class FieldTypeRegistry
 
     /**
      * @return string[]
+     * @throws CrafterException
      */
     public function getImports(string $type, ?string $extensionKey = null): array
     {
@@ -103,6 +113,8 @@ readonly class FieldTypeRegistry
 
     /**
      * Returns 'enum', 'model' or an empty string if the type does not reference another class.
+     *
+     * @throws CrafterException
      */
     public function getLinkedClassType(string $type, ?string $extensionKey = null): string
     {
@@ -111,12 +123,16 @@ readonly class FieldTypeRegistry
 
     /**
      * @return string[]
+     * @throws CrafterException
      */
     public function getNames(?string $extensionKey = null): array
     {
         return array_keys($this->getAll($extensionKey));
     }
 
+    /**
+     * @throws CrafterException
+     */
     public function getPhpType(string $type, ?string $extensionKey = null): string
     {
         $phpType = (string)($this->get($type, $extensionKey)['phpType'] ?? '');
@@ -133,6 +149,7 @@ readonly class FieldTypeRegistry
 
     /**
      * @return string[]
+     * @throws CrafterException
      */
     public function getRequiredAttributes(?string $extensionKey = null): array
     {
@@ -141,12 +158,16 @@ readonly class FieldTypeRegistry
 
     /**
      * @return string[]
+     * @throws CrafterException
      */
     public function getRequiredImports(?string $extensionKey = null): array
     {
         return $this->getList($this->getRequiredProperty($extensionKey), 'imports');
     }
 
+    /**
+     * @throws CrafterException
+     */
     public function isObjectStorage(string $type, ?string $extensionKey = null): bool
     {
         return true === ($this->get($type, $extensionKey)['objectStorage'] ?? false);
@@ -154,7 +175,6 @@ readonly class FieldTypeRegistry
 
     /**
      * @param array<string, mixed> $configuration
-     *
      * @return string[]
      */
     private function getList(array $configuration, string $key): array
@@ -170,6 +190,7 @@ readonly class FieldTypeRegistry
 
     /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     private function getRequiredProperty(?string $extensionKey): array
     {

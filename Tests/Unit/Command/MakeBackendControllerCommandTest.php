@@ -12,10 +12,16 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 final class MakeBackendControllerCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsABackendControllerWithModuleRegistration(): void
     {
@@ -33,6 +39,10 @@ final class MakeBackendControllerCommandTest extends AbstractCommandTestCase
         self::assertFileExists($this->getExtensionFilePath('Configuration/Backend/Modules.php'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function noModuleFlagSkipsTheRegistration(): void
     {

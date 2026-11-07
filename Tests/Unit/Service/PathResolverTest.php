@@ -11,9 +11,12 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit\Service;
 
+use JsonException;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
+use RuntimeException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function dirname;
@@ -21,6 +24,10 @@ use function json_encode;
 
 final class PathResolverTest extends AbstractCrafterTestCase
 {
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function candidatesAreOrderedByDescendingPriority(): void
     {
@@ -32,6 +39,10 @@ final class PathResolverTest extends AbstractCrafterTestCase
         self::assertTrue($candidates[1]['exists']);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function collapsesEmptyOptionalPathSegments(): void
     {
@@ -44,6 +55,10 @@ final class PathResolverTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function extensionPathFallsBackToTheConfiguredExtensionRootPath(): void
     {
@@ -53,6 +68,11 @@ final class PathResolverTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     */
     #[Test]
     public function namespaceFallsBackToTheVendorAndExtensionName(): void
     {
@@ -62,6 +82,12 @@ final class PathResolverTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function namespaceIsReadFromComposerJson(): void
     {
@@ -76,6 +102,11 @@ final class PathResolverTest extends AbstractCrafterTestCase
         self::assertSame('Acme\Shop', $this->pathResolver->resolveNamespace(self::EXTENSION_KEY));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function projectSkeletonWinsOverTheShippedOne(): void
     {
@@ -86,6 +117,10 @@ final class PathResolverTest extends AbstractCrafterTestCase
         self::assertSame($path, $this->pathResolver->resolveSkeleton('Php/Model', self::EXTENSION_KEY));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function shippedSkeletonIsResolvedWhenNothingOverridesIt(): void
     {
@@ -95,6 +130,10 @@ final class PathResolverTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function targetPathReplacesAllPlaceholders(): void
     {
@@ -107,6 +146,9 @@ final class PathResolverTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     */
     #[Test]
     public function unconfiguredPathTypeThrows(): void
     {
@@ -116,6 +158,9 @@ final class PathResolverTest extends AbstractCrafterTestCase
         $this->pathResolver->resolveTargetPath('doesNotExist', self::EXTENSION_KEY);
     }
 
+    /**
+     * @throws CrafterException
+     */
     #[Test]
     public function unknownSkeletonThrows(): void
     {

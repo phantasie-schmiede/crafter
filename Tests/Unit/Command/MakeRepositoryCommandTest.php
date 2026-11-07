@@ -12,10 +12,16 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 final class MakeRepositoryCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsARepository(): void
     {
@@ -29,6 +35,10 @@ final class MakeRepositoryCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Repository "ProductRepository" has been created.', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function requiresTheExtensionOption(): void
     {

@@ -11,8 +11,12 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
 
 use function array_merge;
 use function implode;
@@ -49,6 +53,8 @@ readonly class BackendControllerGenerator
     /**
      * @param string[] $actions
      * @param string[] $dependencies
+     * @throws CrafterException
+     * @throws ValueError
      */
     public function buildBlueprint(
         string $extensionKey,
@@ -80,6 +86,10 @@ readonly class BackendControllerGenerator
     /**
      * @param string[] $actions      module actions, the first one becomes the default action
      * @param string[] $dependencies fully qualified class names injected via the constructor
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
      */
     public function generate(
         string $extensionKey,
@@ -118,6 +128,7 @@ readonly class BackendControllerGenerator
     /**
      * @param string[]                $actions
      * @param array<string, string[]> $labelIds label identifiers per action, derived from the rendered templates
+     * @throws RuntimeException
      */
     private function generateLanguageFiles(
         string $extensionKey,
@@ -148,6 +159,10 @@ readonly class BackendControllerGenerator
         }
     }
 
+    /**
+     * @throws CrafterException
+     * @throws RuntimeException
+     */
     private function generateModuleLanguageFiles(string $extensionKey, string $name, string $moduleName): void
     {
         $moduleName = '' === $moduleName ? lcfirst($name) : $moduleName;
@@ -181,8 +196,9 @@ readonly class BackendControllerGenerator
 
     /**
      * @param string[] $actions
-     *
      * @return array<string, string[]> label identifiers per action
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     private function generateTemplates(string $extensionKey, string $name, array $actions): array
     {
@@ -210,6 +226,9 @@ readonly class BackendControllerGenerator
         return $labelIds;
     }
 
+    /**
+     * @throws CrafterException
+     */
     private function renderAction(string $extensionKey, string $action, bool $isDefault): string
     {
         return rtrim($this->skeletonRenderer->render(
@@ -228,6 +247,8 @@ readonly class BackendControllerGenerator
      * being promoted into a property.
      *
      * @param string[] $dependencies
+     * @throws CrafterException
+     * @throws ValueError
      */
     private function renderConstructor(string $extensionKey, array $dependencies): string
     {

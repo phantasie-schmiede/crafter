@@ -11,11 +11,14 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
 use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
 
 use function array_filter;
 use function array_keys;
@@ -63,8 +66,8 @@ readonly class ClassGenerator
      * keyword on its properties, so the class keywords decide how the arguments look.
      *
      * @param string[] $dependencies fully qualified class names
-     *
      * @return string[]
+     * @throws ValueError
      */
     public function buildConstructorArguments(array $dependencies, bool $readonlyClass = false): array
     {
@@ -85,11 +88,20 @@ readonly class ClassGenerator
         return $arguments;
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     public function generate(ClassBlueprint $blueprint): WriteResult
     {
         return $this->fileWriter->write($this->resolveTargetPath($blueprint), $this->render($blueprint));
     }
 
+    /**
+     * @throws CrafterException
+     */
     public function getClassName(ClassBlueprint $blueprint): string
     {
         return $blueprint->getClassName(
@@ -97,6 +109,10 @@ readonly class ClassGenerator
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     public function getNamespace(ClassBlueprint $blueprint): string
     {
         $configuration = $this->getTypeConfiguration($blueprint->type, $blueprint->extensionKey);
@@ -113,6 +129,7 @@ readonly class ClassGenerator
 
     /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     public function getTypeConfiguration(string $type, ?string $extensionKey = null): array
     {
@@ -132,6 +149,11 @@ readonly class ClassGenerator
         return (array)$types[$type];
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws ValueError
+     */
     public function render(ClassBlueprint $blueprint): string
     {
         $extensionKey  = $blueprint->extensionKey;
@@ -180,6 +202,9 @@ readonly class ClassGenerator
 
     /**
      * Resolves a short dependency name to a fully qualified class name via crafter.dependencies.
+     *
+     * @throws CrafterException
+     * @throws JsonException
      */
     public function resolveDependency(string $name, string $extensionKey): string
     {
@@ -218,6 +243,9 @@ readonly class ClassGenerator
         );
     }
 
+    /**
+     * @throws CrafterException
+     */
     public function resolveTargetPath(ClassBlueprint $blueprint): string
     {
         $configuration = $this->getTypeConfiguration($blueprint->type, $blueprint->extensionKey);
@@ -239,8 +267,8 @@ readonly class ClassGenerator
      *
      * @param string[] $traits  fully qualified trait names
      * @param string[] $methods rendered methods
-     *
      * @return array<string, string>
+     * @throws ValueError
      */
     private function buildSections(array $traits, array $methods): array
     {
@@ -275,7 +303,6 @@ readonly class ClassGenerator
 
     /**
      * @param array<int, mixed> $classNames
-     *
      * @return string[]
      */
     private function normalizeClassNames(array $classNames): array
@@ -309,6 +336,10 @@ readonly class ClassGenerator
         ));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ValueError
+     */
     private function renderConstructor(ClassBlueprint $blueprint, bool $readonlyClass): string
     {
         $arguments = $this->buildConstructorArguments($blueprint->dependencies, $readonlyClass);

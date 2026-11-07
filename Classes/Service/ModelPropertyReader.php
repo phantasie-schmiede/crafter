@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Data\PropertyDefinition;
+use PSBits\Crafter\Exception\CrafterException;
 
 use function array_map;
 use function file_get_contents;
@@ -35,6 +36,7 @@ readonly class ModelPropertyReader
 
     /**
      * @return PropertyDefinition[]
+     * @throws CrafterException
      */
     public function read(string $filePath, ?string $extensionKey = null): array
     {
@@ -83,6 +85,7 @@ readonly class ModelPropertyReader
      * have to be present for it to match.
      *
      * @return array<string, string[]>
+     * @throws CrafterException
      */
     private function buildTypePatterns(?string $extensionKey): array
     {

@@ -14,6 +14,7 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Data\ContentProfile;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use UnexpectedValueException;
 
 use function is_dir;
 use function is_string;
@@ -55,6 +56,9 @@ class ExtensionProfileService
         'vendor',
     ];
 
+    /**
+     * @throws UnexpectedValueException
+     */
     public function fromDirectory(string $extensionPath): ContentProfile
     {
         $signals = [];

@@ -11,17 +11,15 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\EventListener;
 
+use JsonException;
 use PSBits\Crafter\Event\AfterGenerationEvent;
 use PSBits\Crafter\Service\SyncService;
+use RuntimeException;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
 
 /**
- * Class ToolchainSyncEventListener
- *
  * Renews the toolchain of the affected extension after every generation command, so composer.json, package.json and
  * the quality configuration stay aligned with the content profile. Skipped while syncing itself to avoid recursion.
- *
- * @package PSBits\Crafter\EventListener
  */
 #[AsEventListener(event: AfterGenerationEvent::class)]
 final class ToolchainSyncEventListener
@@ -33,6 +31,10 @@ final class ToolchainSyncEventListener
     ) {
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     public function __invoke(AfterGenerationEvent $event): void
     {
         if (null === $event->getExtensionKey()

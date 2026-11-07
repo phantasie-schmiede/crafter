@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use TYPO3\CMS\Core\Core\Environment;
 
@@ -20,6 +22,10 @@ use function mkdir;
 
 final class SkeletonListCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function listsTheShippedSkeletons(): void
     {
@@ -31,6 +37,10 @@ final class SkeletonListCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Overrides default', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function marksOverriddenSkeletons(): void
     {

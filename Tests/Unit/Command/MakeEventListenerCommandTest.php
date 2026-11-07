@@ -12,12 +12,18 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
 
 final class MakeEventListenerCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAnEventListenerForTheGivenEvent(): void
     {
@@ -33,6 +39,10 @@ final class MakeEventListenerCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Event listener "ProductUpdate" has been created.', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnEventWithoutNamespace(): void
     {

@@ -12,10 +12,16 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 final class SkeletonShowCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function failsForAnUnknownSkeleton(): void
     {
@@ -25,6 +31,10 @@ final class SkeletonShowCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Php/DoesNotExist', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function listsTheAvailableVariables(): void
     {
@@ -35,6 +45,10 @@ final class SkeletonShowCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('extensionKey', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rendersAPlaceholderFreeStub(): void
     {
@@ -44,6 +58,10 @@ final class SkeletonShowCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('.Build/', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function replacesVariablesGivenViaSetOption(): void
     {

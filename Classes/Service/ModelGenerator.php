@@ -11,11 +11,15 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ModelBlueprint;
 use PSBits\Crafter\Data\PropertyDefinition;
 use PSBits\Crafter\Data\WriteResult;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
 
 use function array_filter;
 use function array_keys;
@@ -61,6 +65,12 @@ readonly class ModelGenerator
     ) {
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     public function generate(ModelBlueprint $blueprint): WriteResult
     {
         return $this->fileWriter->write(
@@ -69,6 +79,11 @@ readonly class ModelGenerator
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws ValueError
+     */
     public function render(ModelBlueprint $blueprint): string
     {
         $extensionKey    = $blueprint->extensionKey;
@@ -140,6 +155,9 @@ readonly class ModelGenerator
      *     objectStorage: bool,
      *     phpType: string
      * }
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws ValueError
      */
     private function buildContext(PropertyDefinition $property, ModelBlueprint $blueprint): array
     {
@@ -183,6 +201,7 @@ readonly class ModelGenerator
 
     /**
      * @return array<string, string>
+     * @throws ValueError
      */
     private function buildReplacements(PropertyDefinition $property, ModelBlueprint $blueprint): array
     {
@@ -198,6 +217,9 @@ readonly class ModelGenerator
         ];
     }
 
+    /**
+     * @throws CrafterException
+     */
     private function determineLabelProperty(ModelBlueprint $blueprint, string $extensionKey): string
     {
         $fallback = '';
@@ -235,6 +257,10 @@ readonly class ModelGenerator
         return 1 === preg_match('/<\s*([^>]+)\s*>/', $docBlockType, $matches) ? trim($matches[1]) : '';
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     private function getLinkedClassName(string $linkedClass, string $linkedClassType, string $extensionKey): string
     {
         if (str_contains($linkedClass, '\\')) {
@@ -248,11 +274,19 @@ readonly class ModelGenerator
         return $this->getNamespace($extensionKey) . '\\' . $subNamespace . '\\' . $linkedClass;
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     private function getModelNamespace(string $extensionKey): string
     {
         return $this->getNamespace($extensionKey) . '\\' . self::MODEL_SUB_NAMESPACE;
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     private function getNamespace(string $extensionKey): string
     {
         return $this->pathResolver->resolveNamespace(
@@ -263,6 +297,7 @@ readonly class ModelGenerator
 
     /**
      * @param string[] $imports
+     * @throws CrafterException
      */
     private function renderClassAttributes(
         ModelBlueprint $blueprint,
@@ -327,8 +362,8 @@ readonly class ModelGenerator
      *     objectStorage: bool,
      *     phpType: string
      * } $context
-     *
      * @return array<string, string>
+     * @throws CrafterException
      */
     private function renderMethods(PropertyDefinition $property, array $context, string $extensionKey): array
     {
@@ -411,6 +446,7 @@ readonly class ModelGenerator
      *     objectStorage: bool,
      *     phpType: string
      * } $context
+     * @throws CrafterException
      */
     private function renderProperty(PropertyDefinition $property, array $context, string $extensionKey): string
     {
@@ -435,7 +471,6 @@ readonly class ModelGenerator
     /**
      * @param string[]              $values
      * @param array<string, string> $replacements
-     *
      * @return string[]
      */
     private function replace(array $values, array $replacements): array
@@ -452,7 +487,6 @@ readonly class ModelGenerator
 
     /**
      * @param PropertyDefinition[] $properties
-     *
      * @return PropertyDefinition[]
      */
     private function sortProperties(array $properties): array

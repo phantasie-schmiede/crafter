@@ -11,15 +11,21 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\BackendControllerGenerator;
 use PSBits\Crafter\Service\ClassGenerator;
 use PSBits\Crafter\Service\FileWriter;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use ValueError;
 
 use function array_filter;
 use function array_map;
@@ -32,11 +38,7 @@ use function sprintf;
 use function trim;
 
 /**
- * Class MakeBackendControllerCommand
- *
  * Creates a backend module controller including its templates, language files and the module registration.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:backend-controller',
@@ -52,6 +54,9 @@ class MakeBackendControllerCommand extends AbstractCrafterCommand
     public const string OPTION_NO_MODULE    = 'no-module';
     public const string OPTION_NO_TEMPLATES = 'no-templates';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly BackendControllerGenerator $backendControllerGenerator,
         protected readonly ClassGenerator             $classGenerator,
@@ -60,6 +65,9 @@ class MakeBackendControllerCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -113,6 +121,13 @@ class MakeBackendControllerCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
@@ -187,6 +202,7 @@ class MakeBackendControllerCommand extends AbstractCrafterCommand
 
     /**
      * @return string[]|null
+     * @throws InvalidArgumentException
      */
     private function determineActions(InputInterface $input, SymfonyStyle $io): ?array
     {
@@ -212,6 +228,9 @@ class MakeBackendControllerCommand extends AbstractCrafterCommand
         return array_values(array_unique($actions));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determineName(InputInterface $input, SymfonyStyle $io): ?string
     {
         $name = $input->getArgument(self::ARGUMENT_NAME);

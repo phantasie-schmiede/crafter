@@ -12,13 +12,24 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\MockObject\Exception;
+use Random\RandomException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\LogicException;
 use TYPO3\CMS\Core\Core\Environment;
 
 final class SkeletonPublishCommandTest extends AbstractCommandTestCase
 {
     private string $projectRoot;
 
+    /**
+     * @throws Exception
+     * @throws LogicException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,6 +37,10 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
         $this->projectRoot = rtrim(Environment::getProjectPath(), '/') . '/config/Crafter/Skeletons/';
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function copiesAShippedSkeletonIntoTheProjectRoot(): void
     {
@@ -36,6 +51,10 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('config/Crafter/Skeletons/Php/FileHeader.stub', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function dryRunWritesNoFile(): void
     {
@@ -49,6 +68,10 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
         self::assertFileDoesNotExist($this->projectRoot . 'Php/FileHeader.stub');
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnUnknownPriority(): void
     {
@@ -62,6 +85,10 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Available priorities', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function reportsAnAlreadyPublishedSkeleton(): void
     {

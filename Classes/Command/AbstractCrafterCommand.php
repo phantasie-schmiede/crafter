@@ -14,6 +14,7 @@ namespace PSBits\Crafter\Command;
 use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Exception\CrafterException;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -33,6 +34,9 @@ abstract class AbstractCrafterCommand extends Command
     public const string OPTION_EXTENSION = 'extension';
     public const string OPTION_FORCE     = 'force';
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function addFileOptions(): static
     {
         $this->addOption(
@@ -51,6 +55,9 @@ abstract class AbstractCrafterCommand extends Command
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         $this->addOption(
@@ -74,6 +81,9 @@ abstract class AbstractCrafterCommand extends Command
         }
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function getExtensionKey(InputInterface $input): ?string
     {
         $extensionKey = $input->getOption(self::OPTION_EXTENSION);
@@ -86,6 +96,9 @@ abstract class AbstractCrafterCommand extends Command
         return new SymfonyStyle($input, $output);
     }
 
+    /**
+     * @throws CrafterException
+     */
     abstract protected function handle(InputInterface $input, SymfonyStyle $io): int;
 
     /**

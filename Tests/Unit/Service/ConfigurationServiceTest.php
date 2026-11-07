@@ -12,15 +12,25 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Exception;
+use PHPUnit\Framework\ExpectationFailedException;
 use PSBits\Crafter\Event\ModifyConfigurationEvent;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ConfigurationService;
 use PSBits\Crafter\Tests\Fixtures\CallbackEventDispatcher;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
 use Psr\Log\NullLogger;
+use RuntimeException;
 use TYPO3\CMS\Core\Configuration\Loader\YamlFileLoader;
 
 final class ConfigurationServiceTest extends AbstractCrafterTestCase
 {
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function eventIsTopmostLayerAndIsTrackedAsOrigin(): void
     {
@@ -39,6 +49,11 @@ final class ConfigurationServiceTest extends AbstractCrafterTestCase
         self::assertArrayHasKey('event', $configurationService->getLayers());
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function listsAreReplacedCompletely(): void
     {
@@ -47,6 +62,11 @@ final class ConfigurationServiceTest extends AbstractCrafterTestCase
         self::assertSame(['fr'], $this->createConfigurationService()->getValue('audit.languages'));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function mapsAreMergedRecursively(): void
     {
@@ -61,6 +81,11 @@ final class ConfigurationServiceTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function originsExplainTheWinningLayer(): void
     {
@@ -71,6 +96,11 @@ final class ConfigurationServiceTest extends AbstractCrafterTestCase
         self::assertSame('crafter (default)', $origins['paths.repository']);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function runtimeOverridesBeatFileLayers(): void
     {
@@ -82,6 +112,10 @@ final class ConfigurationServiceTest extends AbstractCrafterTestCase
         self::assertSame('cli', $configurationService->getOrigins()['defaults.author']);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function shippedDefaultsAreLoaded(): void
     {
@@ -91,6 +125,10 @@ final class ConfigurationServiceTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function unknownPathReturnsTheGivenDefault(): void
     {

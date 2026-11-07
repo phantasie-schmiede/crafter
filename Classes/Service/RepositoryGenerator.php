@@ -11,8 +11,12 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\WriteResult;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
 
 readonly class RepositoryGenerator
 {
@@ -27,6 +31,12 @@ readonly class RepositoryGenerator
     ) {
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     public function generate(string $extensionKey, string $modelName): WriteResult
     {
         return $this->fileWriter->write(
@@ -35,6 +45,11 @@ readonly class RepositoryGenerator
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws ValueError
+     */
     public function render(string $extensionKey, string $modelName): string
     {
         $namespace = $this->pathResolver->resolveNamespace(

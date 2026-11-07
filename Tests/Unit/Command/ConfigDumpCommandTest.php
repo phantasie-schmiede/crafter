@@ -12,10 +12,16 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 final class ConfigDumpCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function dumpsTheEffectiveConfigurationWithItsLayers(): void
     {
@@ -29,6 +35,10 @@ final class ConfigDumpCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString("author: 'Daniel Ablass'", $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function listsTheOriginOfEveryValue(): void
     {
@@ -42,6 +52,10 @@ final class ConfigDumpCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('project', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function theProjectLayerWinsOverTheDefaults(): void
     {

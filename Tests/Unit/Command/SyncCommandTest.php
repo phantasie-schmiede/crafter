@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
@@ -19,6 +21,10 @@ use function file_put_contents;
 
 final class SyncCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function acceptsTheExtensionViaOption(): void
     {
@@ -31,6 +37,10 @@ final class SyncCommandTest extends AbstractCommandTestCase
         self::assertFileExists($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function dryRunLeavesDriftedFilesUntouched(): void
     {
@@ -46,6 +56,10 @@ final class SyncCommandTest extends AbstractCommandTestCase
         self::assertSame($drifted, (string)file_get_contents($path));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function renewsADriftedQualityConfig(): void
     {
@@ -59,6 +73,10 @@ final class SyncCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('CsFixerFactory', (string)file_get_contents($path));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function reportsNothingToDoForAnInSyncExtension(): void
     {
@@ -70,6 +88,10 @@ final class SyncCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Nothing to do', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function requiresAnExtension(): void
     {

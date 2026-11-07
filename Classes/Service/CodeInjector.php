@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Utility\PhpUtility;
+use ValueError;
 
 use function array_map;
 use function array_merge;
@@ -41,8 +42,8 @@ class CodeInjector
      * Inserts a block into the constructor of a class, keeping the existing blocks of the same kind sorted.
      *
      * @param string[] $imports fully qualified class names required by the block
-     *
      * @return string|null the modified source or null if the block is already present
+     * @throws ValueError
      */
     public function addConstructorBlock(
         string  $source,
@@ -107,6 +108,7 @@ class CodeInjector
 
     /**
      * @param string[] $imports fully qualified class names
+     * @throws ValueError
      */
     public function addImports(string $source, array $imports): string
     {
@@ -151,7 +153,6 @@ class CodeInjector
 
     /**
      * @param string[] $lines
-     *
      * @return string[]
      */
     private function createConstructor(array $lines): array
@@ -201,7 +202,6 @@ class CodeInjector
 
     /**
      * @param string[] $lines
-     *
      * @return array<int, array{end: int, sortKey: string, start: int}>
      */
     private function locateBlocks(array $lines, int $start, int $end, string $blockStart): array
@@ -237,7 +237,6 @@ class CodeInjector
 
     /**
      * @param string[] $lines
-     *
      * @return array{end: int, start: int}|null the first and the line after the last line of the constructor body
      */
     private function locateConstructorBody(array $lines): ?array

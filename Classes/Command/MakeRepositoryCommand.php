@@ -11,23 +11,24 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\RepositoryGenerator;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use ValueError;
 
 use function is_string;
 use function sprintf;
 
 /**
- * Class MakeRepositoryCommand
- *
  * Creates a repository for an existing domain model.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:repository',
@@ -37,6 +38,9 @@ class MakeRepositoryCommand extends AbstractCrafterCommand
 {
     public const string ARGUMENT_NAME = 'name';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly FileWriter          $fileWriter,
         protected readonly RepositoryGenerator $repositoryGenerator,
@@ -44,6 +48,9 @@ class MakeRepositoryCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -65,6 +72,12 @@ class MakeRepositoryCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
@@ -112,6 +125,9 @@ class MakeRepositoryCommand extends AbstractCrafterCommand
         return Command::SUCCESS;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determineName(InputInterface $input, SymfonyStyle $io): ?string
     {
         $name = $input->getArgument(self::ARGUMENT_NAME);

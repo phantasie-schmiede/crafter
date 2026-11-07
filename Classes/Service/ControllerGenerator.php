@@ -11,9 +11,12 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
 
 use function array_filter;
 use function array_key_exists;
@@ -101,6 +104,12 @@ readonly class ControllerGenerator
         ];
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     public function generate(ControllerBlueprint $blueprint): void
     {
         $extensionKey = $blueprint->extensionKey;
@@ -132,6 +141,7 @@ readonly class ControllerGenerator
 
     /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     public function getActionConfiguration(string $action, string $extensionKey): array
     {
@@ -153,6 +163,7 @@ readonly class ControllerGenerator
 
     /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     public function getAvailableActions(?string $extensionKey = null): array
     {
@@ -161,6 +172,11 @@ readonly class ControllerGenerator
         return is_array($actions) ? $actions : [];
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws ValueError
+     */
     public function render(ControllerBlueprint $blueprint): string
     {
         $extensionKey        = $blueprint->extensionKey;
@@ -211,6 +227,7 @@ readonly class ControllerGenerator
      * Blocks of the templates that only make sense when the matching action exists.
      *
      * @return array<string, string>
+     * @throws CrafterException
      */
     private function buildOptionalBlocks(ControllerBlueprint $blueprint): array
     {
@@ -234,6 +251,8 @@ readonly class ControllerGenerator
 
     /**
      * @return string[]
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     private function generateFormFieldsPartial(ControllerBlueprint $blueprint): array
     {
@@ -266,6 +285,8 @@ readonly class ControllerGenerator
 
     /**
      * @return array<string, string[]> label identifiers per action
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     private function generateTemplates(ControllerBlueprint $blueprint): array
     {
@@ -299,8 +320,9 @@ readonly class ControllerGenerator
      * automatically get the dependencies they need.
      *
      * @param string[] $imports
-     *
      * @return string[]
+     * @throws CrafterException
+     * @throws JsonException
      */
     private function getConstructorArguments(
         string              $bodies,
@@ -339,6 +361,10 @@ readonly class ControllerGenerator
         return sprintf('{%s.%s}', $blueprint->getModelVariable(), $labelProperty);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     private function getNamespace(string $extensionKey, string $subNamespace): string
     {
         return $this->pathResolver->resolveNamespace(
@@ -350,6 +376,8 @@ readonly class ControllerGenerator
     /**
      * @param array<string, mixed> $configuration
      * @param string[]             $imports
+     * @throws CrafterException
+     * @throws JsonException
      */
     private function renderAction(
         string              $action,
@@ -398,6 +426,8 @@ readonly class ControllerGenerator
 
     /**
      * @param string[] $arguments
+     * @throws CrafterException
+     * @throws ValueError
      */
     private function renderConstructor(array $arguments, string $extensionKey): string
     {
@@ -426,6 +456,9 @@ readonly class ControllerGenerator
         return implode("\n    ", $rendered);
     }
 
+    /**
+     * @throws CrafterException
+     */
     private function renderFormFields(ControllerBlueprint $blueprint): string
     {
         $extensionKey = $blueprint->extensionKey;
@@ -495,8 +528,8 @@ readonly class ControllerGenerator
      * Actions are written in the order of crafter.controllerActions, which keeps the methods alphabetical.
      *
      * @param string[] $actions
-     *
      * @return string[]
+     * @throws CrafterException
      */
     private function sortActions(array $actions, string $extensionKey): array
     {

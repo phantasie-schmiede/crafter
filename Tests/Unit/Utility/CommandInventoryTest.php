@@ -12,6 +12,10 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Utility;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Exception;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\GeneratorNotSupportedException;
+use PHPUnit\Framework\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use PSBits\Crafter\Utility\CommandInventory;
 
@@ -31,6 +35,12 @@ final class CommandInventoryTest extends TestCase
         $this->inventory = new CommandInventory();
     }
 
+    /**
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws GeneratorNotSupportedException
+     * @throws InvalidArgumentException
+     */
     #[Test]
     public function carriesTheDescriptionOfEveryCommand(): void
     {
@@ -52,6 +62,9 @@ final class CommandInventoryTest extends TestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function findsEveryConcreteCommandShippedByTheExtension(): void
     {
@@ -78,6 +91,10 @@ final class CommandInventoryTest extends TestCase
         );
     }
 
+    /**
+     * @throws Exception
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function picksUpNewCommandFiles(): void
     {

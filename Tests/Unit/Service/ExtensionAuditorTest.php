@@ -11,7 +11,11 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit\Service;
 
+use JsonException;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Exception;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\MockObject\Exception as MockObjectException;
 use PSBits\Crafter\Data\AuditFinding;
 use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Data\ModelBlueprint;
@@ -20,6 +24,10 @@ use PSBits\Crafter\Enum\AuditSeverity;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ExtensionAuditor;
 use PSBits\Crafter\Tests\Unit\AbstractGeneratorTestCase;
+use Random\RandomException;
+use RuntimeException;
+use UnexpectedValueException;
+use ValueError;
 
 use function file_get_contents;
 use function file_put_contents;
@@ -34,6 +42,11 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
 {
     private ExtensionAuditor $extensionAuditor;
 
+    /**
+     * @throws MockObjectException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -46,6 +59,14 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function completeExtensionHasNoFindings(): void
     {
@@ -54,6 +75,14 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertSame([], $this->extensionAuditor->audit(self::EXTENSION_KEY));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function missingLanguageFileIsReported(): void
     {
@@ -63,6 +92,15 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertCount(1, $this->auditCategory('language'));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function missingModuleConfigurationFileIsReported(): void
     {
@@ -76,6 +114,15 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertSame('Configuration/Backend/Modules.php', $findings[0]->path);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function missingRepositoryIsReported(): void
     {
@@ -88,6 +135,15 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertStringContainsString('crafter:make:repository', $findings[0]->hint);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function missingRequiredFileIsReported(): void
     {
@@ -100,6 +156,15 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertSame('ext_emconf.php', $findings[0]->path);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function missingTemplateIsReported(): void
     {
@@ -112,6 +177,15 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertStringContainsString('List.html', $findings[0]->path);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function missingToolchainFileIsReported(): void
     {
@@ -124,6 +198,15 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertSame('Build/Quality/.php-cs-fixer.dist.php', $findings[0]->path);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function orphanedTemplateIsReported(): void
     {
@@ -138,6 +221,15 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertStringContainsString('Archive.html', $findings[0]->path);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function outdatedToolchainFileIsReported(): void
     {
@@ -152,6 +244,11 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertSame('crafter:sync demo_shop', $findings[0]->hint);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws UnexpectedValueException
+     */
     #[Test]
     public function unknownExtensionThrows(): void
     {
@@ -161,6 +258,15 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         $this->extensionAuditor->audit(self::EXTENSION_KEY);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
     #[Test]
     public function unregisteredPluginIsReported(): void
     {
@@ -176,6 +282,9 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
 
     /**
      * @return AuditFinding[]
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws UnexpectedValueException
      */
     private function auditCategory(string $category): array
     {
@@ -186,6 +295,10 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
      * Creates an extension that satisfies every audit category: base files, a model, its repository, a controller
      * including templates, language files and a registered plugin. The toolchain sync runs afterwards, exactly like
      * the ToolchainSyncEventListener would after a generation command.
+     *
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
      */
     private function generateExtension(): void
     {

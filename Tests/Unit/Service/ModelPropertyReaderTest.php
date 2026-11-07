@@ -12,10 +12,15 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\MockObject\Exception;
 use PSBits\Crafter\Data\PropertyDefinition;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\FieldTypeRegistry;
 use PSBits\Crafter\Service\ModelPropertyReader;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
+use Random\RandomException;
+use RuntimeException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_map;
@@ -29,6 +34,11 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
 {
     private ModelPropertyReader $modelPropertyReader;
 
+    /**
+     * @throws Exception
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -36,6 +46,12 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         $this->modelPropertyReader = new ModelPropertyReader(new FieldTypeRegistry($this->configurationService));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     #[Test]
     public function fallsBackToStringForAnUnknownAttribute(): void
     {
@@ -56,6 +72,10 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         self::assertFalse($byName['mystery']->required);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function readsThePropertiesOfAGeneratedModel(): void
     {
@@ -77,6 +97,12 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         self::assertFalse($byName['price']->required);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     #[Test]
     public function requiresEveryAttributeOfAType(): void
     {
@@ -100,6 +126,12 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         self::assertSame('string', $byName['label']->type);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     #[Test]
     public function resolvesEveryConfiguredAttributePattern(): void
     {
@@ -160,12 +192,22 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function returnsAnEmptyArrayForAMissingFile(): void
     {
         self::assertSame([], $this->modelPropertyReader->read('/does/not/exist/Model.php'));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     #[Test]
     public function returnsAnEmptyArrayWithoutProtectedProperties(): void
     {
@@ -190,6 +232,7 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
 
     /**
      * @return array<string, PropertyDefinition>
+     * @throws CrafterException
      */
     private function readByProperty(string $filePath): array
     {
@@ -202,6 +245,10 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         return $byName;
     }
 
+    /**
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     private function writeModelSource(string $source): string
     {
         $path = $this->getExtensionFilePath('Classes/Domain/Model/' . bin2hex(random_bytes(4)) . '.php');

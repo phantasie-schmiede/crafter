@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
@@ -22,6 +24,10 @@ use function file_get_contents;
  */
 final class MakeServiceCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAServiceWithResolvedDependencies(): void
     {
@@ -40,6 +46,10 @@ final class MakeServiceCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Service "PriceService" has been created.', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function dryRunWritesNoFile(): void
     {
@@ -56,6 +66,10 @@ final class MakeServiceCommandTest extends AbstractCommandTestCase
         self::assertFileDoesNotExist($this->getExtensionFilePath('Classes/Service/PriceService.php'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnInvalidName(): void
     {
@@ -65,6 +79,10 @@ final class MakeServiceCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('UpperCamelCase', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnInvalidSubPath(): void
     {
@@ -78,6 +96,10 @@ final class MakeServiceCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('UpperCamelCase segments', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnUnresolvableShortDependency(): void
     {
@@ -93,6 +115,10 @@ final class MakeServiceCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Dependency "Bogus" cannot be resolved', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function reportsAnUpToDateClassOnTheSecondRun(): void
     {
@@ -107,6 +133,10 @@ final class MakeServiceCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('already up to date', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function requiresTheExtensionOption(): void
     {

@@ -14,6 +14,7 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Data\ExtensionBlueprint;
 use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Exception\CrafterException;
+use RuntimeException;
 
 use function array_filter;
 use function array_keys;
@@ -66,8 +67,9 @@ readonly class ExtensionGenerator
 
     /**
      * @param string[] $groups
-     *
      * @return WriteResult[]
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     public function generate(ExtensionBlueprint $blueprint, array $groups): array
     {
@@ -101,6 +103,7 @@ readonly class ExtensionGenerator
      * All groups defined in `crafter.extensionFiles`, in configuration order.
      *
      * @return string[]
+     * @throws CrafterException
      */
     public function getAvailableGroups(?string $extensionKey = null): array
     {
@@ -111,6 +114,7 @@ readonly class ExtensionGenerator
      * Groups that are preselected when the command runs without explicit selection.
      *
      * @return string[]
+     * @throws CrafterException
      */
     public function getDefaultGroups(?string $extensionKey = null): array
     {
@@ -134,8 +138,8 @@ readonly class ExtensionGenerator
      * Skeleton identifier => target path relative to the extension directory.
      *
      * @param string[] $groups
-     *
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getFiles(?string $extensionKey, array $groups): array
     {
@@ -172,8 +176,8 @@ readonly class ExtensionGenerator
     /**
      * @param string[]              $groups
      * @param array<string, string> $toolchainVariables
-     *
      * @return array<string, string>
+     * @throws CrafterException
      */
     private function buildVariables(ExtensionBlueprint $blueprint, array $groups, array $toolchainVariables): array
     {
@@ -231,6 +235,7 @@ readonly class ExtensionGenerator
 
     /**
      * @return array<string, array<string, string>>
+     * @throws CrafterException
      */
     private function getExtensionFiles(?string $extensionKey): array
     {
@@ -245,6 +250,7 @@ readonly class ExtensionGenerator
 
     /**
      * @return array<string, string>
+     * @throws CrafterException
      */
     private function getMap(string $path, ?string $extensionKey): array
     {
@@ -258,8 +264,8 @@ readonly class ExtensionGenerator
      * quality group files need at least one enabled tool, otherwise no tooling would be configured at all.
      *
      * @param array<string, string> $files
-     *
      * @return array<string, string>
+     * @throws CrafterException
      */
     private function pruneFiles(array $files, ?string $extensionKey): array
     {

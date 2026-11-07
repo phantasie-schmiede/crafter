@@ -11,9 +11,12 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ContentProfile;
 use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Exception\CrafterException;
+use RuntimeException;
+use UnexpectedValueException;
 
 use function array_keys;
 use function array_map;
@@ -77,6 +80,10 @@ final class SyncService
     /**
      * Rendered (or merged) content a renewable file would have after a sync. Returns null when the file is not
      * applicable for the current profile or cannot be managed, e.g. because an existing JSON file cannot be parsed.
+     *
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws UnexpectedValueException
      */
     public function getExpectedContent(
         string          $identifier,
@@ -112,6 +119,7 @@ final class SyncService
      * Declared renewable files with their policy and target path, in configuration order.
      *
      * @return array<string, array{policy: string, target: string}>
+     * @throws CrafterException
      */
     public function getRenewableEntries(?string $extensionKey = null): array
     {
@@ -142,6 +150,8 @@ final class SyncService
 
     /**
      * States whether a renewable file belongs to the toolchain of the given profile at all.
+     *
+     * @throws CrafterException
      */
     public function isApplicable(string $identifier, ContentProfile $profile, ?string $extensionKey): bool
     {
@@ -163,6 +173,10 @@ final class SyncService
     /**
      * States whether a renewable file already matches what the generators would write. Merge files are compared
      * semantically, i.e. only the managed keys are checked, so formatting differences do not cause drift.
+     *
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws UnexpectedValueException
      */
     public function isUpToDate(
         string          $identifier,
@@ -204,6 +218,10 @@ final class SyncService
 
     /**
      * @return WriteResult[]
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
      */
     public function sync(string $extensionKey, bool $dryRun = false): array
     {
@@ -248,6 +266,8 @@ final class SyncService
 
     /**
      * @return array<string, string>
+     * @throws CrafterException
+     * @throws JsonException
      */
     private function buildVariables(string $extensionKey, string $extensionPath, ContentProfile $profile): array
     {
@@ -286,6 +306,7 @@ final class SyncService
 
     /**
      * @return array<string, string>
+     * @throws CrafterException
      */
     private function flattenExtensionFiles(?string $extensionKey): array
     {
@@ -308,6 +329,7 @@ final class SyncService
      * Names of map keys the sync manages within a given tool section, i.e. entries that may be replaced or dropped.
      *
      * @return string[]
+     * @throws CrafterException
      */
     private function getManagedKeys(string $toolKey, ?string $extensionKey): array
     {
@@ -332,6 +354,7 @@ final class SyncService
 
     /**
      * @return mixed[]
+     * @throws CrafterException
      */
     private function getRenewableConfig(?string $extensionKey): array
     {
@@ -342,6 +365,7 @@ final class SyncService
 
     /**
      * @return array<string, array<string, mixed>>
+     * @throws CrafterException
      */
     private function getTools(?string $extensionKey): array
     {
@@ -353,6 +377,8 @@ final class SyncService
     /**
      * Compares only the managed keys of an existing JSON file with what the generators would produce, so
      * formatting, key order and user owned keys never cause a finding.
+     *
+     * @throws CrafterException
      */
     private function isMergeUpToDate(
         string         $absoluteFilePath,
@@ -424,6 +450,8 @@ final class SyncService
     /**
      * Merges the managed keys into an existing JSON file and returns it re-encoded in canonical JSON. Returns null
      * when parsing fails.
+     *
+     * @throws CrafterException
      */
     private function mergeJsonFile(
         string         $absoluteFilePath,
@@ -479,7 +507,6 @@ final class SyncService
      * @param array<string, string> $existing
      * @param array<string, mixed>  $generated
      * @param string[]              $managedNames
-     *
      * @return array<string, mixed>
      */
     private function mergeMap(array $existing, array $generated, array $managedNames): array

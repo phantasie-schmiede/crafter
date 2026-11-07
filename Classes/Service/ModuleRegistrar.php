@@ -11,8 +11,12 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
 
 use function file_get_contents;
 use function is_file;
@@ -55,6 +59,10 @@ readonly class ModuleRegistrar
 
     /**
      * @return bool true when the module has been added, false when the file is missing or the module already exists
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
      */
     public function register(ClassBlueprint $blueprint, string $moduleName): bool
     {
@@ -127,6 +135,11 @@ readonly class ModuleRegistrar
     /**
      * Writes Configuration/Backend/Modules.php. Existing files are left untouched by the FileWriter, so a project
      * that has customised the file keeps its version.
+     *
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
      */
     private function ensureModuleConfiguration(string $extensionKey): void
     {

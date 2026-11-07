@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Enum;
 
-/**
- * Enum AuditSeverity
- */
 enum AuditSeverity: string
 {
     case error   = 'error';

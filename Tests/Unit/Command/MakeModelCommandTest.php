@@ -13,6 +13,8 @@ namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
@@ -29,6 +31,10 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
         yield 'missing both' => ['required=1'];
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAModelWithParsedPropertiesAndRepository(): void
     {
@@ -52,6 +58,10 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Model "Product" has been created.', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsOnlyTheModelWithoutFollowUpFlags(): void
     {
@@ -67,6 +77,10 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
         self::assertFileDoesNotExist($this->getExtensionFilePath('Classes/Controller/ProductController.php'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnInvalidName(): void
     {
@@ -76,6 +90,10 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('UpperCamelCase', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnUnknownPropertyType(): void
     {
@@ -89,6 +107,10 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Unknown field type "bogus"', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     #[DataProvider('incompleteProperties')]
     public function rejectsAPropertyWithoutNameOrType(string $property): void
@@ -103,6 +125,10 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('must at least define "name" and "type"', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function requiresTheExtensionOption(): void
     {

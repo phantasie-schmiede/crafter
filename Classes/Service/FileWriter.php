@@ -17,6 +17,7 @@ use PSBits\Crafter\Event\AfterGenerationEvent;
 use PSBits\Crafter\Event\BeforeFileWriteEvent;
 use PSBits\Crafter\Exception\CrafterException;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use RuntimeException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function chmod;
@@ -65,6 +66,8 @@ class FileWriter
     /**
      * Writes a modification of an existing file. In contrast to write() the file is always updated, because the
      * content is derived from the file itself and adding something twice is prevented by the caller.
+     *
+     * @throws RuntimeException
      */
     public function modify(string $absoluteFilePath, string $content, int $mode = 0): WriteResult
     {
@@ -78,6 +81,9 @@ class FileWriter
         $this->results = [];
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public function write(string $absoluteFilePath, string $content, int $mode = 0): WriteResult
     {
         return $this->process($absoluteFilePath, $content, false, $mode);
@@ -101,6 +107,9 @@ class FileWriter
         return true === $this->force ? WriteStatus::overwritten : WriteStatus::skipped;
     }
 
+    /**
+     * @throws RuntimeException
+     */
     private function process(string $absoluteFilePath, string $content, bool $modification, int $mode = 0): WriteResult
     {
         $event = new BeforeFileWriteEvent(
@@ -127,6 +136,10 @@ class FileWriter
         return $result;
     }
 
+    /**
+     * @throws CrafterException
+     * @throws RuntimeException
+     */
     private function putContents(string $absoluteFilePath, string $content, int $mode): void
     {
         $directory = dirname($absoluteFilePath);

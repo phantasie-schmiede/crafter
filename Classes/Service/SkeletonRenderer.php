@@ -59,6 +59,7 @@ class SkeletonRenderer
      * All variables that are available in every stub without being passed explicitly.
      *
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getGlobalVariables(?string $extensionKey = null): array
     {
@@ -107,6 +108,7 @@ class SkeletonRenderer
 
     /**
      * @param array<string, string> $variables
+     * @throws CrafterException
      */
     public function render(string $identifier, array $variables = [], ?string $extensionKey = null): string
     {
@@ -151,6 +153,7 @@ class SkeletonRenderer
 
     /**
      * @param array<string, string> $variables
+     * @throws CrafterException
      */
     private function replacePlaceholders(string $skeleton, array $variables, string $identifier): string
     {
@@ -187,6 +190,7 @@ class SkeletonRenderer
 
     /**
      * @param array<string, string> $variables
+     * @throws CrafterException
      */
     private function resolveValue(string $name, array $variables, string $identifier): string
     {

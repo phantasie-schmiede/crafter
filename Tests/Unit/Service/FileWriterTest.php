@@ -12,15 +12,22 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Exception;
+use PHPUnit\Framework\ExpectationFailedException;
 use PSBits\Crafter\Enum\WriteStatus;
 use PSBits\Crafter\Event\AfterGenerationEvent;
 use PSBits\Crafter\Event\BeforeFileWriteEvent;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Tests\Fixtures\CallbackEventDispatcher;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
+use RuntimeException;
 
 final class FileWriterTest extends AbstractCrafterTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function dryRunReportsTheStatusWithoutTouchingTheDisk(): void
     {
@@ -33,6 +40,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertFileDoesNotExist($path);
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function existingFileIsSkippedWithoutForce(): void
     {
@@ -43,6 +54,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertStringEqualsFile($path, 'original');
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function finishDispatchesTheAfterGenerationEvent(): void
     {
@@ -61,6 +76,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertSame([$path], $event->getChangedPaths());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function forceOverwritesAnExistingFile(): void
     {
@@ -72,6 +91,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertStringEqualsFile($path, 'changed');
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function identicalContentIsReportedAsUnchanged(): void
     {
@@ -81,6 +104,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertSame(WriteStatus::unchanged, $this->fileWriter->write($path, 'content')->status);
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function listenerCanRewriteThePathAndTheContent(): void
     {
@@ -99,6 +126,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertStringEqualsFile($target, 'patched');
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function listenerCanSkipAFile(): void
     {
@@ -116,6 +147,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertFileDoesNotExist($path);
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function modificationIsWrittenEvenWithoutForce(): void
     {
@@ -126,6 +161,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertStringEqualsFile($path, 'changed');
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function newFileIsCreatedIncludingItsDirectories(): void
     {
@@ -137,6 +176,11 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertStringEqualsFile($path, 'content');
     }
 
+    /**
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function resetClearsThePreviousResults(): void
     {
@@ -147,6 +191,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertSame([], $this->fileWriter->getResults());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function theFileModeIsAppliedWhenProvided(): void
     {
@@ -157,6 +205,10 @@ final class FileWriterTest extends AbstractCrafterTestCase
         self::assertSame(0755, fileperms($path) & 0777);
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function withoutAModeTheFileIsNotExecutable(): void
     {

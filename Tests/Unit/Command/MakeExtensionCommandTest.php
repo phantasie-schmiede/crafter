@@ -11,8 +11,11 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit\Command;
 
+use JsonException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 use function dirname;
@@ -34,6 +37,11 @@ final class MakeExtensionCommandTest extends AbstractCommandTestCase
         yield 'uppercase'   => ['MyExt'];
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAnExtensionFromExplicitOptions(): void
     {
@@ -64,6 +72,10 @@ final class MakeExtensionCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('composer require acme/budget-tracker:@dev', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function dryRunWritesNoFile(): void
     {
@@ -74,6 +86,10 @@ final class MakeExtensionCommandTest extends AbstractCommandTestCase
         self::assertFileDoesNotExist($this->pathOf('budget_tracker', 'composer.json'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function refusesToOverwriteAnExistingExtensionWithoutForce(): void
     {
@@ -88,6 +104,10 @@ final class MakeExtensionCommandTest extends AbstractCommandTestCase
         self::assertSame('{"name":"acme/budget-tracker"}', (string)file_get_contents($target));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     #[DataProvider('invalidExtensionKeys')]
     public function rejectsAnInvalidExtensionKey(string $extensionKey): void
@@ -102,6 +122,10 @@ final class MakeExtensionCommandTest extends AbstractCommandTestCase
         self::assertDirectoryDoesNotExist($this->pathOf($extensionKey, '.'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function reportsUnknownFileGroupsAsAnError(): void
     {
@@ -114,6 +138,11 @@ final class MakeExtensionCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Unknown extension file group(s): bogus', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function usesConfigurationDefaultsWithoutOptions(): void
     {

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Data\ContentProfile;
+use PSBits\Crafter\Exception\CrafterException;
 
 use function array_key_last;
 use function array_keys;
@@ -51,6 +52,7 @@ final class ToolchainGenerator
      * Injectable configuration files of the enabled tools, skeleton identifier => target path.
      *
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getConfigFiles(ContentProfile $profile, ?string $extensionKey = null): array
     {
@@ -73,6 +75,7 @@ final class ToolchainGenerator
      * Names of the tools that apply to the given profile, in configuration order.
      *
      * @return string[]
+     * @throws CrafterException
      */
     public function getEnabledTools(ContentProfile $profile, ?string $extensionKey = null): array
     {
@@ -93,6 +96,7 @@ final class ToolchainGenerator
 
     /**
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getManagedComposerRequireDev(ContentProfile $profile, ?string $extensionKey = null): array
     {
@@ -124,6 +128,7 @@ final class ToolchainGenerator
      * The composer scripts the generator manages: the bootstrap commands and the test aggregate.
      *
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     public function getManagedComposerScripts(ContentProfile $profile, ?string $extensionKey = null): array
     {
@@ -143,6 +148,7 @@ final class ToolchainGenerator
 
     /**
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getManagedPackageDevDependencies(ContentProfile $profile, ?string $extensionKey = null): array
     {
@@ -165,6 +171,7 @@ final class ToolchainGenerator
 
     /**
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getManagedPackageScripts(ContentProfile $profile, ?string $extensionKey = null): array
     {
@@ -189,6 +196,7 @@ final class ToolchainGenerator
      * Rendered variable blocks for every stub that depends on the tool selection.
      *
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getVariables(ContentProfile $profile, ?string $extensionKey = null): array
     {
@@ -211,6 +219,9 @@ final class ToolchainGenerator
         ];
     }
 
+    /**
+     * @throws CrafterException
+     */
     public function needsNode(ContentProfile $profile, ?string $extensionKey = null): bool
     {
         foreach ($this->getEnabledTools($profile, $extensionKey) as $toolName) {
@@ -280,6 +291,7 @@ final class ToolchainGenerator
 
     /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     private function getMap(string $path, ?string $extensionKey): array
     {
@@ -293,6 +305,7 @@ final class ToolchainGenerator
      * declare as composer scripts.
      *
      * @return list<string>
+     * @throws CrafterException
      */
     private function getTestMembers(ContentProfile $profile, ?string $extensionKey): array
     {
@@ -317,6 +330,7 @@ final class ToolchainGenerator
 
     /**
      * @return array<string, array<string, mixed>>
+     * @throws CrafterException
      */
     private function getTools(?string $extensionKey): array
     {
@@ -341,6 +355,7 @@ final class ToolchainGenerator
 
     /**
      * @param string[] $enabledTools
+     * @throws CrafterException
      */
     private function renderAgentToolChecks(array $enabledTools, ?string $extensionKey): string
     {

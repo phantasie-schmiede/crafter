@@ -13,6 +13,7 @@ namespace PSBits\Crafter\Tests\Unit\Utility;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 use PSBits\Crafter\Utility\NamingUtility;
 
@@ -43,6 +44,9 @@ final class NamingUtilityTest extends TestCase
         ];
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function buildNamespaceJoinsAllSegments(): void
     {
@@ -52,12 +56,18 @@ final class NamingUtilityTest extends TestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function buildNamespaceOmitsAnEmptySubNamespace(): void
     {
         self::assertSame('PSBits\DemoShop', NamingUtility::buildNamespace('PSBits', 'DemoShop'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function buildSubNamespaceFromPathDropsClassesAndFileName(): void
     {
@@ -67,12 +77,18 @@ final class NamingUtilityTest extends TestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function buildSubNamespaceFromPathReturnsAnEmptyStringForTopLevelClasses(): void
     {
         self::assertSame('', NamingUtility::buildSubNamespaceFromPath('Classes/Product.php'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function buildTableNameStripsUnderscoresFromTheExtensionKey(): void
     {
@@ -82,18 +98,27 @@ final class NamingUtilityTest extends TestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function toExtensionKeyUnderscoresCamelCase(): void
     {
         self::assertSame('demo_shop', NamingUtility::toExtensionKey('DemoShop'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function toLowerCamelCaseLowercasesTheFirstLetter(): void
     {
         self::assertSame('demoShop', NamingUtility::toLowerCamelCase('demo_shop'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     #[DataProvider('pluralDataProvider')]
     public function toPluralAppliesTheExpectedRule(string $value, string $expected): void
@@ -101,6 +126,9 @@ final class NamingUtilityTest extends TestCase
         self::assertSame($expected, NamingUtility::toPlural($value));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     #[DataProvider('upperCamelCaseDataProvider')]
     public function toUpperCamelCaseNormalizesTheValue(string $value, string $expected): void

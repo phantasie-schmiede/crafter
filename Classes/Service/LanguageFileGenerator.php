@@ -12,7 +12,9 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Data\ControllerBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
+use RuntimeException;
 
 use function array_keys;
 use function implode;
@@ -41,6 +43,8 @@ readonly class LanguageFileGenerator
 
     /**
      * @param array<string, string[]> $labelIds label identifiers per action, derived from the rendered templates
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     public function generateForController(ControllerBlueprint $blueprint, array $labelIds = []): void
     {
@@ -76,6 +80,8 @@ readonly class LanguageFileGenerator
      *
      * @param array<string, string> $placeholders placeholders of the configured path
      * @param array<string, string> $units        translation identifier => source text
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     public function writeLanguageFiles(
         string $extensionKey,
@@ -137,7 +143,6 @@ readonly class LanguageFileGenerator
     /**
      * @param string[]             $ids
      * @param array<string, mixed> $labels
-     *
      * @return array<string, string>
      */
     private function buildUnits(array $ids, array $labels, ControllerBlueprint $blueprint): array
@@ -164,6 +169,7 @@ readonly class LanguageFileGenerator
 
     /**
      * @param array<string, string> $units
+     * @throws RuntimeException
      */
     private function write(ControllerBlueprint $blueprint, string $action, array $units): void
     {

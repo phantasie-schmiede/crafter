@@ -11,6 +11,11 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit;
 
+use PHPUnit\Event\NoPreviousThrowableException;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\InvalidArgumentException;
+use PHPUnit\Framework\MockObject\Exception;
+use PHPUnit\Framework\MockObject\IncompatibleReturnValueException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PSBits\Crafter\Service\ConfigurationService;
 use PSBits\Crafter\Service\ExtensionProfileService;
@@ -21,6 +26,8 @@ use PSBits\Crafter\Service\SyncService;
 use PSBits\Crafter\Service\ToolchainGenerator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\NullLogger;
+use Random\RandomException;
+use RuntimeException;
 use TYPO3\CMS\Core\Configuration\Loader\YamlFileLoader;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\EventDispatcher\NoopEventDispatcher;
@@ -67,6 +74,13 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
     protected SyncService        $syncService;
     protected ToolchainGenerator $toolchainGenerator;
 
+    /**
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws NoPreviousThrowableException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -100,6 +114,9 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         $this->fileWriter->reset();
     }
 
+    /**
+     * @throws RuntimeException
+     */
     protected function tearDown(): void
     {
         if ('' !== $this->projectPath && is_dir($this->projectPath)) {
@@ -136,6 +153,9 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
     /**
      * Compares a generated file with its fixture. Set CRAFTER_UPDATE_FIXTURES=1 to rewrite the fixtures after an
      * intended change of the generated output. Always review the resulting diff.
+     *
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
      */
     protected function assertFileMatchesFixture(string $relativePath, string $fixtureName): void
     {
@@ -165,6 +185,9 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         return $this->projectPath . '/packages/' . self::EXTENSION_KEY . '/' . ltrim($relativePath, '/');
     }
 
+    /**
+     * @throws ExpectationFailedException
+     */
     protected function getFixtureContent(string $name): string
     {
         $path = self::getFixturePath($name);
@@ -176,6 +199,8 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
 
     /**
      * Writes a project wide configuration layer, which is the layer a project uses to override the defaults.
+     *
+     * @throws RuntimeException
      */
     protected function writeProjectConfiguration(string $yaml): void
     {
@@ -183,6 +208,10 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         GeneralUtility::writeFile($this->projectPath . '/config/crafter.yaml', $yaml, true);
     }
 
+    /**
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     private function createTemporaryDirectory(): string
     {
         $path = sys_get_temp_dir() . '/crafter-test-' . bin2hex(random_bytes(8));
@@ -206,6 +235,12 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         );
     }
 
+    /**
+     * @throws Exception
+     * @throws IncompatibleReturnValueException
+     * @throws InvalidArgumentException
+     * @throws NoPreviousThrowableException
+     */
     private function initializePackageManager(): void
     {
         $crafterPath = dirname(__DIR__, 2) . '/';

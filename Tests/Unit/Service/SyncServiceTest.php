@@ -11,9 +11,13 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit\Service;
 
+use JsonException;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Exception;
+use PHPUnit\Framework\ExpectationFailedException;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
+use RuntimeException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_keys;
@@ -30,6 +34,11 @@ use function str_replace;
  */
 final class SyncServiceTest extends AbstractCrafterTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createIfMissingPreservesUserEdits(): void
     {
@@ -45,6 +54,11 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function mergeSyncIgnoresFormattingDrift(): void
     {
@@ -66,6 +80,12 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         self::assertSame($reindented, (string)file_get_contents($this->getExtensionFilePath('composer.json')));
     }
 
+    /**
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function missingPackageJsonGetsTheCompleteSkeleton(): void
     {
@@ -86,6 +106,11 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         self::assertArrayHasKey('prettier', $packageDevDependencies);
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function overwriteRestoresADriftedQualityConfig(): void
     {
@@ -101,6 +126,11 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function syncCreatesTheClassAttributeLinterForHtmlContent(): void
     {
@@ -126,6 +156,12 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function syncCreatesTheMissingToolchainForPhpContent(): void
     {
@@ -165,6 +201,11 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         self::assertSame('^2.56', $composer['require-dev']['ergebnis/composer-normalize']);
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function syncMergesAndReplacesManagedComposerKeys(): void
     {
@@ -189,6 +230,10 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         self::assertSame('^2.0', $composer['require-dev']['foo/bar']);
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     #[Test]
     public function syncThrowsWithoutAnExtensionDirectory(): void
     {
@@ -198,6 +243,9 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         $this->syncService->sync(self::EXTENSION_KEY);
     }
 
+    /**
+     * @throws RuntimeException
+     */
     private function createExtensionFile(string $relativePath, string $content): void
     {
         $absolutePath = $this->getExtensionFilePath($relativePath);

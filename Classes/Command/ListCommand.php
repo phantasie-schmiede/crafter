@@ -14,15 +14,12 @@ namespace PSBits\Crafter\Command;
 use PSBits\Crafter\Utility\CommandInventory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Class ListCommand
- *
  * Lists all crafter commands with a short description.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:list',
@@ -30,6 +27,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class ListCommand extends AbstractCrafterCommand
 {
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly CommandInventory $commandInventory,
     ) {

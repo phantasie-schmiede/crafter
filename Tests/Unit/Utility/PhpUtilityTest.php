@@ -12,13 +12,19 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Utility;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 use PSBits\Crafter\Utility\PhpUtility;
+use ValueError;
 
 use function implode;
 
 final class PhpUtilityTest extends TestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws ValueError
+     */
     #[Test]
     public function alignArgumentsPadsTheTypesToTheLongestOne(): void
     {
@@ -34,12 +40,20 @@ final class PhpUtilityTest extends TestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws ValueError
+     */
     #[Test]
     public function getShortClassNameReturnsGlobalClassesUnchanged(): void
     {
         self::assertSame('DateTime', PhpUtility::getShortClassName('\DateTime'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws ValueError
+     */
     #[Test]
     public function getShortClassNameReturnsTheLastSegment(): void
     {
@@ -49,6 +63,10 @@ final class PhpUtilityTest extends TestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws ValueError
+     */
     #[Test]
     public function renderImportsOmitsClassesOfTheTargetNamespace(): void
     {
@@ -66,6 +84,9 @@ final class PhpUtilityTest extends TestCase
 
     /**
      * The backslash must be treated like a character below the letters, which is how php-cs-fixer sorts imports.
+     *
+     * @throws ExpectationFailedException
+     * @throws ValueError
      */
     #[Test]
     public function renderImportsSortsLikePhpCsFixer(): void
