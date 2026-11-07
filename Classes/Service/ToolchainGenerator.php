@@ -33,10 +33,10 @@ use function str_starts_with;
  * A tool is active when the profile contains one of the signals of its `when` list, e.g. Prettier for HTML, XML
  * or XLF files and PHP-CS-Fixer for PHP files. Tools without a `when` list are always active.
  *
- * The managed composer scripts are the bootstrap commands (the profile-dependent npm install and the `qa link`
+ * The managed composer scripts are the bootstrap commands (the profile-dependent npm install and the `qa sync`
  * call) and the test:all aggregate, which collects every test:* script (except the coverage runs) the enabled
  * tools declare. The shared QA scripts and the lint:all, fix:all and qa aggregates are owned by the psbits/qa
- * package: `qa link` adds them to the caller composer.json on every composer install/update, so the generator
+ * package: `qa sync` adds them to the caller composer.json on every composer install/update, so the generator
  * does not duplicate them. The test scripts themselves (test:unit, test:coverage, ...) stay under repository
  * management.
  */
@@ -130,9 +130,9 @@ final class ToolchainGenerator
         $scripts = [
             'post-install-cmd' => array_merge(
                 $this->needsNode($profile, $extensionKey) ? ['npm install'] : [],
-                ['.Build/bin/qa link']
+                ['.Build/bin/qa sync']
             ),
-            'post-update-cmd'  => ['.Build/bin/qa link'],
+            'post-update-cmd'  => ['.Build/bin/qa sync'],
             'test:all'         => $this->getTestMembers($profile, $extensionKey),
         ];
 

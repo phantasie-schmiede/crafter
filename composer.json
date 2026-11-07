@@ -40,7 +40,7 @@
         "typo3/testing-framework": "^9.5"
     },
     "suggest": {
-        "psbits/qa": "Shared QA tooling for the generated extensions: QA scripts, pre-commit hook and CI workflow (installed via qa link)"
+        "psbits/qa": "Shared QA tooling for the generated extensions: QA scripts, pre-commit hook and CI workflow (installed via qa sync)"
     },
     "autoload": {
         "psr-4": {
@@ -75,10 +75,10 @@
     "scripts": {
         "post-install-cmd": [
             "npm install",
-            ".Build/bin/qa link"
+            ".Build/bin/qa sync"
         ],
         "post-update-cmd": [
-            ".Build/bin/qa link"
+            ".Build/bin/qa sync"
         ],
         "analyze:php": "phpstan analyse --configuration=Build/Quality/phpstan.neon.dist --no-progress",
         "audit:composer": "composer audit --abandoned=report",

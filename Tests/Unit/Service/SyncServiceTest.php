@@ -118,7 +118,7 @@ final class SyncServiceTest extends AbstractCrafterTestCase
             (string)file_get_contents($this->getExtensionFilePath('AGENTS.md'))
         );
         $composer = $this->readComposer();
-        self::assertSame(['npm install', '.Build/bin/qa link'], $composer['scripts']['post-install-cmd']);
+        self::assertSame(['npm install', '.Build/bin/qa sync'], $composer['scripts']['post-install-cmd']);
         $packageJson = json_decode((string)file_get_contents($this->getExtensionFilePath('package.json')), true);
         self::assertSame(
             'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs --dry-run',
@@ -156,8 +156,8 @@ final class SyncServiceTest extends AbstractCrafterTestCase
 
         $composer = $this->readComposer();
         self::assertSame('phpunit', $composer['scripts']['test:user']);
-        self::assertSame(['.Build/bin/qa link'], $composer['scripts']['post-install-cmd']);
-        self::assertSame(['.Build/bin/qa link'], $composer['scripts']['post-update-cmd']);
+        self::assertSame(['.Build/bin/qa sync'], $composer['scripts']['post-install-cmd']);
+        self::assertSame(['.Build/bin/qa sync'], $composer['scripts']['post-update-cmd']);
         self::assertArrayNotHasKey('lint:all', $composer['scripts']);
         self::assertArrayNotHasKey('fix:all', $composer['scripts']);
         self::assertArrayNotHasKey('qa', $composer['scripts']);
@@ -183,8 +183,8 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         $composer = $this->readComposer();
         self::assertSame('echo stale', $composer['scripts']['lint:all']);
         self::assertSame('echo stale', $composer['scripts']['lint:php']);
-        self::assertSame(['.Build/bin/qa link'], $composer['scripts']['post-install-cmd']);
-        self::assertSame(['.Build/bin/qa link'], $composer['scripts']['post-update-cmd']);
+        self::assertSame(['.Build/bin/qa sync'], $composer['scripts']['post-install-cmd']);
+        self::assertSame(['.Build/bin/qa sync'], $composer['scripts']['post-update-cmd']);
         self::assertSame('phpunit', $composer['scripts']['test:user']);
         self::assertSame('^2.0', $composer['require-dev']['foo/bar']);
     }

@@ -124,8 +124,8 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         );
         self::assertSame(
             [
-                'post-install-cmd' => ['.Build/bin/qa link'],
-                'post-update-cmd'  => ['.Build/bin/qa link'],
+                'post-install-cmd' => ['.Build/bin/qa sync'],
+                'post-update-cmd'  => ['.Build/bin/qa sync'],
                 'test:all'         => [],
             ],
             $this->toolchainGenerator->getManagedComposerScripts($profile)
@@ -161,8 +161,8 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertFalse($this->toolchainGenerator->needsNode($profile));
         self::assertSame(
             [
-                'post-install-cmd' => ['.Build/bin/qa link'],
-                'post-update-cmd'  => ['.Build/bin/qa link'],
+                'post-install-cmd' => ['.Build/bin/qa sync'],
+                'post-update-cmd'  => ['.Build/bin/qa sync'],
                 'test:all'         => [],
             ],
             $this->toolchainGenerator->getManagedComposerScripts($profile)

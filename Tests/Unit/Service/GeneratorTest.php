@@ -146,7 +146,7 @@ final class GeneratorTest extends AbstractGeneratorTestCase
     #[Test]
     public function extensionIsGeneratedWithoutACiWorkflow(): void
     {
-        // The caller CI workflow is installed by .Build/bin/qa link (psbits/qa), not by the crafter.
+        // The caller CI workflow is installed by .Build/bin/qa sync (psbits/qa), not by the crafter.
         $this->generateBaseExtension(['core', 'typoScript', 'quality']);
 
         self::assertFileDoesNotExist($this->getExtensionFilePath('.github/workflows/ci.yml'));

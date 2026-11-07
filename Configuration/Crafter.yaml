@@ -213,7 +213,7 @@ crafter:
   # "when" list; an empty list enables it always. Each tool contributes its own npm scripts (packageScripts),
   # require-dev packages and configuration files, plus an `agentsBullet` describing its checks for AGENTS.md. The
   # composer scripts of the shared QA tooling and the lint:all/fix:all/qa aggregates are synced into the caller
-  # composer.json by the psbits/qa package (qa link), not by the crafter.
+  # composer.json by the psbits/qa package (qa sync), not by the crafter.
   tools:
     classLint:
       agentsBullet: '`lint:classes`/`fix:classes` enforce the class attribute breakpoint order.'

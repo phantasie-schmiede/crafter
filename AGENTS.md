@@ -149,9 +149,9 @@ Repository quality checks are defined in `composer.json`, `package.json`, and `B
 - `fix:all` **rewrites source files** (runs class attribute linting, Prettier
   for XML/XLF and package.json, the composer.json normalization, php-cs-fixer);
   `lint:all` is the read-only verification.
-- A pre-commit hook (installed by `.Build/bin/qa link` from the psbits/qa package) runs `composer lint:all`.
+- A pre-commit hook (installed by `.Build/bin/qa sync` from the psbits/qa package) runs `composer lint:all`.
 - The shared QA scripts and their `lint:all` / `fix:all` aggregates are kept in sync by
-  `.Build/bin/qa link` (psbits/qa package); the `psbits-qa` skill documents the protocol.
+  `.Build/bin/qa sync` (psbits/qa package); the `psbits-qa` skill documents the protocol.
 - Unit tests: `composer test:unit` (golden master tests, no database needed).
 - Update fixtures after intended output changes: `composer test:unit:update-fixtures`, then review
   `git diff Tests/Fixtures/Expected`.
