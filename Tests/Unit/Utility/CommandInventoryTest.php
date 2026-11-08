@@ -12,16 +12,18 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Utility;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Exception;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\GeneratorNotSupportedException;
+use PHPUnit\Framework\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use PSBits\Crafter\Utility\CommandInventory;
 
 use function array_keys;
+use function dirname;
+use function file_put_contents;
+use function unlink;
 
-/**
- * Class CommandInventoryTest
- *
- * @package PSBits\Crafter\Tests\Unit\Utility
- */
 final class CommandInventoryTest extends TestCase
 {
     private CommandInventory $inventory;
@@ -33,6 +35,36 @@ final class CommandInventoryTest extends TestCase
         $this->inventory = new CommandInventory();
     }
 
+    /**
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws GeneratorNotSupportedException
+     * @throws InvalidArgumentException
+     */
+    #[Test]
+    public function carriesTheDescriptionOfEveryCommand(): void
+    {
+        $commands = $this->inventory->find();
+
+        foreach ($commands as $name => $details) {
+            self::assertStringStartsWith('crafter:', $name);
+            self::assertArrayHasKey('description', $details);
+            self::assertNotEmpty($details['description']);
+        }
+
+        self::assertSame(
+            ['description' => 'Creates a domain model and optionally its repository'],
+            $commands['crafter:make:model']
+        );
+        self::assertSame(
+            ['description' => 'Lists all crafter commands with a short description'],
+            $commands['crafter:list']
+        );
+    }
+
+    /**
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function findsEveryConcreteCommandShippedByTheExtension(): void
     {
@@ -59,27 +91,10 @@ final class CommandInventoryTest extends TestCase
         );
     }
 
-    #[Test]
-    public function carriesTheDescriptionOfEveryCommand(): void
-    {
-        $commands = $this->inventory->find();
-
-        foreach ($commands as $name => $details) {
-            self::assertStringStartsWith('crafter:', $name);
-            self::assertArrayHasKey('description', $details);
-            self::assertNotEmpty($details['description']);
-        }
-
-        self::assertSame(
-            ['description' => 'Creates a domain model and optionally its repository'],
-            $commands['crafter:make:model']
-        );
-        self::assertSame(
-            ['description' => 'Lists all crafter commands with a short description'],
-            $commands['crafter:list']
-        );
-    }
-
+    /**
+     * @throws Exception
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function picksUpNewCommandFiles(): void
     {

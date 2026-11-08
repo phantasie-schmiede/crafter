@@ -9,10 +9,7 @@ namespace {{ repositoryNamespace }};
 {{ imports }}
 
 /**
- * Class {{ className }}Repository
- *
  * @extends {{ parentClass }}<{{ className }}>
- * @package {{ repositoryNamespace }}
  */
 class {{ className }}Repository extends {{ parentClass }}
 {

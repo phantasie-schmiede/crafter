@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
 use TYPO3\CMS\Core\Core\Environment;
@@ -18,18 +19,27 @@ use TYPO3\CMS\Core\Package\Exception\UnknownPackageException;
 use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function file_get_contents;
+use function implode;
 use function is_array;
+use function is_dir;
+use function is_file;
 use function is_string;
+use function json_decode;
+use function ksort;
+use function ltrim;
 use function sprintf;
+use function str_contains;
+use function str_ends_with;
+use function str_replace;
+use function str_starts_with;
 use function strlen;
+use function substr;
+use function trim;
 
 /**
- * Class PathResolver
- *
  * Resolves skeleton files via the prioritised `skeletonRootPaths` cascade and builds target file paths from the
  * configurable `paths` map. Generators must never concatenate paths themselves.
- *
- * @package PSBits\Crafter\Service
  */
 class PathResolver
 {
@@ -47,6 +57,7 @@ class PathResolver
      * Absolute skeleton root paths, ordered by descending priority. Roots that cannot be resolved are omitted.
      *
      * @return array<int, string>
+     * @throws CrafterException
      */
     public function getResolvedRootPaths(?string $extensionKey = null): array
     {
@@ -67,6 +78,7 @@ class PathResolver
      * Returns all lookup locations for a skeleton, ordered by descending priority.
      *
      * @return array<int, array{priority: int, root: string, path: string, exists: bool}>
+     * @throws CrafterException
      */
     public function getSkeletonCandidates(string $identifier, ?string $extensionKey = null): array
     {
@@ -90,6 +102,7 @@ class PathResolver
      * Enumerates every skeleton available in any root path and states which root currently wins.
      *
      * @return array<string, array{priority: int, path: string, overridden: bool}>
+     * @throws CrafterException
      */
     public function listSkeletons(?string $extensionKey = null): array
     {
@@ -134,6 +147,8 @@ class PathResolver
     /**
      * Absolute path of an extension directory. Falls back to the configured `extensionRootPath` for extensions that
      * do not exist yet, which is required by `crafter:make:extension`.
+     *
+     * @throws CrafterException
      */
     public function resolveExtensionPath(string $extensionKey): string
     {
@@ -160,6 +175,9 @@ class PathResolver
     /**
      * PHP namespace of an extension. Read from the PSR-4 autoload mapping of composer.json to stay correct for
      * extensions that do not follow the vendor/extension name convention.
+     *
+     * @throws CrafterException
+     * @throws JsonException
      */
     public function resolveNamespace(string $extensionKey, string $fallbackVendor = ''): string
     {
@@ -188,6 +206,8 @@ class PathResolver
 
     /**
      * Returns the absolute path of the highest prioritised skeleton file.
+     *
+     * @throws CrafterException
      */
     public function resolveSkeleton(string $identifier, ?string $extensionKey = null): string
     {
@@ -211,6 +231,7 @@ class PathResolver
      * Builds the absolute target path for a generated file.
      *
      * @param array<string, string> $placeholders
+     * @throws CrafterException
      */
     public function resolveTargetPath(string $type, string $extensionKey, array $placeholders = []): string
     {
@@ -231,6 +252,7 @@ class PathResolver
 
     /**
      * @return array<int, string>
+     * @throws CrafterException
      */
     private function getSkeletonRootPaths(?string $extensionKey): array
     {

@@ -12,25 +12,26 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
 
-/**
- * Class MakeViewHelperCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class MakeViewHelperCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAViewHelperWithArgumentRegistrationInASubPath(): void
     {
         $tester = $this->runCommand($this->makeViewHelperCommand, [
-            'name'        => 'Price',
+            '--argument'  => ['price:integer:1:The price to format'],
             '--extension' => self::EXTENSION_KEY,
             '--sub-path'  => 'Format',
-            '--argument'  => ['price:integer:1:The price to format'],
+            'name'        => 'Price',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -40,26 +41,34 @@ final class MakeViewHelperCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString("return '';", $viewHelper);
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnUnknownArgumentType(): void
     {
         $tester = $this->runCommand($this->makeViewHelperCommand, [
-            'name'        => 'Price',
-            '--extension' => self::EXTENSION_KEY,
             '--argument'  => ['price:bogus'],
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'Price',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('Unknown argument type "bogus"', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnUnknownReturnType(): void
     {
         $tester = $this->runCommand($this->makeViewHelperCommand, [
-            'name'          => 'Price',
             '--extension'   => self::EXTENSION_KEY,
             '--return-type' => 'bogus',
+            'name'          => 'Price',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());

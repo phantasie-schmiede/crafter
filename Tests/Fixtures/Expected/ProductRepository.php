@@ -15,10 +15,7 @@ use PSBits\DemoShop\Domain\Model\Product;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
 /**
- * Class ProductRepository
- *
  * @extends Repository<Product>
- * @package PSBits\DemoShop\Domain\Repository
  */
 class ProductRepository extends Repository
 {

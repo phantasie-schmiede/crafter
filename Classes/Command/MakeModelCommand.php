@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Data\ModelBlueprint;
 use PSBits\Crafter\Data\PropertyDefinition;
@@ -20,23 +21,28 @@ use PSBits\Crafter\Service\FieldTypeRegistry;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\ModelGenerator;
 use PSBits\Crafter\Service\RepositoryGenerator;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use ValueError;
 
+use function array_keys;
+use function explode;
+use function implode;
 use function in_array;
 use function is_string;
 use function sprintf;
+use function str_contains;
+use function trim;
 
 /**
- * Class MakeModelCommand
- *
  * Creates a domain model and optionally the matching repository.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:model',
@@ -51,6 +57,9 @@ class MakeModelCommand extends AbstractCrafterCommand
     public const string OPTION_WITH_CONTROLLER = 'with-controller';
     public const string OPTION_WITH_REPOSITORY = 'with-repository';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly ControllerGenerator $controllerGenerator,
         protected readonly FieldTypeRegistry   $fieldTypeRegistry,
@@ -61,6 +70,9 @@ class MakeModelCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -122,6 +134,13 @@ class MakeModelCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
@@ -191,6 +210,9 @@ class MakeModelCommand extends AbstractCrafterCommand
         return Command::SUCCESS;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determineName(InputInterface $input, SymfonyStyle $io): ?string
     {
         $name = $input->getArgument(self::ARGUMENT_NAME);
@@ -210,6 +232,8 @@ class MakeModelCommand extends AbstractCrafterCommand
 
     /**
      * @return PropertyDefinition[]
+     * @throws CrafterException
+     * @throws InvalidArgumentException
      */
     private function determineProperties(InputInterface $input, SymfonyStyle $io, string $extensionKey): array
     {
@@ -277,6 +301,9 @@ class MakeModelCommand extends AbstractCrafterCommand
         return $definitions;
     }
 
+    /**
+     * @throws CrafterException
+     */
     private function parseProperty(string $property, string $extensionKey): PropertyDefinition
     {
         $values = [];
@@ -305,6 +332,9 @@ class MakeModelCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function shouldCreateController(InputInterface $input, SymfonyStyle $io, string $name): bool
     {
         if (true === (bool)$input->getOption(self::OPTION_NO_CONTROLLER)) {
@@ -325,6 +355,9 @@ class MakeModelCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function shouldCreateRepository(InputInterface $input, SymfonyStyle $io, string $name): bool
     {
         if (true === (bool)$input->getOption(self::OPTION_NO_REPOSITORY)) {

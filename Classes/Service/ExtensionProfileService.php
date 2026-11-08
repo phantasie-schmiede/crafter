@@ -14,21 +14,23 @@ namespace PSBits\Crafter\Service;
 use PSBits\Crafter\Data\ContentProfile;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use UnexpectedValueException;
 
 use function is_dir;
+use function is_string;
+use function ltrim;
 use function pathinfo;
+use function str_replace;
+use function str_starts_with;
+use function strtolower;
 
 /**
- * Class ExtensionProfileService
- *
  * Builds a content profile of an extension - either from the files that are about to be generated or from a scan
  * of an existing extension directory. The profile is the input for the tool selection of the quality group, so an
  * extension with TypoScript files gets the TypoScript linter and one without PHP gets none of the PHP tools.
  *
  * The `Build/` directory is intentionally excluded: the quality files themselves carry the very extensions that
  * would otherwise turn every tool on automatically.
- *
- * @package PSBits\Crafter\Service
  */
 class ExtensionProfileService
 {
@@ -55,23 +57,8 @@ class ExtensionProfileService
     ];
 
     /**
-     * @param string[] $relativePaths
+     * @throws UnexpectedValueException
      */
-    public function fromPlannedFiles(array $relativePaths): ContentProfile
-    {
-        $signals = [];
-
-        foreach ($relativePaths as $relativePath) {
-            $signal = $this->detectSignal((string)$relativePath);
-
-            if (null !== $signal) {
-                $signals[$signal] = true;
-            }
-        }
-
-        return new ContentProfile($signals);
-    }
-
     public function fromDirectory(string $extensionPath): ContentProfile
     {
         $signals = [];
@@ -91,6 +78,24 @@ class ExtensionProfileService
             }
 
             $signal = $this->detectSignal($file->getFilename());
+
+            if (null !== $signal) {
+                $signals[$signal] = true;
+            }
+        }
+
+        return new ContentProfile($signals);
+    }
+
+    /**
+     * @param string[] $relativePaths
+     */
+    public function fromPlannedFiles(array $relativePaths): ContentProfile
+    {
+        $signals = [];
+
+        foreach ($relativePaths as $relativePath) {
+            $signal = $this->detectSignal((string)$relativePath);
 
             if (null !== $signal) {
                 $signals[$signal] = true;

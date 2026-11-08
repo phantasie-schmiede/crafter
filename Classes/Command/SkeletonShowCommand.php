@@ -11,21 +11,23 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\SkeletonRenderer;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function explode;
+use function sort;
+
 /**
- * Class SkeletonShowCommand
- *
  * Renders a skeleton with the effective configuration so overridden stubs and placeholders can be checked without
  * generating any file.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:skeleton:show',
@@ -37,12 +39,18 @@ class SkeletonShowCommand extends AbstractCrafterCommand
     public const string OPTION_SET          = 'set';
     public const string OPTION_VARIABLES    = 'variables';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly SkeletonRenderer $skeletonRenderer,
     ) {
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -76,6 +84,10 @@ class SkeletonShowCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
@@ -111,6 +123,7 @@ class SkeletonShowCommand extends AbstractCrafterCommand
 
     /**
      * @return array<string, string>
+     * @throws InvalidArgumentException
      */
     private function parseVariables(InputInterface $input): array
     {

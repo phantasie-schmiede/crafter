@@ -11,22 +11,31 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
 
+use function array_filter;
 use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_unique;
+use function array_values;
+use function implode;
 use function is_array;
+use function ksort;
+use function sort;
 use function sprintf;
+use function str_contains;
 
 /**
- * Class ControllerGenerator
- *
  * Assembles a frontend controller together with its Fluid templates, form fields partial and language files.
  * Which actions exist and what they do is defined in crafter.controllerActions, so the whole behaviour can be
  * changed without touching this class.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ControllerGenerator
 {
@@ -55,6 +64,52 @@ readonly class ControllerGenerator
     ) {
     }
 
+    /**
+     * Collects the label identifiers a rendered Fluid file asks for, so the language files always match the
+     * templates, even when those have been overridden.
+     *
+     * @return string[]
+     */
+    public static function extractLabelIds(string $content): array
+    {
+        preg_match_all(
+            '/<foundation:translate\s+id="([^"]+)"|translate\(id:\s*\\\\?\'([^\'\\\\]+)/',
+            $content,
+            $matches
+        );
+
+        return array_values(array_unique(array_filter(array_merge($matches[1], $matches[2]))));
+    }
+
+    /**
+     * Placeholders shared by all controller, template and language file skeletons.
+     *
+     * @return array<string, string>
+     */
+    public function buildVariables(ControllerBlueprint $blueprint): array
+    {
+        $modelVariable = $blueprint->getModelVariable();
+
+        return [
+            'controllerName'     => $blueprint->name,
+            'labelExpression'    => $this->getLabelExpression($blueprint),
+            'modelArguments'     => sprintf('{%s: %s}', $modelVariable, $modelVariable),
+            'modelName'          => $blueprint->getModelName(),
+            'modelObject'        => sprintf('{%s}', $modelVariable),
+            'modelVariable'      => $modelVariable,
+            'partialName'        => $blueprint->getModelName(),
+            'pluralObject'       => sprintf('{%s}', $blueprint->getPluralVariable()),
+            'pluralVariable'     => $blueprint->getPluralVariable(),
+            'repositoryProperty' => $modelVariable . 'Repository',
+        ];
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     public function generate(ControllerBlueprint $blueprint): void
     {
         $extensionKey = $blueprint->extensionKey;
@@ -85,24 +140,8 @@ readonly class ControllerGenerator
     }
 
     /**
-     * Collects the label identifiers a rendered Fluid file asks for, so the language files always match the
-     * templates, even when those have been overridden.
-     *
-     * @return string[]
-     */
-    public static function extractLabelIds(string $content): array
-    {
-        preg_match_all(
-            '/<foundation:translate\s+id="([^"]+)"|translate\(id:\s*\\\\?\'([^\'\\\\]+)/',
-            $content,
-            $matches
-        );
-
-        return array_values(array_unique(array_filter(array_merge($matches[1], $matches[2]))));
-    }
-
-    /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     public function getActionConfiguration(string $action, string $extensionKey): array
     {
@@ -124,6 +163,7 @@ readonly class ControllerGenerator
 
     /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     public function getAvailableActions(?string $extensionKey = null): array
     {
@@ -132,6 +172,11 @@ readonly class ControllerGenerator
         return is_array($actions) ? $actions : [];
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws ValueError
+     */
     public function render(ControllerBlueprint $blueprint): string
     {
         $extensionKey        = $blueprint->extensionKey;
@@ -179,32 +224,10 @@ readonly class ControllerGenerator
     }
 
     /**
-     * Placeholders shared by all controller, template and language file skeletons.
-     *
-     * @return array<string, string>
-     */
-    public function buildVariables(ControllerBlueprint $blueprint): array
-    {
-        $modelVariable = $blueprint->getModelVariable();
-
-        return [
-            'controllerName'     => $blueprint->name,
-            'labelExpression'    => $this->getLabelExpression($blueprint),
-            'modelArguments'     => sprintf('{%s: %s}', $modelVariable, $modelVariable),
-            'modelName'          => $blueprint->getModelName(),
-            'modelObject'        => sprintf('{%s}', $modelVariable),
-            'modelVariable'      => $modelVariable,
-            'partialName'        => $blueprint->getModelName(),
-            'pluralObject'       => sprintf('{%s}', $blueprint->getPluralVariable()),
-            'pluralVariable'     => $blueprint->getPluralVariable(),
-            'repositoryProperty' => $modelVariable . 'Repository',
-        ];
-    }
-
-    /**
      * Blocks of the templates that only make sense when the matching action exists.
      *
      * @return array<string, string>
+     * @throws CrafterException
      */
     private function buildOptionalBlocks(ControllerBlueprint $blueprint): array
     {
@@ -228,6 +251,8 @@ readonly class ControllerGenerator
 
     /**
      * @return string[]
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     private function generateFormFieldsPartial(ControllerBlueprint $blueprint): array
     {
@@ -260,6 +285,8 @@ readonly class ControllerGenerator
 
     /**
      * @return array<string, string[]> label identifiers per action
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     private function generateTemplates(ControllerBlueprint $blueprint): array
     {
@@ -293,8 +320,9 @@ readonly class ControllerGenerator
      * automatically get the dependencies they need.
      *
      * @param string[] $imports
-     *
      * @return string[]
+     * @throws CrafterException
+     * @throws JsonException
      */
     private function getConstructorArguments(
         string              $bodies,
@@ -333,6 +361,10 @@ readonly class ControllerGenerator
         return sprintf('{%s.%s}', $blueprint->getModelVariable(), $labelProperty);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     private function getNamespace(string $extensionKey, string $subNamespace): string
     {
         return $this->pathResolver->resolveNamespace(
@@ -344,6 +376,8 @@ readonly class ControllerGenerator
     /**
      * @param array<string, mixed> $configuration
      * @param string[]             $imports
+     * @throws CrafterException
+     * @throws JsonException
      */
     private function renderAction(
         string              $action,
@@ -392,6 +426,8 @@ readonly class ControllerGenerator
 
     /**
      * @param string[] $arguments
+     * @throws CrafterException
+     * @throws ValueError
      */
     private function renderConstructor(array $arguments, string $extensionKey): string
     {
@@ -406,6 +442,23 @@ readonly class ControllerGenerator
         ));
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function renderFieldAttributes(array $attributes): string
+    {
+        $rendered = [];
+
+        foreach ($attributes as $name => $value) {
+            $rendered[] = sprintf('%s="%s"', $name, (string)$value);
+        }
+
+        return implode("\n    ", $rendered);
+    }
+
+    /**
+     * @throws CrafterException
+     */
     private function renderFormFields(ControllerBlueprint $blueprint): string
     {
         $extensionKey = $blueprint->extensionKey;
@@ -457,20 +510,6 @@ readonly class ControllerGenerator
     }
 
     /**
-     * @param array<string, mixed> $attributes
-     */
-    private function renderFieldAttributes(array $attributes): string
-    {
-        $rendered = [];
-
-        foreach ($attributes as $name => $value) {
-            $rendered[] = sprintf('%s="%s"', $name, (string)$value);
-        }
-
-        return implode("\n    ", $rendered);
-    }
-
-    /**
      * @param array<int, mixed> $throws
      */
     private function renderThrowsDocBlock(array $throws): string
@@ -489,8 +528,8 @@ readonly class ControllerGenerator
      * Actions are written in the order of crafter.controllerActions, which keeps the methods alphabetical.
      *
      * @param string[] $actions
-     *
      * @return string[]
+     * @throws CrafterException
      */
     private function sortActions(array $actions, string $extensionKey): array
     {

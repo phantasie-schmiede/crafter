@@ -13,13 +13,17 @@ namespace PSBits\Crafter\Utility;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function explode;
+use function implode;
+use function lcfirst;
+use function str_replace;
+use function strtolower;
+use function substr;
+use function trim;
+
 /**
- * Class NamingUtility
- *
  * Central place for all conversions between extension keys, class names, namespaces and database table names.
  * Generators must not build such strings on their own to keep naming consistent across all commands.
- *
- * @package PSBits\Crafter\Utility
  */
 class NamingUtility
 {

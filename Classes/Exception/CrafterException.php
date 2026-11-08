@@ -13,11 +13,6 @@ namespace PSBits\Crafter\Exception;
 
 use RuntimeException;
 
-/**
- * Class CrafterException
- *
- * @package PSBits\Crafter\Exception
- */
 class CrafterException extends RuntimeException
 {
 }

@@ -11,11 +11,6 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Enum;
 
-/**
- * Enum WriteStatus
- *
- * @package PSBits\Crafter\Enum
- */
 enum WriteStatus: string
 {
     case created     = 'created';

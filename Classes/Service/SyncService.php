@@ -11,11 +11,15 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ContentProfile;
 use PSBits\Crafter\Data\WriteResult;
 use PSBits\Crafter\Exception\CrafterException;
+use RuntimeException;
+use UnexpectedValueException;
 
 use function array_keys;
+use function array_map;
 use function array_merge;
 use function array_unique;
 use function array_values;
@@ -35,16 +39,16 @@ use function ksort;
 use function ltrim;
 use function sort;
 use function sprintf;
+use function str_contains;
 use function str_ends_with;
 use function str_repeat;
+use function str_replace;
 use function str_starts_with;
 use function strlen;
 use function substr;
 use function trim;
 
 /**
- * Class SyncService
- *
  * Keeps the toolchain of an existing extension aligned with `crafter.tools`: renewable files are rendered from the
  * very same skeletons the generators use, while composer.json and package.json are merged in a structured way so
  * manual entries survive. The renewal policies are defined in `crafter.sync.renewable`:
@@ -55,15 +59,13 @@ use function trim;
  *
  * The service is used by `crafter:sync`, by the toolchain audit category and automatically after every
  * `crafter:make:*` command through the AfterGenerationEvent.
- *
- * @package PSBits\Crafter\Service
  */
 final class SyncService
 {
+    public const array ALWAYS_MANAGED_COMPOSER_SCRIPTS = ['post-install-cmd', 'post-update-cmd'];
     public const string POLICY_CREATE_IF_MISSING       = 'createIfMissing';
     public const string POLICY_MERGE                   = 'merge';
     public const string POLICY_OVERWRITE               = 'overwrite';
-    public const array ALWAYS_MANAGED_COMPOSER_SCRIPTS = ['fix:all', 'lint:all', 'post-install-cmd', 'validate:composer'];
 
     public function __construct(
         protected ConfigurationService    $configurationService,
@@ -76,7 +78,150 @@ final class SyncService
     }
 
     /**
+     * Rendered (or merged) content a renewable file would have after a sync. Returns null when the file is not
+     * applicable for the current profile or cannot be managed, e.g. because an existing JSON file cannot be parsed.
+     *
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws UnexpectedValueException
+     */
+    public function getExpectedContent(
+        string          $identifier,
+        ?string         $extensionKey = null,
+        ?ContentProfile $profile = null,
+    ): ?string {
+        $entry = $this->getRenewableEntries($extensionKey)[$identifier] ?? null;
+
+        if (null === $entry) {
+            return null;
+        }
+
+        $extensionPath = $this->pathResolver->resolveExtensionPath((string)$extensionKey);
+        $profile ??= $this->extensionProfileService->fromDirectory($extensionPath);
+        $target = $extensionPath . ltrim($entry['target'], '/');
+
+        /*
+         * Without an existing file the whole skeleton is rendered, so a fresh composer.json or package.json is
+         * complete instead of only containing the managed keys.
+         */
+        if (self::POLICY_MERGE === $entry['policy'] && is_file($target)) {
+            return $this->mergeJsonFile($target, $extensionKey, $profile);
+        }
+
+        return $this->skeletonRenderer->render(
+            $identifier,
+            $this->buildVariables((string)$extensionKey, $extensionPath, $profile),
+            $extensionKey
+        );
+    }
+
+    /**
+     * Declared renewable files with their policy and target path, in configuration order.
+     *
+     * @return array<string, array{policy: string, target: string}>
+     * @throws CrafterException
+     */
+    public function getRenewableEntries(?string $extensionKey = null): array
+    {
+        $catalogue = $this->flattenExtensionFiles($extensionKey);
+        $entries   = [];
+
+        foreach ($this->getRenewableConfig($extensionKey) as $entry) {
+            if (is_string($entry)) {
+                $identifier = $entry;
+                $policy     = self::POLICY_OVERWRITE;
+            } else {
+                $identifier = (string)($entry['identifier'] ?? '');
+                $policy     = (string)($entry['policy'] ?? self::POLICY_OVERWRITE);
+            }
+
+            if ('' === $identifier || !isset($catalogue[$identifier])) {
+                continue;
+            }
+
+            $entries[$identifier] = [
+                'policy' => $this->normalizePolicy($policy),
+                'target' => $catalogue[$identifier],
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
+     * States whether a renewable file belongs to the toolchain of the given profile at all.
+     *
+     * @throws CrafterException
+     */
+    public function isApplicable(string $identifier, ContentProfile $profile, ?string $extensionKey): bool
+    {
+        $enabledTools = $this->toolchainGenerator->getEnabledTools($profile, $extensionKey);
+
+        foreach ($this->getTools($extensionKey) as $toolName => $tool) {
+            if (isset($tool['configFiles'][$identifier])) {
+                return in_array((string)$toolName, $enabledTools, true);
+            }
+        }
+
+        if (str_starts_with($identifier, 'Extension/Quality/') || 'Extension/PackageJson' === $identifier) {
+            return [] !== $enabledTools;
+        }
+
+        return true;
+    }
+
+    /**
+     * States whether a renewable file already matches what the generators would write. Merge files are compared
+     * semantically, i.e. only the managed keys are checked, so formatting differences do not cause drift.
+     *
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws UnexpectedValueException
+     */
+    public function isUpToDate(
+        string          $identifier,
+        ?string         $extensionKey = null,
+        ?ContentProfile $profile = null,
+        ?string         $policy = null,
+    ): bool {
+        $entry = $this->getRenewableEntries($extensionKey)[$identifier] ?? null;
+
+        if (null === $entry) {
+            return true;
+        }
+
+        $extensionPath = $this->pathResolver->resolveExtensionPath((string)$extensionKey);
+        $profile ??= $this->extensionProfileService->fromDirectory($extensionPath);
+        $policy  ??= $entry['policy'];
+        $target = $extensionPath . ltrim($entry['target'], '/');
+
+        if (!is_file($target)) {
+            return false;
+        }
+
+        if (self::POLICY_CREATE_IF_MISSING === $policy) {
+            return true;
+        }
+
+        if (self::POLICY_MERGE === $policy) {
+            return $this->isMergeUpToDate($target, $extensionKey, $profile);
+        }
+
+        $expected = $this->skeletonRenderer->render(
+            $identifier,
+            $this->buildVariables($extensionKey, $extensionPath, $profile),
+            $extensionKey
+        );
+
+        return $expected === (string)file_get_contents($target);
+    }
+
+    /**
      * @return WriteResult[]
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
      */
     public function sync(string $extensionKey, bool $dryRun = false): array
     {
@@ -120,165 +265,120 @@ final class SyncService
     }
 
     /**
-     * Declared renewable files with their policy and target path, in configuration order.
-     *
-     * @return array<string, array{policy: string, target: string}>
+     * @return array<string, string>
+     * @throws CrafterException
+     * @throws JsonException
      */
-    public function getRenewableEntries(?string $extensionKey = null): array
+    private function buildVariables(string $extensionKey, string $extensionPath, ContentProfile $profile): array
     {
-        $catalogue = $this->flattenExtensionFiles($extensionKey);
-        $entries   = [];
+        $composer  = $this->readJsonFile($extensionPath . 'composer.json') ?? [];
+        $namespace = $this->pathResolver->resolveNamespace($extensionKey);
 
-        foreach ($this->getRenewableConfig($extensionKey) as $entry) {
-            if (is_string($entry)) {
-                $identifier = $entry;
-                $policy     = self::POLICY_OVERWRITE;
-            } else {
-                $identifier = (string)($entry['identifier'] ?? '');
-                $policy     = (string)($entry['policy'] ?? self::POLICY_OVERWRITE);
-            }
+        return array_merge(
+            [
+                'composerName'     => (string)($composer['name'] ?? ''),
+                'description'      => (string)($composer['description'] ?? ''),
+                'extensionKey'     => $extensionKey,
+                'gitHubRepository' => $this->resolveGitHubRepository($composer, $extensionKey),
+                'license'          => $this->resolveLicense($composer),
+                'namespace'        => $namespace,
+                'packageTitle'     => $this->resolvePackageTitle($namespace),
+                'repositoryName'   => str_replace('_', '-', $extensionKey),
+                'vendor'           => $this->resolveVendor($namespace, $composer),
+            ],
+            $this->toolchainGenerator->getVariables($profile, $extensionKey)
+        );
+    }
 
-            if ('' === $identifier || !isset($catalogue[$identifier])) {
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function encodeJson(array $data, bool $twoSpaces): string
+    {
+        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        if (false === $json) {
+            return '';
+        }
+
+        return ($twoSpaces ? $this->reindent($json) : $json) . "\n";
+    }
+
+    /**
+     * @return array<string, string>
+     * @throws CrafterException
+     */
+    private function flattenExtensionFiles(?string $extensionKey): array
+    {
+        $files = [];
+
+        foreach ($this->configurationService->getValue('extensionFiles', $extensionKey, []) as $group) {
+            if (!is_array($group)) {
                 continue;
             }
 
-            $entries[$identifier] = [
-                'policy' => $this->normalizePolicy($policy),
-                'target' => $catalogue[$identifier],
-            ];
+            foreach ($group as $identifier => $relativePath) {
+                $files[(string)$identifier] = (string)$relativePath;
+            }
         }
 
-        return $entries;
+        return $files;
     }
 
     /**
-     * Rendered (or merged) content a renewable file would have after a sync. Returns null when the file is not
-     * applicable for the current profile or cannot be managed, e.g. because an existing JSON file cannot be parsed.
+     * Names of map keys the sync manages within a given tool section, i.e. entries that may be replaced or dropped.
+     *
+     * @return string[]
+     * @throws CrafterException
      */
-    public function getExpectedContent(
-        string          $identifier,
-        ?string         $extensionKey = null,
-        ?ContentProfile $profile = null,
-    ): ?string {
-        $entry = $this->getRenewableEntries($extensionKey)[$identifier] ?? null;
+    private function getManagedKeys(string $toolKey, ?string $extensionKey): array
+    {
+        $names = [];
 
-        if (null === $entry) {
-            return null;
+        foreach ($this->getTools($extensionKey) as $tool) {
+            $values = $tool[$toolKey] ?? [];
+
+            if (!is_array($values)) {
+                continue;
+            }
+
+            foreach (array_keys($values) as $name) {
+                $names[] = (string)$name;
+            }
         }
 
-        $extensionPath = $this->pathResolver->resolveExtensionPath((string)$extensionKey);
-        $profile ??= $this->extensionProfileService->fromDirectory($extensionPath);
-        $target = $extensionPath . ltrim($entry['target'], '/');
+        sort($names);
 
-        /*
-         * Without an existing file the whole skeleton is rendered, so a fresh composer.json or package.json is
-         * complete instead of only containing the managed keys.
-         */
-        if (self::POLICY_MERGE === $entry['policy'] && is_file($target)) {
-            return $this->mergeJsonFile($target, $extensionKey, $profile);
-        }
-
-        return $this->skeletonRenderer->render(
-            $identifier,
-            $this->buildVariables((string)$extensionKey, $extensionPath, $profile),
-            $extensionKey
-        );
+        return array_values(array_unique($names));
     }
 
     /**
-     * States whether a renewable file already matches what the generators would write. Merge files are compared
-     * semantically, i.e. only the managed keys are checked, so formatting differences do not cause drift.
+     * @return mixed[]
+     * @throws CrafterException
      */
-    public function isUpToDate(
-        string          $identifier,
-        ?string         $extensionKey = null,
-        ?ContentProfile $profile = null,
-        ?string         $policy = null,
-    ): bool {
-        $entry = $this->getRenewableEntries($extensionKey)[$identifier] ?? null;
+    private function getRenewableConfig(?string $extensionKey): array
+    {
+        $renewable = $this->configurationService->getValue('sync.renewable', $extensionKey, []);
 
-        if (null === $entry) {
-            return true;
-        }
-
-        $extensionPath = $this->pathResolver->resolveExtensionPath((string)$extensionKey);
-        $profile ??= $this->extensionProfileService->fromDirectory($extensionPath);
-        $policy  ??= $entry['policy'];
-        $target = $extensionPath . ltrim($entry['target'], '/');
-
-        if (!is_file($target)) {
-            return false;
-        }
-
-        if (self::POLICY_CREATE_IF_MISSING === $policy) {
-            return true;
-        }
-
-        if (self::POLICY_MERGE === $policy) {
-            return $this->isMergeUpToDate($target, $extensionKey, $profile);
-        }
-
-        $expected = $this->skeletonRenderer->render(
-            $identifier,
-            $this->buildVariables($extensionKey, $extensionPath, $profile),
-            $extensionKey
-        );
-
-        return $expected === (string)file_get_contents($target);
+        return is_array($renewable) ? $renewable : [];
     }
 
     /**
-     * Merges the managed keys into an existing JSON file and returns it re-encoded in canonical JSON. Returns null
-     * when parsing fails.
+     * @return array<string, array<string, mixed>>
+     * @throws CrafterException
      */
-    private function mergeJsonFile(
-        string         $absoluteFilePath,
-        ?string        $extensionKey,
-        ContentProfile $profile,
-    ): ?string {
-        $existing = $this->readJsonFile($absoluteFilePath);
+    private function getTools(?string $extensionKey): array
+    {
+        $tools = $this->configurationService->getValue('tools', $extensionKey, []);
 
-        if (null === $existing) {
-            return null;
-        }
-
-        if (str_ends_with($absoluteFilePath, 'package.json')) {
-            $merged            = $existing;
-            $merged['scripts'] = $this->mergeMap(
-                $existing['scripts'] ?? [],
-                $this->toolchainGenerator->getManagedPackageScripts($profile, $extensionKey),
-                $this->getManagedKeys('packageScripts', $extensionKey)
-            );
-            $merged['devDependencies'] = $this->mergeMap(
-                $existing['devDependencies'] ?? [],
-                $this->toolchainGenerator->getManagedPackageDevDependencies($profile, $extensionKey),
-                $this->getManagedKeys('packageDevDependencies', $extensionKey)
-            );
-
-            return $this->encodeJson($merged, true);
-        }
-
-        $merged            = $existing;
-        $merged['scripts'] = $this->mergeMap(
-            $existing['scripts'] ?? [],
-            $this->toolchainGenerator->getManagedComposerScripts($profile, $extensionKey),
-            array_merge(
-                $this->getManagedKeys('composerScripts', $extensionKey),
-                self::ALWAYS_MANAGED_COMPOSER_SCRIPTS
-            )
-        );
-        $merged['require-dev'] = $this->mergeMap(
-            $existing['require-dev'] ?? [],
-            $this->toolchainGenerator->getManagedComposerRequireDev($profile, $extensionKey),
-            $this->getManagedKeys('requireDev', $extensionKey)
-        );
-
-        return $this->encodeJson($merged, false);
+        return is_array($tools) ? $tools : [];
     }
 
     /**
      * Compares only the managed keys of an existing JSON file with what the generators would produce, so
      * formatting, key order and user owned keys never cause a finding.
+     *
+     * @throws CrafterException
      */
     private function isMergeUpToDate(
         string         $absoluteFilePath,
@@ -330,32 +430,6 @@ final class SyncService
     }
 
     /**
-     * @param array<string, string> $existing
-     * @param array<string, mixed>  $generated
-     * @param string[]              $managedNames
-     *
-     * @return array<string, mixed>
-     */
-    private function mergeMap(array $existing, array $generated, array $managedNames): array
-    {
-        $map = [];
-
-        foreach ($existing as $name => $value) {
-            if (!in_array((string)$name, $managedNames, true)) {
-                $map[(string)$name] = $value;
-            }
-        }
-
-        foreach ($generated as $name => $value) {
-            $map[(string)$name] = $value;
-        }
-
-        ksort($map);
-
-        return $map;
-    }
-
-    /**
      * Compares two script or dependency maps ignoring key order, used by the semantic up-to-date check.
      *
      * @param array<mixed> $a
@@ -374,69 +448,86 @@ final class SyncService
     }
 
     /**
-     * Names of map keys the sync manages within a given tool section, i.e. entries that may be replaced or dropped.
+     * Merges the managed keys into an existing JSON file and returns it re-encoded in canonical JSON. Returns null
+     * when parsing fails.
      *
-     * @return string[]
+     * @throws CrafterException
      */
-    private function getManagedKeys(string $toolKey, ?string $extensionKey): array
+    private function mergeJsonFile(
+        string         $absoluteFilePath,
+        ?string        $extensionKey,
+        ContentProfile $profile,
+    ): ?string {
+        $existing = $this->readJsonFile($absoluteFilePath);
+
+        if (null === $existing) {
+            return null;
+        }
+
+        if (str_ends_with($absoluteFilePath, 'package.json')) {
+            $merged            = $existing;
+            $merged['scripts'] = $this->mergeMap(
+                $existing['scripts'] ?? [],
+                $this->toolchainGenerator->getManagedPackageScripts($profile, $extensionKey),
+                $this->getManagedKeys('packageScripts', $extensionKey)
+            );
+            $merged['devDependencies'] = $this->mergeMap(
+                $existing['devDependencies'] ?? [],
+                $this->toolchainGenerator->getManagedPackageDevDependencies($profile, $extensionKey),
+                $this->getManagedKeys('packageDevDependencies', $extensionKey)
+            );
+
+            return $this->encodeJson($merged, true);
+        }
+
+        $merged            = $existing;
+        $merged['scripts'] = $this->mergeMap(
+            $existing['scripts'] ?? [],
+            $this->toolchainGenerator->getManagedComposerScripts($profile, $extensionKey),
+            array_merge(
+                $this->getManagedKeys('composerScripts', $extensionKey),
+                self::ALWAYS_MANAGED_COMPOSER_SCRIPTS
+            )
+        );
+        $merged['require-dev'] = $this->mergeMap(
+            $existing['require-dev'] ?? [],
+            $this->toolchainGenerator->getManagedComposerRequireDev($profile, $extensionKey),
+            $this->getManagedKeys('requireDev', $extensionKey)
+        );
+
+        return $this->encodeJson($merged, false);
+    }
+
+    /**
+     * Merges the generated entries into the existing map: the managed names take the generated value (or are
+     * dropped when the generator no longer provides them), every other existing entry survives as-is and
+     * generated names that are not managed are ignored, so the sync never injects entries it does not own
+     * (e.g. the repository-managed test:all aggregate).
+     *
+     * @param array<string, string> $existing
+     * @param array<string, mixed>  $generated
+     * @param string[]              $managedNames
+     * @return array<string, mixed>
+     */
+    private function mergeMap(array $existing, array $generated, array $managedNames): array
     {
-        $names = [];
+        $map = [];
 
-        foreach ($this->getTools($extensionKey) as $tool) {
-            $values = $tool[$toolKey] ?? [];
-
-            if (!is_array($values)) {
-                continue;
-            }
-
-            foreach (array_keys($values) as $name) {
-                $names[] = (string)$name;
+        foreach ($existing as $name => $value) {
+            if (!in_array((string)$name, $managedNames, true)) {
+                $map[(string)$name] = $value;
             }
         }
 
-        sort($names);
-
-        return array_values(array_unique($names));
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function flattenExtensionFiles(?string $extensionKey): array
-    {
-        $files = [];
-
-        foreach ($this->configurationService->getValue('extensionFiles', $extensionKey, []) as $group) {
-            if (!is_array($group)) {
-                continue;
-            }
-
-            foreach ($group as $identifier => $relativePath) {
-                $files[(string)$identifier] = (string)$relativePath;
+        foreach ($generated as $name => $value) {
+            if (in_array($name, $managedNames, true)) {
+                $map[$name] = $value;
             }
         }
 
-        return $files;
-    }
+        ksort($map);
 
-    /**
-     * @return mixed[]
-     */
-    private function getRenewableConfig(?string $extensionKey): array
-    {
-        $renewable = $this->configurationService->getValue('sync.renewable', $extensionKey, []);
-
-        return is_array($renewable) ? $renewable : [];
-    }
-
-    /**
-     * @return array<string, array<string, mixed>>
-     */
-    private function getTools(?string $extensionKey): array
-    {
-        $tools = $this->configurationService->getValue('tools', $extensionKey, []);
-
-        return is_array($tools) ? $tools : [];
+        return $map;
     }
 
     private function normalizePolicy(string $policy): string
@@ -451,49 +542,37 @@ final class SyncService
     }
 
     /**
-     * States whether a renewable file belongs to the toolchain of the given profile at all.
+     * @return array<string, mixed>|null
      */
-    public function isApplicable(string $identifier, ContentProfile $profile, ?string $extensionKey): bool
+    private function readJsonFile(string $absoluteFilePath): ?array
     {
-        $enabledTools = $this->toolchainGenerator->getEnabledTools($profile, $extensionKey);
-
-        foreach ($this->getTools($extensionKey) as $toolName => $tool) {
-            if (isset($tool['configFiles'][$identifier])) {
-                return in_array((string)$toolName, $enabledTools, true);
-            }
+        if (!is_file($absoluteFilePath)) {
+            return [];
         }
 
-        if (str_starts_with($identifier, 'Extension/Quality/')
-            || str_starts_with($identifier, 'Extension/Workflow/')
-            || 'Extension/PackageJson' === $identifier) {
-            return [] !== $enabledTools;
-        }
+        $data = json_decode((string)file_get_contents($absoluteFilePath), true);
 
-        return true;
+        return is_array($data) ? $data : null;
     }
 
     /**
-     * @return array<string, string>
+     * Halves the four space indentation json_encode uses, to match the two space style of package.json.
      */
-    private function buildVariables(string $extensionKey, string $extensionPath, ContentProfile $profile): array
+    private function reindent(string $json): string
     {
-        $composer  = $this->readJsonFile($extensionPath . 'composer.json') ?? [];
-        $namespace = $this->pathResolver->resolveNamespace($extensionKey);
+        $lines = explode("\n", $json);
 
-        return array_merge(
-            [
-                'composerName'     => (string)($composer['name'] ?? ''),
-                'description'      => (string)($composer['description'] ?? ''),
-                'extensionKey'     => $extensionKey,
-                'gitHubRepository' => $this->resolveGitHubRepository($composer, $extensionKey),
-                'license'          => $this->resolveLicense($composer),
-                'namespace'        => $namespace,
-                'packageTitle'     => $this->resolvePackageTitle($namespace),
-                'repositoryName'   => str_replace('_', '-', $extensionKey),
-                'vendor'           => $this->resolveVendor($namespace, $composer),
-            ],
-            $this->toolchainGenerator->getVariables($profile, $extensionKey)
-        );
+        foreach ($lines as &$line) {
+            $indentation = strlen($line) - strlen(ltrim($line));
+
+            if (0 < $indentation) {
+                $line = str_repeat(' ', ($indentation / 2)) . substr($line, $indentation);
+            }
+        }
+
+        unset($line);
+
+        return implode("\n", $lines);
     }
 
     /**
@@ -524,6 +603,13 @@ final class SyncService
         return trim((string)$license);
     }
 
+    private function resolvePackageTitle(string $namespace): string
+    {
+        $segments = explode('\\', $namespace);
+
+        return trim(preg_replace('/(?<!^)[A-Z]/', ' $0', end($segments) ?: ''));
+    }
+
     /**
      * @param array<string, mixed> $composer
      */
@@ -538,60 +624,5 @@ final class SyncService
         $name = trim((string)($composer['name'] ?? ''));
 
         return str_contains($name, '/') ? explode('/', $name)[0] : '';
-    }
-
-    private function resolvePackageTitle(string $namespace): string
-    {
-        $segments = explode('\\', $namespace);
-
-        return trim(preg_replace('/(?<!^)[A-Z]/', ' $0', end($segments) ?: ''));
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    private function readJsonFile(string $absoluteFilePath): ?array
-    {
-        if (!is_file($absoluteFilePath)) {
-            return [];
-        }
-
-        $data = json_decode((string)file_get_contents($absoluteFilePath), true);
-
-        return is_array($data) ? $data : null;
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    private function encodeJson(array $data, bool $twoSpaces): string
-    {
-        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
-        if (false === $json) {
-            return '';
-        }
-
-        return ($twoSpaces ? $this->reindent($json) : $json) . "\n";
-    }
-
-    /**
-     * Halves the four space indentation json_encode uses, to match the two space style of package.json.
-     */
-    private function reindent(string $json): string
-    {
-        $lines = explode("\n", $json);
-
-        foreach ($lines as &$line) {
-            $indentation = strlen($line) - strlen(ltrim($line));
-
-            if (0 < $indentation) {
-                $line = str_repeat(' ', (int)($indentation / 2)) . substr($line, $indentation);
-            }
-        }
-
-        unset($line);
-
-        return implode("\n", $lines);
     }
 }

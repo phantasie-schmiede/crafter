@@ -11,23 +11,61 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit\Service;
 
+use JsonException;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
 use PSBits\Crafter\Data\ClassBlueprint;
 use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Data\ModelBlueprint;
 use PSBits\Crafter\Data\PropertyDefinition;
 use PSBits\Crafter\Tests\Unit\AbstractGeneratorTestCase;
+use RuntimeException;
+use ValueError;
+
+use function file_get_contents;
+use function file_put_contents;
+use function implode;
+use function json_encode;
 
 /**
- * Class GeneratorTest
- *
  * Golden master tests: every generator writes into a throwaway project and the result is compared byte by byte with
  * a reviewed fixture. Run the suite with CRAFTER_UPDATE_FIXTURES=1 after an intended change of the output.
- *
- * @package PSBits\Crafter\Tests\Unit\Service
  */
 final class GeneratorTest extends AbstractGeneratorTestCase
 {
+    /**
+     * Covers every rendering branch of the model generator: scalars, dates, relations and enums.
+     *
+     * @return PropertyDefinition[]
+     */
+    private static function getProperties(): array
+    {
+        return [
+            new PropertyDefinition(name: 'title', type: 'string', required: true),
+            new PropertyDefinition(name: 'description', type: 'text'),
+            new PropertyDefinition(name: 'price', type: 'decimal'),
+            new PropertyDefinition(name: 'active', type: 'boolean'),
+            new PropertyDefinition(name: 'releaseDate', type: 'date'),
+            new PropertyDefinition(
+                name: 'category',
+                type: 'relationSingle',
+                linkedClass: 'PSBits\DemoShop\Domain\Model\Category'
+            ),
+            // The console passes short names, so both notations have to work.
+            new PropertyDefinition(
+                name: 'tags',
+                type: 'relationMultiple',
+                linkedClass: 'Tag',
+                foreignField: 'product'
+            ),
+        ];
+    }
+
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function backendControllerIsGeneratedWithTemplatesAndLanguageFiles(): void
     {
@@ -63,6 +101,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function controllerIsGeneratedWithCrudActionsTemplatesAndLanguageFiles(): void
     {
@@ -94,6 +137,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function eventListenerIsGenerated(): void
     {
@@ -110,6 +158,24 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function extensionIsGeneratedWithoutACiWorkflow(): void
+    {
+        // The caller CI workflow is installed by .Build/bin/qa sync (psbits/qa), not by the crafter.
+        $this->generateBaseExtension(['core', 'typoScript', 'quality']);
+
+        self::assertFileDoesNotExist($this->getExtensionFilePath('.github/workflows/ci.yml'));
+    }
+
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function modelIsGeneratedWithEveryRelevantPropertyType(): void
     {
@@ -122,14 +188,12 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         $this->assertFileMatchesFixture('Classes/Domain/Model/Product.php', 'Product.php');
     }
 
-    #[Test]
-    public function extensionIsGeneratedWithTheQualityWorkflow(): void
-    {
-        $this->generateBaseExtension(['core', 'typoScript', 'quality', 'ci']);
-
-        $this->assertFileMatchesFixture('.github/workflows/quality.yml', 'Workflow/Quality.yml');
-    }
-
+    /**
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function moduleConfigurationImportsAreSortedForAnyVendor(): void
     {
@@ -152,6 +216,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         );
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function repositoryIsGenerated(): void
     {
@@ -160,6 +229,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         $this->assertFileMatchesFixture('Classes/Domain/Repository/ProductRepository.php', 'ProductRepository.php');
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function serviceIsGeneratedWithInjectedDependencies(): void
     {
@@ -176,6 +250,11 @@ final class GeneratorTest extends AbstractGeneratorTestCase
         $this->assertFileMatchesFixture('Classes/Service/PriceService.php', 'PriceService.php');
     }
 
+    /**
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     #[Test]
     public function viewHelperIsGeneratedInASubDirectory(): void
     {
@@ -190,33 +269,5 @@ final class GeneratorTest extends AbstractGeneratorTestCase
             'Classes/ViewHelpers/Format/PriceViewHelper.php',
             'PriceViewHelper.php'
         );
-    }
-
-    /**
-     * Covers every rendering branch of the model generator: scalars, dates, relations and enums.
-     *
-     * @return PropertyDefinition[]
-     */
-    private static function getProperties(): array
-    {
-        return [
-            new PropertyDefinition(name: 'title', type: 'string', required: true),
-            new PropertyDefinition(name: 'description', type: 'text'),
-            new PropertyDefinition(name: 'price', type: 'decimal'),
-            new PropertyDefinition(name: 'active', type: 'boolean'),
-            new PropertyDefinition(name: 'releaseDate', type: 'date'),
-            new PropertyDefinition(
-                name: 'category',
-                type: 'relationSingle',
-                linkedClass: 'PSBits\DemoShop\Domain\Model\Category'
-            ),
-            // The console passes short names, so both notations have to work.
-            new PropertyDefinition(
-                name: 'tags',
-                type: 'relationMultiple',
-                linkedClass: 'Tag',
-                foreignField: 'product'
-            ),
-        ];
     }
 }

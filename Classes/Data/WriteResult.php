@@ -13,11 +13,6 @@ namespace PSBits\Crafter\Data;
 
 use PSBits\Crafter\Enum\WriteStatus;
 
-/**
- * Class WriteResult
- *
- * @package PSBits\Crafter\Data
- */
 readonly class WriteResult
 {
     public function __construct(

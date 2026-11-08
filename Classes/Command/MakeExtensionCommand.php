@@ -12,30 +12,39 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Command;
 
 use PSBits\Crafter\Data\ExtensionBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ConfigurationService;
 use PSBits\Crafter\Service\ExtensionGenerator;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\PathResolver;
 use PSBits\Crafter\Utility\NamingUtility;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_filter;
+use function array_map;
+use function array_values;
 use function count;
+use function explode;
+use function implode;
 use function in_array;
+use function is_dir;
 use function is_scalar;
 use function is_string;
 use function sprintf;
+use function str_replace;
+use function strtolower;
+use function trim;
 
 /**
- * Class MakeExtensionCommand
- *
  * Creates the complete base structure of a new TYPO3 extension.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:extension',
@@ -58,6 +67,9 @@ class MakeExtensionCommand extends AbstractCrafterCommand
     public const string OPTION_VERSION             = 'package-version';
     private const string EXTENSION_KEY_PATTERN     = '/^[a-z][a-z0-9_]{2,}$/';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly ConfigurationService $configurationService,
         protected readonly ExtensionGenerator   $extensionGenerator,
@@ -67,6 +79,9 @@ class MakeExtensionCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -109,6 +124,11 @@ class MakeExtensionCommand extends AbstractCrafterCommand
         }
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->determineExtensionKey($input, $io);
@@ -156,6 +176,33 @@ class MakeExtensionCommand extends AbstractCrafterCommand
         return Command::SUCCESS;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function ask(
+        InputInterface $input,
+        SymfonyStyle   $io,
+        string         $option,
+        string         $question,
+        string         $default,
+    ): string {
+        $value = $input->getOption($option);
+
+        if (is_string($value) && '' !== $value) {
+            return $value;
+        }
+
+        if (false === $input->isInteractive()) {
+            return $default;
+        }
+
+        return (string)$io->ask($question, '' === $default ? null : $default);
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     */
     private function buildBlueprint(
         InputInterface $input,
         SymfonyStyle   $io,
@@ -244,26 +291,9 @@ class MakeExtensionCommand extends AbstractCrafterCommand
         );
     }
 
-    private function ask(
-        InputInterface $input,
-        SymfonyStyle   $io,
-        string         $option,
-        string         $question,
-        string         $default,
-    ): string {
-        $value = $input->getOption($option);
-
-        if (is_string($value) && '' !== $value) {
-            return $value;
-        }
-
-        if (false === $input->isInteractive()) {
-            return $default;
-        }
-
-        return (string)$io->ask($question, '' === $default ? null : $default);
-    }
-
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determineExtensionKey(InputInterface $input, SymfonyStyle $io): ?string
     {
         $extensionKey = $input->getArgument(self::ARGUMENT_EXTENSION_KEY);
@@ -286,6 +316,8 @@ class MakeExtensionCommand extends AbstractCrafterCommand
 
     /**
      * @return string[]
+     * @throws CrafterException
+     * @throws InvalidArgumentException
      */
     private function determineGroups(InputInterface $input, SymfonyStyle $io, string $extensionKey): array
     {
@@ -319,6 +351,9 @@ class MakeExtensionCommand extends AbstractCrafterCommand
         return $groups;
     }
 
+    /**
+     * @throws CrafterException
+     */
     private function getDefault(string $extensionKey, string $key, string $fallback): string
     {
         $value = $this->configurationService->getValue('defaults.' . $key, $extensionKey, $fallback);
@@ -344,6 +379,7 @@ class MakeExtensionCommand extends AbstractCrafterCommand
 
     /**
      * @param string[] $groups
+     * @throws CrafterException
      */
     private function showSummary(
         SymfonyStyle       $io,

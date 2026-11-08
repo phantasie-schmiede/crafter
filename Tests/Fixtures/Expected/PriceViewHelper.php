@@ -13,11 +13,6 @@ namespace PSBits\DemoShop\ViewHelpers\Format;
 
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
-/**
- * Class PriceViewHelper
- *
- * @package PSBits\DemoShop\ViewHelpers\Format
- */
 class PriceViewHelper extends AbstractViewHelper
 {
 }

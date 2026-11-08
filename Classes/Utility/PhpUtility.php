@@ -11,14 +11,20 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Utility;
 
+use ValueError;
+
+use function array_map;
+use function implode;
+use function max;
+use function str_repeat;
+use function str_replace;
 use function strlen;
+use function strrpos;
+use function substr;
+use function trim;
 
 /**
- * Class PhpUtility
- *
  * Helpers for assembling PHP source code that are shared by all class generators.
- *
- * @package PSBits\Crafter\Utility
  */
 class PhpUtility
 {
@@ -26,8 +32,8 @@ class PhpUtility
      * Aligns the parameter names of a promoted constructor, matching the house style of the reference extensions.
      *
      * @param string[] $arguments
-     *
      * @return string[]
+     * @throws ValueError
      */
     public static function alignArguments(array $arguments): array
     {
@@ -47,6 +53,8 @@ class PhpUtility
 
     /**
      * Example: 'TYPO3\CMS\Extbase\DomainObject\AbstractEntity' => 'AbstractEntity'
+     *
+     * @throws ValueError
      */
     public static function getShortClassName(string $className): string
     {
@@ -61,6 +69,7 @@ class PhpUtility
      * because importing them would be redundant.
      *
      * @param string[] $classNames
+     * @throws ValueError
      */
     public static function renderImports(array $classNames, string $targetNamespace = ''): string
     {
@@ -92,6 +101,8 @@ class PhpUtility
 
     /**
      * Example: 'PSBits\ContactBook\Domain\Model\Contact' => 'PSBits\ContactBook\Domain\Model'
+     *
+     * @throws ValueError
      */
     private static function getNamespace(string $className): string
     {
@@ -102,6 +113,8 @@ class PhpUtility
 
     /**
      * Example: 'protected readonly ContactRepository $contactRepository,' => 'protected readonly ContactRepository'
+     *
+     * @throws ValueError
      */
     private static function getTypePart(string $argument): string
     {

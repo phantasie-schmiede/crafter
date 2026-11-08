@@ -13,13 +13,11 @@ namespace PSBits\Crafter\Data;
 
 use PSBits\Crafter\Utility\NamingUtility;
 
+use function lcfirst;
+
 /**
- * Class ModelBlueprint
- *
  * Description of a domain model. Follow-up generators (repository, controller, templates) consume this object
  * instead of asking the console again.
- *
- * @package PSBits\Crafter\Data
  */
 readonly class ModelBlueprint
 {

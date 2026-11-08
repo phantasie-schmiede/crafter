@@ -11,16 +11,14 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Event;
 
+use function array_replace_recursive;
+
 /**
- * Class ModifyConfigurationEvent
- *
  * Fifth and topmost layer of the configuration cascade. While the four file based layers cover static overrides,
  * this event allows deciding at runtime, e.g. a different copyright block per vendor directory.
  *
  * The already merged configuration is readable, overrides are collected separately and merged afterwards with the
  * origin "event", so `crafter:config:dump --origins` keeps explaining where a value comes from.
- *
- * @package PSBits\Crafter\Event
  */
 final class ModifyConfigurationEvent
 {

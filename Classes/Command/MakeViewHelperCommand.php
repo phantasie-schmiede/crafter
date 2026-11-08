@@ -11,25 +11,31 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ClassGenerator;
 use PSBits\Crafter\Service\ConfigurationService;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\SkeletonRenderer;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_values;
+use function implode;
 use function in_array;
 use function sprintf;
+use function trim;
 
 /**
- * Class MakeViewHelperCommand
- *
  * Creates a Fluid view helper including initializeArguments() and render().
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:view-helper',
@@ -46,6 +52,9 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
     public const string SKELETON_REGISTER_ARGUMENT = 'Php/RegisterArgument';
     public const string SKELETON_RENDER            = 'Php/ViewHelperRender';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         ClassGenerator                          $classGenerator,
         FileWriter                              $fileWriter,
@@ -55,6 +64,48 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
         parent::__construct($classGenerator, $fileWriter);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     */
+    protected function buildBlueprint(
+        InputInterface $input,
+        SymfonyStyle   $io,
+        string         $extensionKey,
+        string         $name,
+    ): ?ClassBlueprint {
+        $subPath = $this->getSubPath($input, $io);
+
+        if (null === $subPath) {
+            return null;
+        }
+
+        $arguments = $this->renderArguments($input, $io, $extensionKey);
+
+        if (null === $arguments) {
+            return null;
+        }
+
+        $render = $this->renderRenderMethod($input, $io, $extensionKey);
+
+        if (null === $render) {
+            return null;
+        }
+
+        return new ClassBlueprint(
+            extensionKey: $extensionKey,
+            name        : $name,
+            type        : self::CLASS_TYPE,
+            dependencies: $this->getDependencies($input, $extensionKey),
+            methods     : array_values(array_filter([$arguments, $render])),
+            subPath     : $subPath
+        );
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -90,40 +141,6 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
         );
     }
 
-    protected function buildBlueprint(
-        InputInterface $input,
-        SymfonyStyle   $io,
-        string         $extensionKey,
-        string         $name,
-    ): ?ClassBlueprint {
-        $subPath = $this->getSubPath($input, $io);
-
-        if (null === $subPath) {
-            return null;
-        }
-
-        $arguments = $this->renderArguments($input, $io, $extensionKey);
-
-        if (null === $arguments) {
-            return null;
-        }
-
-        $render = $this->renderRenderMethod($input, $io, $extensionKey);
-
-        if (null === $render) {
-            return null;
-        }
-
-        return new ClassBlueprint(
-            extensionKey: $extensionKey,
-            name        : $name,
-            type        : self::CLASS_TYPE,
-            dependencies: $this->getDependencies($input, $extensionKey),
-            methods     : array_values(array_filter([$arguments, $render])),
-            subPath     : $subPath
-        );
-    }
-
     protected function getArtifactLabel(): string
     {
         return 'View helper';
@@ -137,6 +154,8 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
     /**
      * @return string|null the rendered initializeArguments() method, an empty string if there is no argument or null
      *                     on invalid input
+     * @throws CrafterException
+     * @throws InvalidArgumentException
      */
     private function renderArguments(InputInterface $input, SymfonyStyle $io, string $extensionKey): ?string
     {
@@ -202,6 +221,10 @@ class MakeViewHelperCommand extends AbstractMakeClassCommand
         ));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     */
     private function renderRenderMethod(InputInterface $input, SymfonyStyle $io, string $extensionKey): ?string
     {
         $returnTypes = (array)$this->configurationService->getValue('viewHelperReturnTypes', $extensionKey, []);

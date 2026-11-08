@@ -8,11 +8,6 @@ namespace {{ namespace }}\Data;
 
 use PSBits\Foundation\Data\AbstractExtensionInformation;
 
-/**
- * Class ExtensionInformation
- *
- * @package {{ namespace }}\Data
- */
 class ExtensionInformation extends AbstractExtensionInformation
 {
 }

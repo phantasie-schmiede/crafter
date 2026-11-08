@@ -1,11 +1,22 @@
 {
+    "name": "{{ composerName }}",
+    "description": "{{ description }}",
+    "license": "{{ license }}",
+    "type": "typo3-cms-extension",
+    "keywords": [
+        {{ composerKeywords }}
+    ],
     "authors": [
         {
-            "email": "{{ authorEmail }}",
             "name": "{{ author }}",
+            "email": "{{ authorEmail }}",
             "role": "Developer"
         }
     ],
+    "require": {
+        {{ composerRequire }}
+    },
+{{ composerDevSection }}
     "autoload": {
         "psr-4": {
             "{{ namespaceEscaped }}\\": "Classes"
@@ -13,6 +24,7 @@
     },
     "config": {
         "allow-plugins": {
+            "ergebnis/composer-normalize": true,
             "typo3/class-alias-loader": true,
             "typo3/cms-composer-installers": true
         },
@@ -20,21 +32,13 @@
         "sort-packages": true,
         "vendor-dir": ".Build/vendor"
     },
-    "description": "{{ description }}",
     "extra": {
         "typo3/cms": {
             "extension-key": "{{ extensionKey }}",
             "web-dir": ".Build/public"
         }
     },
-    "keywords": [
-        {{ composerKeywords }}
-    ],
-    "license": "{{ license }}",
-    "name": "{{ composerName }}",
-    "require": {
-        {{ composerRequire }}
-    },
-{{ composerDevSection }}
-    "type": "typo3-cms-extension"
+    "scripts": {
+{{ composerDevScripts }}
+    }
 }

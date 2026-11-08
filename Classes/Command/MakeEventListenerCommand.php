@@ -11,25 +11,28 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ClassGenerator;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\SkeletonRenderer;
 use PSBits\Crafter\Utility\PhpUtility;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use ValueError;
 
 use function is_string;
+use function str_contains;
+use function trim;
 
 /**
- * Class MakeEventListenerCommand
- *
  * Creates a PSR-14 event listener. The listener is registered through the AsEventListener attribute, so no entry in
  * Configuration/Services.yaml is needed.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:event-listener',
@@ -41,6 +44,9 @@ class MakeEventListenerCommand extends AbstractMakeClassCommand
     public const string OPTION_EVENT    = 'event';
     public const string SKELETON_INVOKE = 'Php/InvokeMethod';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         ClassGenerator                      $classGenerator,
         FileWriter                          $fileWriter,
@@ -49,32 +55,12 @@ class MakeEventListenerCommand extends AbstractMakeClassCommand
         parent::__construct($classGenerator, $fileWriter);
     }
 
-    protected function configure(): void
-    {
-        parent::configure();
-        $this->setHelp(
-            <<<'HELP'
-            Creates a PSR-14 event listener registered via the AsEventListener attribute, with an
-            invoke() method that receives the event class.
-
-            The event class is given with --event as a fully qualified class name or asked
-            interactively. Constructor dependencies can be added with the repeatable option
-            --dependency.
-
-            Example:
-              crafter:make:event-listener --extension budget_manager BeforeFileWriteListener \
-                  --event PSBits\Crafter\Event\BeforeFileWriteEvent
-            HELP
-        );
-        $this->addDependencyOption();
-        $this->addOption(
-            self::OPTION_EVENT,
-            'E',
-            InputOption::VALUE_REQUIRED,
-            'Fully qualified class name of the event to listen to'
-        );
-    }
-
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     * @throws ValueError
+     */
     protected function buildBlueprint(
         InputInterface $input,
         SymfonyStyle   $io,
@@ -106,6 +92,35 @@ class MakeEventListenerCommand extends AbstractMakeClassCommand
         );
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
+    protected function configure(): void
+    {
+        parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a PSR-14 event listener registered via the AsEventListener attribute, with an
+            invoke() method that receives the event class.
+
+            The event class is given with --event as a fully qualified class name or asked
+            interactively. Constructor dependencies can be added with the repeatable option
+            --dependency.
+
+            Example:
+              crafter:make:event-listener --extension budget_manager BeforeFileWriteListener \
+                  --event PSBits\Crafter\Event\BeforeFileWriteEvent
+            HELP
+        );
+        $this->addDependencyOption();
+        $this->addOption(
+            self::OPTION_EVENT,
+            'E',
+            InputOption::VALUE_REQUIRED,
+            'Fully qualified class name of the event to listen to'
+        );
+    }
+
     protected function getArtifactLabel(): string
     {
         return 'Event listener';
@@ -116,6 +131,9 @@ class MakeEventListenerCommand extends AbstractMakeClassCommand
         return 'Name of the listener, e.g. ContactPersistenceListener';
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determineEvent(InputInterface $input, SymfonyStyle $io): ?string
     {
         $event = $input->getOption(self::OPTION_EVENT);

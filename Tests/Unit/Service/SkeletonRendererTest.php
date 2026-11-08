@@ -12,26 +12,29 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
 use PSBits\Crafter\Event\AfterSkeletonRenderEvent;
 use PSBits\Crafter\Event\BeforeSkeletonRenderEvent;
 use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\SkeletonRenderer;
 use PSBits\Crafter\Tests\Fixtures\CallbackEventDispatcher;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
+use RuntimeException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function dirname;
 
 /**
- * Class SkeletonRendererTest
- *
  * The stubs used here are written into the project wide skeleton root path, which is the very mechanism a project
  * uses to override a shipped stub.
- *
- * @package PSBits\Crafter\Tests\Unit\Service
  */
 final class SkeletonRendererTest extends AbstractCrafterTestCase
 {
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function afterEventCanRewriteTheRenderedContent(): void
     {
@@ -50,6 +53,11 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function beforeEventCanRedirectToAnotherSkeleton(): void
     {
@@ -66,6 +74,11 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         self::assertSame('replacement', $this->createRenderer($dispatcher)->render('Test/Original'));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function blockPlaceholderIndentsEveryLineOfTheValue(): void
     {
@@ -77,6 +90,11 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function blockPlaceholderKeepsEmptyLinesUnindented(): void
     {
@@ -88,6 +106,11 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function emptyBlockPlaceholderRemovesTheWholeLine(): void
     {
@@ -99,6 +122,11 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function inlinePlaceholderIsReplacedInPlace(): void
     {
@@ -110,6 +138,11 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function projectSkeletonOverridesTheShippedOne(): void
     {
@@ -121,6 +154,11 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function unknownPlaceholderIsResolvedFromTheConfiguration(): void
     {
@@ -132,6 +170,10 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws RuntimeException
+     */
     #[Test]
     public function unresolvablePlaceholderThrows(): void
     {
@@ -148,6 +190,9 @@ final class SkeletonRendererTest extends AbstractCrafterTestCase
         return new SkeletonRenderer($this->configurationService, $dispatcher, $this->pathResolver);
     }
 
+    /**
+     * @throws RuntimeException
+     */
     private function writeSkeleton(string $identifier, string $content): void
     {
         $path = $this->projectPath . '/config/Crafter/Skeletons/' . $identifier . '.stub';

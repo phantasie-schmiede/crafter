@@ -11,19 +11,19 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\PathResolver;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Environment;
 
-/**
- * Class SkeletonWhereCommand
- *
- * @package PSBits\Crafter\Command
- */
+use function str_replace;
+
 #[AsCommand(
     name: 'crafter:skeleton:where',
     description: 'Shows all lookup locations of a skeleton and which one wins'
@@ -32,12 +32,18 @@ class SkeletonWhereCommand extends AbstractCrafterCommand
 {
     public const string ARGUMENT_IDENTIFIER = 'identifier';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly PathResolver $pathResolver,
     ) {
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -57,6 +63,10 @@ class SkeletonWhereCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);

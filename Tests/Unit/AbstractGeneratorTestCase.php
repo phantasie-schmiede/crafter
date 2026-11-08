@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit;
 
+use PHPUnit\Framework\MockObject\Exception;
 use PSBits\Crafter\Data\ExtensionBlueprint;
 use PSBits\Crafter\Service\BackendControllerGenerator;
 use PSBits\Crafter\Service\ClassGenerator;
@@ -23,14 +24,12 @@ use PSBits\Crafter\Service\ModelGenerator;
 use PSBits\Crafter\Service\ModuleRegistrar;
 use PSBits\Crafter\Service\PluginRegistrar;
 use PSBits\Crafter\Service\RepositoryGenerator;
+use Random\RandomException;
+use RuntimeException;
 
 /**
- * Class AbstractGeneratorTestCase
- *
  * Adds the generator layer on top of the base service graph. The services are wired manually instead of via the
  * container, so the tests stay independent of a running TYPO3 installation.
- *
- * @package PSBits\Crafter\Tests\Unit
  */
 abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
 {
@@ -42,6 +41,11 @@ abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
     protected ModelGenerator             $modelGenerator;
     protected RepositoryGenerator        $repositoryGenerator;
 
+    /**
+     * @throws Exception
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -117,6 +121,7 @@ abstract class AbstractGeneratorTestCase extends AbstractCrafterTestCase
      * notably Classes/Data/ExtensionInformation.php.
      *
      * @param string[] $groups
+     * @throws RuntimeException
      */
     protected function generateBaseExtension(array $groups = ['core']): void
     {

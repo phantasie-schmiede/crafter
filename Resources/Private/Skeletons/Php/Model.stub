@@ -8,11 +8,6 @@ namespace {{ modelNamespace }};
 
 {{ imports }}
 
-/**
- * Class {{ className }}
- *
- * @package {{ modelNamespace }}
- */
 {{ classAttributes }}
 class {{ className }} extends {{ parentClass }}
 {

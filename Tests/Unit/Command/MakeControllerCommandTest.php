@@ -12,22 +12,23 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
-/**
- * Class MakeControllerCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class MakeControllerCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAControllerWithTheSelectedActionsOnly(): void
     {
         $tester = $this->runCommand($this->makeControllerCommand, [
-            'name'        => 'Product',
-            '--extension' => self::EXTENSION_KEY,
             '--actions'   => 'list,show',
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'Product',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -38,13 +39,17 @@ final class MakeControllerCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Controller "ProductController" has been created.', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function crudKeywordGeneratesEveryConfiguredAction(): void
     {
         $tester = $this->runCommand($this->makeControllerCommand, [
-            'name'        => 'Product',
-            '--extension' => self::EXTENSION_KEY,
             '--actions'   => 'crud',
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'Product',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -54,14 +59,18 @@ final class MakeControllerCommandTest extends AbstractCommandTestCase
         }
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function noTemplatesFlagSkipsTheFluidTemplates(): void
     {
         $tester = $this->runCommand($this->makeControllerCommand, [
-            'name'           => 'Product',
-            '--extension'    => self::EXTENSION_KEY,
             '--actions'      => 'list',
+            '--extension'    => self::EXTENSION_KEY,
             '--no-templates' => true,
+            'name'           => 'Product',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -69,10 +78,14 @@ final class MakeControllerCommandTest extends AbstractCommandTestCase
         self::assertFileDoesNotExist($this->getExtensionFilePath('Resources/Private/Templates/Product/List.html'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnInvalidName(): void
     {
-        $tester = $this->runCommand($this->makeControllerCommand, ['name' => 'product', '--extension' => self::EXTENSION_KEY]);
+        $tester = $this->runCommand($this->makeControllerCommand, ['--extension' => self::EXTENSION_KEY, 'name' => 'product']);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('UpperCamelCase', $tester->getDisplay());

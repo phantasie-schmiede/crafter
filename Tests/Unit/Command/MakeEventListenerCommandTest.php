@@ -12,24 +12,25 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
 
-/**
- * Class MakeEventListenerCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class MakeEventListenerCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAnEventListenerForTheGivenEvent(): void
     {
         $tester = $this->runCommand($this->makeEventListenerCommand, [
-            'name'        => 'ProductUpdate',
-            '--extension' => self::EXTENSION_KEY,
             '--event'     => 'TYPO3\CMS\Core\Database\Event\AfterFileOperationEvent',
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'ProductUpdate',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -38,13 +39,17 @@ final class MakeEventListenerCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Event listener "ProductUpdate" has been created.', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnEventWithoutNamespace(): void
     {
         $tester = $this->runCommand($this->makeEventListenerCommand, [
-            'name'        => 'ProductUpdate',
-            '--extension' => self::EXTENSION_KEY,
             '--event'     => 'AfterFileOperationEvent',
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'ProductUpdate',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());

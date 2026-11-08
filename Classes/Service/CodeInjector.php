@@ -12,17 +12,23 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Utility\PhpUtility;
+use ValueError;
 
+use function array_map;
+use function array_merge;
+use function array_unique;
 use function count;
+use function explode;
+use function implode;
+use function ltrim;
+use function str_contains;
+use function str_repeat;
 use function strlen;
+use function trim;
 
 /**
- * Class CodeInjector
- *
  * Adds entries to already existing classes. The file is edited line by line instead of being rebuilt from a parser,
  * so that formatting, comments and manual changes of the developer survive untouched.
- *
- * @package PSBits\Crafter\Service
  */
 class CodeInjector
 {
@@ -36,8 +42,8 @@ class CodeInjector
      * Inserts a block into the constructor of a class, keeping the existing blocks of the same kind sorted.
      *
      * @param string[] $imports fully qualified class names required by the block
-     *
      * @return string|null the modified source or null if the block is already present
+     * @throws ValueError
      */
     public function addConstructorBlock(
         string  $source,
@@ -102,6 +108,7 @@ class CodeInjector
 
     /**
      * @param string[] $imports fully qualified class names
+     * @throws ValueError
      */
     public function addImports(string $source, array $imports): string
     {
@@ -146,7 +153,6 @@ class CodeInjector
 
     /**
      * @param string[] $lines
-     *
      * @return string[]
      */
     private function createConstructor(array $lines): array
@@ -180,7 +186,22 @@ class CodeInjector
 
     /**
      * @param string[] $lines
-     *
+     */
+    private function locateBlockEnd(array $lines, int $start, int $end): int
+    {
+        $indentation = strlen($lines[$start]) - strlen(ltrim($lines[$start]));
+
+        for ($index = $start + 1; $index < $end; ++$index) {
+            if (str_repeat(' ', $indentation) . ');' === rtrim($lines[$index])) {
+                return $index;
+            }
+        }
+
+        return $start;
+    }
+
+    /**
+     * @param string[] $lines
      * @return array<int, array{end: int, sortKey: string, start: int}>
      */
     private function locateBlocks(array $lines, int $start, int $end, string $blockStart): array
@@ -216,23 +237,6 @@ class CodeInjector
 
     /**
      * @param string[] $lines
-     */
-    private function locateBlockEnd(array $lines, int $start, int $end): int
-    {
-        $indentation = strlen($lines[$start]) - strlen(ltrim($lines[$start]));
-
-        for ($index = $start + 1; $index < $end; ++$index) {
-            if (str_repeat(' ', $indentation) . ');' === rtrim($lines[$index])) {
-                return $index;
-            }
-        }
-
-        return $start;
-    }
-
-    /**
-     * @param string[] $lines
-     *
      * @return array{end: int, start: int}|null the first and the line after the last line of the constructor body
      */
     private function locateConstructorBody(array $lines): ?array

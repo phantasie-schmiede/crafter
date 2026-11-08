@@ -24,16 +24,17 @@ use function is_a;
 use function ksort;
 
 /**
- * Class CommandInventory
- *
  * Discovers the commands shipped by this extension by reading the AsCommand attributes of the command classes,
  * without booting TYPO3 or instantiating a service.
- *
- * @package PSBits\Crafter\Utility
  */
 final class CommandInventory
 {
     private const string NAMESPACE_PREFIX = 'PSBits\\Crafter\\Command\\';
+
+    private static function classFromFileName(string $file): string
+    {
+        return self::NAMESPACE_PREFIX . basename($file, '.php');
+    }
 
     /**
      * @return array<string, array{description: string}> commands keyed by their primary name, sorted by name
@@ -76,10 +77,5 @@ final class CommandInventory
         ksort($commands);
 
         return $commands;
-    }
-
-    private static function classFromFileName(string $file): string
-    {
-        return self::NAMESPACE_PREFIX . basename($file, '.php');
     }
 }

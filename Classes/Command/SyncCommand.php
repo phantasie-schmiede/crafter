@@ -11,10 +11,14 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\SyncService;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -24,13 +28,9 @@ use function is_string;
 use function sprintf;
 
 /**
- * Class SyncCommand
- *
  * Brings the toolchain of an existing extension in line with `crafter.tools`: quality configuration, workflow and
  * agent instructions are renewed according to the `crafter.sync.renewable` policies, and the managed keys of
  * composer.json and package.json are re-merged.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:sync',
@@ -40,6 +40,9 @@ class SyncCommand extends AbstractCrafterCommand
 {
     public const string ARGUMENT_EXTENSION_KEY = 'extensionKey';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly FileWriter  $fileWriter,
         protected readonly SyncService $syncService,
@@ -47,6 +50,9 @@ class SyncCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -77,6 +83,11 @@ class SyncCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->determineExtensionKey($input);
@@ -107,6 +118,9 @@ class SyncCommand extends AbstractCrafterCommand
         return Command::SUCCESS;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determineExtensionKey(InputInterface $input): ?string
     {
         $extensionKey = $input->getArgument(self::ARGUMENT_EXTENSION_KEY);

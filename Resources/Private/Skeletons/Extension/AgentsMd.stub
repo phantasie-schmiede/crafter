@@ -76,6 +76,23 @@ PSBits Crafter; new classes are generated with `vendor/bin/crafter make:*` inste
 - `Resources/Private/` — Fluid templates, partials, layouts, language files and extension-specific overrides.
 - `Build/Quality/` — PHP-CS-Fixer, PHPStan, Prettier, yamllint and class attribute linting configuration.
 
+## Foundation integration
+
+This extension builds on `psbits/foundation`, so it deliberately deviates from the standard TYPO3
+layout. Full conventions: `psbits-foundation` skill (`.opencode/skills/psbits-foundation/SKILL.md`).
+
+- The TCA of a domain model is generated at boot from the `#[Ctrl]`/`#[Column]` attributes on the
+  model itself - there are no `Configuration/TCA/<table>.php` files for own models; do not create
+  them.
+- The database schema is derived from those TCA attributes - there is no `ext_tables.sql` unless
+  you deliberately define columns there (it takes priority over the attribute-derived definition);
+  do not create one to "fix" missing tables.
+- Default TCA labels belong in `Resources/Private/Language/Backend/Configuration/TCA/[modelName].xlf`
+  (keys: `ctrl.title`, `<property>`, `<property>.description`, `palette.*`, `tab.*`); FlexForm
+  labels in `Resources/Private/Language/Backend/Configuration/FlexForms/[formName].xlf`.
+- FlexForms in `Configuration/FlexForms/`, TypoScript in `Configuration/TypoScript/` and icons in
+  `Resources/Public/Icons/` are registered automatically - no registration code needed.
+
 ## Architecture and conventions
 
 - Strongly typed PHP (`declare(strict_types=1);`) is standard for classes. Every class file starts with the
@@ -107,8 +124,11 @@ inconsistencies between the codebase and these instructions, mention them - don'
 
 - `fix:all` **rewrites source files** (formats HTML/XML, reorders class attributes, runs php-cs-fixer); `lint:all` is
   the read-only verification.
-- A pre-commit hook (`Build/GitHooks/pre-commit`, auto-installed by `composer install`) runs `composer lint:all`.
-- The same checks run in the `Quality` GitHub Actions workflow.
+- A pre-commit hook (installed by `.Build/bin/qa sync` from the psbits/qa package) runs `composer lint:all`.
+- The same checks run in the shared `CI` GitHub Actions workflow (`.github/workflows/ci.yml`).
+- The `scripts` section of `composer.json` is kept in sync by `.Build/bin/qa sync` (composer
+  post-install/update, psbits/qa package); the shared QA protocol is documented in the `psbits-qa`
+  skill (`.opencode/skills/psbits-qa/SKILL.md`).
 {{ agentsToolChecks }}
 
 ## Do not modify

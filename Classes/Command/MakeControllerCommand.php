@@ -11,28 +11,36 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Data\ControllerBlueprint;
 use PSBits\Crafter\Data\PropertyDefinition;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ControllerGenerator;
 use PSBits\Crafter\Service\FileWriter;
 use PSBits\Crafter\Service\ModelPropertyReader;
 use PSBits\Crafter\Service\PathResolver;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use ValueError;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_values;
+use function explode;
+use function implode;
 use function is_string;
 use function sprintf;
 
 /**
- * Class MakeControllerCommand
- *
  * Creates a frontend controller including its Fluid templates, language files and plugin registration.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:controller',
@@ -48,6 +56,9 @@ class MakeControllerCommand extends AbstractCrafterCommand
     public const string OPTION_NO_TEMPLATES = 'no-templates';
     public const string OPTION_PLUGIN_NAME  = 'plugin-name';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly ControllerGenerator $controllerGenerator,
         protected readonly FileWriter          $fileWriter,
@@ -57,6 +68,9 @@ class MakeControllerCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -99,6 +113,13 @@ class MakeControllerCommand extends AbstractCrafterCommand
         $this->addOption(self::OPTION_NO_TEMPLATES, null, InputOption::VALUE_NONE, 'Do not create Fluid templates');
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
@@ -178,6 +199,8 @@ class MakeControllerCommand extends AbstractCrafterCommand
 
     /**
      * @return string[]
+     * @throws CrafterException
+     * @throws InvalidArgumentException
      */
     private function determineActions(InputInterface $input, SymfonyStyle $io, string $extensionKey): array
     {
@@ -199,6 +222,9 @@ class MakeControllerCommand extends AbstractCrafterCommand
         return array_values(array_filter(array_map('trim', explode(',', $actions))));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determineName(InputInterface $input, SymfonyStyle $io): ?string
     {
         $name = $input->getArgument(self::ARGUMENT_NAME);
@@ -218,6 +244,7 @@ class MakeControllerCommand extends AbstractCrafterCommand
 
     /**
      * @return PropertyDefinition[]
+     * @throws CrafterException
      */
     private function readProperties(string $extensionKey, string $modelName): array
     {

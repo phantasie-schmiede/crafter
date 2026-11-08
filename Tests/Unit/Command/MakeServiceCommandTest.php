@@ -12,29 +12,31 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
 
 /**
- * Class MakeServiceCommandTest
- *
  * Doubles as the test for the shared behaviour of AbstractMakeClassCommand: name validation, sub path validation,
  * dependency resolution, dry run and the up-to-date detection.
- *
- * @package PSBits\Crafter\Tests\Unit\Command
  */
 final class MakeServiceCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsAServiceWithResolvedDependencies(): void
     {
         $this->generateBaseExtension();
 
         $tester = $this->runCommand($this->makeServiceCommand, [
-            'name'         => 'Price',
-            '--extension'  => self::EXTENSION_KEY,
             '--dependency' => ['Context', 'ProductRepository'],
+            '--extension'  => self::EXTENSION_KEY,
+            'name'         => 'Price',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -44,48 +46,84 @@ final class MakeServiceCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Service "PriceService" has been created.', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
-    public function rejectsAnUnresolvableShortDependency(): void
+    public function dryRunWritesNoFile(): void
     {
         $this->generateBaseExtension();
 
         $tester = $this->runCommand($this->makeServiceCommand, [
-            'name'         => 'Price',
-            '--extension'  => self::EXTENSION_KEY,
-            '--dependency' => ['Bogus'],
+            '--dry-run'   => true,
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'Price',
         ]);
 
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('Dependency "Bogus" cannot be resolved', $tester->getDisplay());
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('Dry run - no file has been written.', $tester->getDisplay());
+        self::assertFileDoesNotExist($this->getExtensionFilePath('Classes/Service/PriceService.php'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnInvalidName(): void
     {
-        $tester = $this->runCommand($this->makeServiceCommand, ['name' => 'price', '--extension' => self::EXTENSION_KEY]);
+        $tester = $this->runCommand($this->makeServiceCommand, ['--extension' => self::EXTENSION_KEY, 'name' => 'price']);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('UpperCamelCase', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnInvalidSubPath(): void
     {
         $tester = $this->runCommand($this->makeServiceCommand, [
-            'name'        => 'Price',
             '--extension' => self::EXTENSION_KEY,
             '--sub-path'  => 'lower/case',
+            'name'        => 'Price',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('UpperCamelCase segments', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function rejectsAnUnresolvableShortDependency(): void
+    {
+        $this->generateBaseExtension();
+
+        $tester = $this->runCommand($this->makeServiceCommand, [
+            '--dependency' => ['Bogus'],
+            '--extension'  => self::EXTENSION_KEY,
+            'name'         => 'Price',
+        ]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Dependency "Bogus" cannot be resolved', $tester->getDisplay());
+    }
+
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function reportsAnUpToDateClassOnTheSecondRun(): void
     {
         $this->generateBaseExtension();
-        $input = ['name' => 'Price', '--extension' => self::EXTENSION_KEY];
+        $input = ['--extension' => self::EXTENSION_KEY, 'name' => 'Price'];
 
         self::assertSame(Command::SUCCESS, $this->runCommand($this->makeServiceCommand, $input)->getStatusCode());
 
@@ -95,22 +133,10 @@ final class MakeServiceCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('already up to date', $tester->getDisplay());
     }
 
-    #[Test]
-    public function dryRunWritesNoFile(): void
-    {
-        $this->generateBaseExtension();
-
-        $tester = $this->runCommand($this->makeServiceCommand, [
-            'name'        => 'Price',
-            '--extension' => self::EXTENSION_KEY,
-            '--dry-run'   => true,
-        ]);
-
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Dry run - no file has been written.', $tester->getDisplay());
-        self::assertFileDoesNotExist($this->getExtensionFilePath('Classes/Service/PriceService.php'));
-    }
-
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function requiresTheExtensionOption(): void
     {

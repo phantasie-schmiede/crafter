@@ -12,15 +12,43 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
-/**
- * Class SkeletonShowCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class SkeletonShowCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function failsForAnUnknownSkeleton(): void
+    {
+        $tester = $this->runCommand($this->skeletonShowCommand, ['identifier' => 'Php/DoesNotExist']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Php/DoesNotExist', $tester->getDisplay());
+    }
+
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function listsTheAvailableVariables(): void
+    {
+        $tester = $this->runCommand($this->skeletonShowCommand, ['--variables' => true, 'identifier' => 'Php/FileHeader']);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('Placeholder', $tester->getDisplay());
+        self::assertStringContainsString('extensionKey', $tester->getDisplay());
+    }
+
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rendersAPlaceholderFreeStub(): void
     {
@@ -30,35 +58,20 @@ final class SkeletonShowCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('.Build/', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function replacesVariablesGivenViaSetOption(): void
     {
         $tester = $this->runCommand($this->skeletonShowCommand, [
-            'identifier' => 'Php/FileHeader',
             '--set'      => ['packageTitle=Demo Shop'],
+            'identifier' => 'Php/FileHeader',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertStringContainsString('This file is part of Demo Shop.', $tester->getDisplay());
         self::assertStringNotContainsString('{{', $tester->getDisplay());
-    }
-
-    #[Test]
-    public function listsTheAvailableVariables(): void
-    {
-        $tester = $this->runCommand($this->skeletonShowCommand, ['identifier' => 'Php/FileHeader', '--variables' => true]);
-
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Placeholder', $tester->getDisplay());
-        self::assertStringContainsString('extensionKey', $tester->getDisplay());
-    }
-
-    #[Test]
-    public function failsForAnUnknownSkeleton(): void
-    {
-        $tester = $this->runCommand($this->skeletonShowCommand, ['identifier' => 'Php/DoesNotExist']);
-
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('Php/DoesNotExist', $tester->getDisplay());
     }
 }

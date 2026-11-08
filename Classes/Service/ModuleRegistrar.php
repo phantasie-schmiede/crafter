@@ -11,18 +11,23 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
+
+use function file_get_contents;
+use function is_file;
+use function str_replace;
+use function strtolower;
 
 /**
- * Class ModuleRegistrar
- *
  * Adds a backend module of a generated module controller to the ExtensionInformation of the extension and makes
  * sure Configuration/Backend/Modules.php exists, because TYPO3 only picks up modules that are returned by that
  * file. Foundation builds the actual configuration from the ExtensionInformation, so the file itself stays a
  * one-liner that never has to be touched again.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ModuleRegistrar
 {
@@ -54,6 +59,10 @@ readonly class ModuleRegistrar
 
     /**
      * @return bool true when the module has been added, false when the file is missing or the module already exists
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
      */
     public function register(ClassBlueprint $blueprint, string $moduleName): bool
     {
@@ -126,6 +135,11 @@ readonly class ModuleRegistrar
     /**
      * Writes Configuration/Backend/Modules.php. Existing files are left untouched by the FileWriter, so a project
      * that has customised the file keeps its version.
+     *
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
      */
     private function ensureModuleConfiguration(string $extensionKey): void
     {

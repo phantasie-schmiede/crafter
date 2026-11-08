@@ -20,11 +20,6 @@ use TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException;
 use TYPO3\CMS\Extbase\Persistence\Exception\UnknownObjectException;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 
-/**
- * Class ProductController
- *
- * @package PSBits\DemoShop\Controller
- */
 class ProductController extends ActionController
 {
     public function __construct(

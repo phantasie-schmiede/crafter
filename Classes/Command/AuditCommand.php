@@ -11,24 +11,30 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Data\AuditFinding;
 use PSBits\Crafter\Enum\AuditSeverity;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ExtensionAuditor;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use UnexpectedValueException;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_values;
 use function is_string;
 use function sprintf;
+use function str_starts_with;
+use function substr;
 
-/**
- * Class AuditCommand
- *
- * @package PSBits\Crafter\Command
- */
 #[AsCommand(
     name: 'crafter:audit',
     description: 'Checks an extension against the conventions Crafter generates by'
@@ -39,12 +45,18 @@ class AuditCommand extends AbstractCrafterCommand
     public const string OPTION_CATEGORY        = 'category';
     public const string OPTION_STRICT          = 'strict';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly ExtensionAuditor $extensionAuditor,
     ) {
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -80,6 +92,12 @@ class AuditCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     * @throws UnexpectedValueException
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->determineExtensionKey($input);
@@ -124,6 +142,9 @@ class AuditCommand extends AbstractCrafterCommand
         return Command::SUCCESS;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function determineExtensionKey(InputInterface $input): ?string
     {
         $extensionKey = $input->getArgument(self::ARGUMENT_EXTENSION_KEY);

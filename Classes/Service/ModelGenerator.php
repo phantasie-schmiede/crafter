@@ -11,23 +11,38 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ModelBlueprint;
 use PSBits\Crafter\Data\PropertyDefinition;
 use PSBits\Crafter\Data\WriteResult;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
 use PSBits\Crafter\Utility\PhpUtility;
+use RuntimeException;
+use ValueError;
 
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_values;
+use function implode;
 use function is_array;
+use function ksort;
+use function max;
+use function sort;
 use function sprintf;
+use function str_contains;
+use function str_repeat;
+use function str_replace;
+use function strcmp;
 use function strlen;
+use function trim;
+use function usort;
 
 /**
- * Class ModelGenerator
- *
  * Assembles a domain model from the small stubs under Php/. Ordering and repetition happen here, the stubs stay
  * free of logic and therefore easy to override.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class ModelGenerator
 {
@@ -38,8 +53,8 @@ readonly class ModelGenerator
     public const string SKELETON_MODEL           = 'Php/Model';
     public const string SKELETON_MODEL_CONSTRUCT = 'Php/ModelConstructor';
     public const string SKELETON_PROPERTY        = 'Php/Property';
-    public const string SKELETON_STORAGE_METHOD  = 'Php/ObjectStorageMethod';
     public const string SKELETON_SETTER          = 'Php/Setter';
+    public const string SKELETON_STORAGE_METHOD  = 'Php/ObjectStorageMethod';
 
     public function __construct(
         protected ConfigurationService $configurationService,
@@ -50,6 +65,12 @@ readonly class ModelGenerator
     ) {
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     public function generate(ModelBlueprint $blueprint): WriteResult
     {
         return $this->fileWriter->write(
@@ -58,6 +79,11 @@ readonly class ModelGenerator
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws ValueError
+     */
     public function render(ModelBlueprint $blueprint): string
     {
         $extensionKey    = $blueprint->extensionKey;
@@ -129,6 +155,9 @@ readonly class ModelGenerator
      *     objectStorage: bool,
      *     phpType: string
      * }
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws ValueError
      */
     private function buildContext(PropertyDefinition $property, ModelBlueprint $blueprint): array
     {
@@ -172,6 +201,7 @@ readonly class ModelGenerator
 
     /**
      * @return array<string, string>
+     * @throws ValueError
      */
     private function buildReplacements(PropertyDefinition $property, ModelBlueprint $blueprint): array
     {
@@ -185,6 +215,30 @@ readonly class ModelGenerator
             '{propertyName}' => $property->name,
             '{tableName}'    => $blueprint->getTableName(),
         ];
+    }
+
+    /**
+     * @throws CrafterException
+     */
+    private function determineLabelProperty(ModelBlueprint $blueprint, string $extensionKey): string
+    {
+        $fallback = '';
+
+        foreach ($this->sortProperties($blueprint->properties) as $property) {
+            if ('string' !== $this->fieldTypeRegistry->getPhpType($property->type, $extensionKey)) {
+                continue;
+            }
+
+            if (true === $property->required) {
+                return $property->name;
+            }
+
+            if ('' === $fallback) {
+                $fallback = $property->name;
+            }
+        }
+
+        return $fallback;
     }
 
     /**
@@ -203,6 +257,10 @@ readonly class ModelGenerator
         return 1 === preg_match('/<\s*([^>]+)\s*>/', $docBlockType, $matches) ? trim($matches[1]) : '';
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     private function getLinkedClassName(string $linkedClass, string $linkedClassType, string $extensionKey): string
     {
         if (str_contains($linkedClass, '\\')) {
@@ -216,11 +274,19 @@ readonly class ModelGenerator
         return $this->getNamespace($extensionKey) . '\\' . $subNamespace . '\\' . $linkedClass;
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     private function getModelNamespace(string $extensionKey): string
     {
         return $this->getNamespace($extensionKey) . '\\' . self::MODEL_SUB_NAMESPACE;
     }
 
+    /**
+     * @throws CrafterException
+     * @throws JsonException
+     */
     private function getNamespace(string $extensionKey): string
     {
         return $this->pathResolver->resolveNamespace(
@@ -230,25 +296,8 @@ readonly class ModelGenerator
     }
 
     /**
-     * @param string[]              $values
-     * @param array<string, string> $replacements
-     *
-     * @return string[]
-     */
-    private function replace(array $values, array $replacements): array
-    {
-        return array_map(
-            static fn(string $value): string => str_replace(
-                array_keys($replacements),
-                array_values($replacements),
-                $value
-            ),
-            $values
-        );
-    }
-
-    /**
      * @param string[] $imports
+     * @throws CrafterException
      */
     private function renderClassAttributes(
         ModelBlueprint $blueprint,
@@ -282,27 +331,6 @@ readonly class ModelGenerator
         ));
     }
 
-    private function determineLabelProperty(ModelBlueprint $blueprint, string $extensionKey): string
-    {
-        $fallback = '';
-
-        foreach ($this->sortProperties($blueprint->properties) as $property) {
-            if ('string' !== $this->fieldTypeRegistry->getPhpType($property->type, $extensionKey)) {
-                continue;
-            }
-
-            if (true === $property->required) {
-                return $property->name;
-            }
-
-            if ('' === $fallback) {
-                $fallback = $property->name;
-            }
-        }
-
-        return $fallback;
-    }
-
     /**
      * @param string[] $storageNames
      */
@@ -334,8 +362,8 @@ readonly class ModelGenerator
      *     objectStorage: bool,
      *     phpType: string
      * } $context
-     *
      * @return array<string, string>
+     * @throws CrafterException
      */
     private function renderMethods(PropertyDefinition $property, array $context, string $extensionKey): array
     {
@@ -418,6 +446,7 @@ readonly class ModelGenerator
      *     objectStorage: bool,
      *     phpType: string
      * } $context
+     * @throws CrafterException
      */
     private function renderProperty(PropertyDefinition $property, array $context, string $extensionKey): string
     {
@@ -440,8 +469,24 @@ readonly class ModelGenerator
     }
 
     /**
+     * @param string[]              $values
+     * @param array<string, string> $replacements
+     * @return string[]
+     */
+    private function replace(array $values, array $replacements): array
+    {
+        return array_map(
+            static fn(string $value): string => str_replace(
+                array_keys($replacements),
+                array_values($replacements),
+                $value
+            ),
+            $values
+        );
+    }
+
+    /**
      * @param PropertyDefinition[] $properties
-     *
      * @return PropertyDefinition[]
      */
     private function sortProperties(array $properties): array

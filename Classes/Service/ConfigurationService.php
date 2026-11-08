@@ -19,12 +19,14 @@ use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_key_exists;
+use function explode;
+use function implode;
 use function is_array;
+use function is_file;
+use function ksort;
 use function sprintf;
 
 /**
- * Class ConfigurationService
- *
  * Merges the Crafter configuration from up to five layers. Later layers win:
  *
  * 1. EXT:crafter/Configuration/Crafter.yaml     (shipped defaults)
@@ -35,8 +37,6 @@ use function sprintf;
  *
  * Maps are merged recursively, lists are replaced completely. The origin of every value is tracked to make the
  * effective configuration explainable via `crafter:config:dump`.
- *
- * @package PSBits\Crafter\Service
  */
 class ConfigurationService
 {
@@ -65,6 +65,7 @@ class ConfigurationService
 
     /**
      * @return array<string, mixed>
+     * @throws CrafterException
      */
     public function get(?string $extensionKey = null): array
     {
@@ -81,6 +82,7 @@ class ConfigurationService
      * Returns all configuration layers with their resolved file path or a status marker.
      *
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getLayers(?string $extensionKey = null): array
     {
@@ -93,6 +95,7 @@ class ConfigurationService
      * Maps a flattened configuration path to the layer that provided its value.
      *
      * @return array<string, string>
+     * @throws CrafterException
      */
     public function getOrigins(?string $extensionKey = null): array
     {
@@ -103,6 +106,8 @@ class ConfigurationService
 
     /**
      * Reads a single value via dot path, e.g. 'defaults.author' or 'paths.model'.
+     *
+     * @throws CrafterException
      */
     public function getValue(string $path, ?string $extensionKey = null, mixed $default = null): mixed
     {
@@ -132,6 +137,9 @@ class ConfigurationService
         $this->runtimeOverrides   = $overrides;
     }
 
+    /**
+     * @throws CrafterException
+     */
     private function load(string $cacheIdentifier, ?string $extensionKey): void
     {
         $configuration = [];
@@ -189,8 +197,10 @@ class ConfigurationService
         $this->layerCache[$cacheIdentifier]         = $layers;
         $this->originCache[$cacheIdentifier]        = $origins;
 
-        // The caches are filled before dispatching on purpose: a listener that reads the configuration itself gets
-        // the state without the event layer instead of running into an endless recursion.
+        /*
+         * The caches are filled before dispatching on purpose: a listener that reads the configuration itself gets
+         * the state without the event layer instead of running into an endless recursion.
+         */
         $event = new ModifyConfigurationEvent($configuration, $extensionKey);
         $this->eventDispatcher->dispatch($event);
         $overrides = $event->getOverrides();
@@ -212,7 +222,6 @@ class ConfigurationService
      * @param array<string, mixed>  $target
      * @param array<string, mixed>  $override
      * @param array<string, string> $origins
-     *
      * @return array<string, mixed>
      */
     private function mergeLayer(

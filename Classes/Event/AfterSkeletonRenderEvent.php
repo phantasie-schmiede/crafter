@@ -12,14 +12,10 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Event;
 
 /**
- * Class AfterSkeletonRenderEvent
- *
  * Dispatched once all placeholders of a stub have been replaced. Listeners receive the finished content and can
  * post process it, e.g. append a generated marker or rewrite a namespace.
  *
  * Note that this event fires for every stub, including the nested ones a generator assembles a file from.
- *
- * @package PSBits\Crafter\Event
  */
 final class AfterSkeletonRenderEvent
 {

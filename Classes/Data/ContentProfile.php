@@ -12,13 +12,9 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Data;
 
 /**
- * Class ContentProfile
- *
  * Summarizes which file kinds an extension contains. Tools of the quality group are enabled per signal, e.g.
  * PHP-CS-Fixer for `php` and TypoScript lint for `typoscript`. Signals are derived from the file extensions the
  * profile was built from, so the profile never has to be synchronized with the tool configuration.
- *
- * @package PSBits\Crafter\Data
  */
 readonly class ContentProfile
 {

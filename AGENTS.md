@@ -89,6 +89,20 @@ domain models, controllers, services, event listeners, and view helpers. PHP nam
 - `Tests/Fixtures/Expected/` — Golden master fixtures for generator output.
 - `Tests/Unit/` — Unit tests wiring the real service graph against throwaway project directories.
 
+## Foundation integration
+
+Crafter scaffolds foundation-based extensions, so generated code deliberately deviates from the
+standard TYPO3 layout. Full conventions: `psbits-foundation` skill
+(`.opencode/skills/psbits-foundation/SKILL.md`).
+
+- Generated extensions carry TCA attributes (`#[Ctrl]`/`#[Column]`) on their domain models and
+  register plugins/modules/page types in `Classes/Data/ExtensionInformation.php` - the skeleton
+  `.stub` files (incl. `AgentsMd.stub`, which ships this documentation) reference the Foundation
+  classes. When changing skeletons, keep them in sync with the installed `psbits/foundation`
+  version (`.Build/vendor/psbits/foundation/`).
+- This repo itself ships no domain models, so there is no generated TCA and no `ext_tables.sql`
+  here; do not create either.
+
 ## Architecture and conventions
 
 - Strongly typed PHP (`declare(strict_types=1);`) is standard for classes. Every class file starts with the
@@ -132,11 +146,12 @@ inconsistencies between the codebase and these instructions, mention them - don'
 
 Repository quality checks are defined in `composer.json`, `package.json`, and `Build/` configuration files.
 
-- `fix:all` **rewrites source files** (runs class attribute linting, Prettier for XML/XLF, php-cs-fixer);
+- `fix:all` **rewrites source files** (runs class attribute linting, Prettier
+  for XML/XLF and package.json, the composer.json normalization, php-cs-fixer);
   `lint:all` is the read-only verification.
-- A pre-commit hook (installed by `.Build/bin/qa link` from the psbits/qa package) runs `composer lint:all`.
-- Individual checks: `lint:php`, `analyze:php` (PHPStan), `lint:classes`, `lint:htmlxml`, `lint:yaml`,
-  `audit:composer`, `validate:composer`.
+- A pre-commit hook (installed by `.Build/bin/qa sync` from the psbits/qa package) runs `composer lint:all`.
+- The shared QA scripts and their `lint:all` / `fix:all` aggregates are kept in sync by
+  `.Build/bin/qa sync` (psbits/qa package); the `psbits-qa` skill documents the protocol.
 - Unit tests: `composer test:unit` (golden master tests, no database needed).
 - Update fixtures after intended output changes: `composer test:unit:update-fixtures`, then review
   `git diff Tests/Fixtures/Expected`.

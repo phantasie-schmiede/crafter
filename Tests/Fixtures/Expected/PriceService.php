@@ -14,11 +14,6 @@ namespace PSBits\DemoShop\Service;
 use PSBits\DemoShop\Domain\Repository\ProductRepository;
 use TYPO3\CMS\Core\Context\Context;
 
-/**
- * Class PriceService
- *
- * @package PSBits\DemoShop\Service
- */
 readonly class PriceService
 {
     public function __construct(

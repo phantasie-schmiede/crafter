@@ -12,12 +12,8 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Event;
 
 /**
- * Class BeforeSkeletonRenderEvent
- *
  * Dispatched before a stub is read and its placeholders are replaced. Listeners can add or change variables and
  * even swap the skeleton identifier to redirect the rendering to a completely different stub.
- *
- * @package PSBits\Crafter\Event
  */
 final class BeforeSkeletonRenderEvent
 {

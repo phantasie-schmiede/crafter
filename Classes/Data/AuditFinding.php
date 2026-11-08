@@ -14,12 +14,8 @@ namespace PSBits\Crafter\Data;
 use PSBits\Crafter\Enum\AuditSeverity;
 
 /**
- * Class AuditFinding
- *
  * A single result of `crafter:audit`. The hint carries the Crafter command that resolves the finding, so the report
  * is directly actionable.
- *
- * @package PSBits\Crafter\Data
  */
 readonly class AuditFinding
 {

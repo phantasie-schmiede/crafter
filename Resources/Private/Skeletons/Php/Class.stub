@@ -8,11 +8,6 @@ namespace {{ namespace }};
 
 {{ imports }}
 
-/**
- * Class {{ className }}
- *
- * @package {{ namespace }}
- */
 {{ classAttributes }}
 {{ classKeywords }}class {{ className }}{{ classExtends }}{{ classImplements }}
 {

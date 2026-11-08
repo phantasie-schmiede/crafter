@@ -11,19 +11,17 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ConfigurationService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Yaml\Yaml;
 
-/**
- * Class ConfigDumpCommand
- *
- * @package PSBits\Crafter\Command
- */
 #[AsCommand(
     name: 'crafter:config:dump',
     description: 'Shows the effective Crafter configuration and which layer provided each value'
@@ -32,12 +30,18 @@ class ConfigDumpCommand extends AbstractCrafterCommand
 {
     public const string OPTION_ORIGINS = 'origins';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly ConfigurationService $configurationService,
     ) {
         parent::__construct();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -62,6 +66,10 @@ class ConfigDumpCommand extends AbstractCrafterCommand
         );
     }
 
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);

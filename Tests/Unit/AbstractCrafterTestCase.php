@@ -11,6 +11,11 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Tests\Unit;
 
+use PHPUnit\Event\NoPreviousThrowableException;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\InvalidArgumentException;
+use PHPUnit\Framework\MockObject\Exception;
+use PHPUnit\Framework\MockObject\IncompatibleReturnValueException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PSBits\Crafter\Service\ConfigurationService;
 use PSBits\Crafter\Service\ExtensionProfileService;
@@ -21,6 +26,8 @@ use PSBits\Crafter\Service\SyncService;
 use PSBits\Crafter\Service\ToolchainGenerator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\NullLogger;
+use Random\RandomException;
+use RuntimeException;
 use TYPO3\CMS\Core\Configuration\Loader\YamlFileLoader;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\EventDispatcher\NoopEventDispatcher;
@@ -32,19 +39,23 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 use function dirname;
+use function explode;
+use function file_get_contents;
+use function is_dir;
+use function ltrim;
 use function sprintf;
+use function str_replace;
+use function str_starts_with;
+use function substr;
+use function sys_get_temp_dir;
 
 /**
- * Class AbstractCrafterTestCase
- *
  * Wires the real service graph against a throwaway project directory. Only the PackageManager is mocked, because
  * everything else has to behave exactly as it does in a running installation: the configuration is read from the
  * shipped Crafter.yaml and the stubs are read from the shipped skeleton directory.
  *
  * The generated extension ends up in <tmp>/packages/<extensionKey>/, which is what the `extensionRootPath` default
  * resolves to once the project path points to the temporary directory.
- *
- * @package PSBits\Crafter\Tests\Unit
  */
 abstract class AbstractCrafterTestCase extends UnitTestCase
 {
@@ -63,71 +74,13 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
     protected SyncService        $syncService;
     protected ToolchainGenerator $toolchainGenerator;
 
-    private static function getFixturePath(string $name): string
-    {
-        return dirname(__DIR__) . '/Fixtures/Expected/' . $name;
-    }
-
     /**
-     * Replaces values that change with every run, currently the generation date of XLIFF files and the copyright
-     * year of PHP files.
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws NoPreviousThrowableException
+     * @throws RandomException
+     * @throws RuntimeException
      */
-    private static function normalizeVolatileValues(string $content): string
-    {
-        return preg_replace(
-            [
-                '/date="[^"]*"/',
-                '/(\(c\) )\d{4}/',
-            ],
-            [
-                'date="@@date@@"',
-                '$1@@year@@',
-            ],
-            $content
-        );
-    }
-
-    /**
-     * Compares a generated file with its fixture. Set CRAFTER_UPDATE_FIXTURES=1 to rewrite the fixtures after an
-     * intended change of the generated output. Always review the resulting diff.
-     */
-    protected function assertFileMatchesFixture(string $relativePath, string $fixtureName): void
-    {
-        $generatedPath = $this->getExtensionFilePath($relativePath);
-        self::assertFileExists($generatedPath, sprintf('File "%s" has not been generated.', $relativePath));
-        $generatedContent = self::normalizeVolatileValues((string)file_get_contents($generatedPath));
-        $fixturePath      = self::getFixturePath($fixtureName);
-
-        if ('1' === getenv('CRAFTER_UPDATE_FIXTURES')) {
-            GeneralUtility::mkdir_deep(dirname($fixturePath));
-            GeneralUtility::writeFile($fixturePath, $generatedContent, true);
-        }
-
-        self::assertFileExists($fixturePath, sprintf('Fixture "%s" is missing.', $fixtureName));
-        self::assertSame(
-            self::normalizeVolatileValues((string)file_get_contents($fixturePath)),
-            $generatedContent,
-            sprintf('Generated file "%s" differs from fixture "%s".', $relativePath, $fixtureName)
-        );
-    }
-
-    /**
-     * Absolute path inside the generated extension.
-     */
-    protected function getExtensionFilePath(string $relativePath): string
-    {
-        return $this->projectPath . '/packages/' . self::EXTENSION_KEY . '/' . ltrim($relativePath, '/');
-    }
-
-    protected function getFixtureContent(string $name): string
-    {
-        $path = self::getFixturePath($name);
-
-        self::assertFileExists($path, sprintf('Fixture "%s" is missing.', $name));
-
-        return (string)file_get_contents($path);
-    }
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -161,6 +114,9 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         $this->fileWriter->reset();
     }
 
+    /**
+     * @throws RuntimeException
+     */
     protected function tearDown(): void
     {
         if ('' !== $this->projectPath && is_dir($this->projectPath)) {
@@ -170,8 +126,81 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         parent::tearDown();
     }
 
+    private static function getFixturePath(string $name): string
+    {
+        return dirname(__DIR__) . '/Fixtures/Expected/' . $name;
+    }
+
+    /**
+     * Replaces values that change with every run, currently the generation date of XLIFF files and the copyright
+     * year of PHP files.
+     */
+    private static function normalizeVolatileValues(string $content): string
+    {
+        return preg_replace(
+            [
+                '/date="[^"]*"/',
+                '/(\(c\) )\d{4}/',
+            ],
+            [
+                'date="@@date@@"',
+                '$1@@year@@',
+            ],
+            $content
+        );
+    }
+
+    /**
+     * Compares a generated file with its fixture. Set CRAFTER_UPDATE_FIXTURES=1 to rewrite the fixtures after an
+     * intended change of the generated output. Always review the resulting diff.
+     *
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
+    protected function assertFileMatchesFixture(string $relativePath, string $fixtureName): void
+    {
+        $generatedPath = $this->getExtensionFilePath($relativePath);
+        self::assertFileExists($generatedPath, sprintf('File "%s" has not been generated.', $relativePath));
+        $generatedContent = self::normalizeVolatileValues((string)file_get_contents($generatedPath));
+        $fixturePath      = self::getFixturePath($fixtureName);
+
+        if ('1' === getenv('CRAFTER_UPDATE_FIXTURES')) {
+            GeneralUtility::mkdir_deep(dirname($fixturePath));
+            GeneralUtility::writeFile($fixturePath, $generatedContent, true);
+        }
+
+        self::assertFileExists($fixturePath, sprintf('Fixture "%s" is missing.', $fixtureName));
+        self::assertSame(
+            self::normalizeVolatileValues((string)file_get_contents($fixturePath)),
+            $generatedContent,
+            sprintf('Generated file "%s" differs from fixture "%s".', $relativePath, $fixtureName)
+        );
+    }
+
+    /**
+     * Absolute path inside the generated extension.
+     */
+    protected function getExtensionFilePath(string $relativePath): string
+    {
+        return $this->projectPath . '/packages/' . self::EXTENSION_KEY . '/' . ltrim($relativePath, '/');
+    }
+
+    /**
+     * @throws ExpectationFailedException
+     */
+    protected function getFixtureContent(string $name): string
+    {
+        $path = self::getFixturePath($name);
+
+        self::assertFileExists($path, sprintf('Fixture "%s" is missing.', $name));
+
+        return (string)file_get_contents($path);
+    }
+
     /**
      * Writes a project wide configuration layer, which is the layer a project uses to override the defaults.
+     *
+     * @throws RuntimeException
      */
     protected function writeProjectConfiguration(string $yaml): void
     {
@@ -179,6 +208,10 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         GeneralUtility::writeFile($this->projectPath . '/config/crafter.yaml', $yaml, true);
     }
 
+    /**
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     private function createTemporaryDirectory(): string
     {
         $path = sys_get_temp_dir() . '/crafter-test-' . bin2hex(random_bytes(8));
@@ -202,6 +235,12 @@ abstract class AbstractCrafterTestCase extends UnitTestCase
         );
     }
 
+    /**
+     * @throws Exception
+     * @throws IncompatibleReturnValueException
+     * @throws InvalidArgumentException
+     * @throws NoPreviousThrowableException
+     */
     private function initializePackageManager(): void
     {
         $crafterPath = dirname(__DIR__, 2) . '/';

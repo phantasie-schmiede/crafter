@@ -12,24 +12,25 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 
-/**
- * Class MakeBackendControllerCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class MakeBackendControllerCommandTest extends AbstractCommandTestCase
 {
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function createsABackendControllerWithModuleRegistration(): void
     {
         $this->generateBaseExtension();
 
         $tester = $this->runCommand($this->makeBackendControllerCommand, [
-            'name'        => 'Import',
-            '--extension' => self::EXTENSION_KEY,
             '--actions'   => 'index,run',
+            '--extension' => self::EXTENSION_KEY,
+            'name'        => 'Import',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -38,16 +39,20 @@ final class MakeBackendControllerCommandTest extends AbstractCommandTestCase
         self::assertFileExists($this->getExtensionFilePath('Configuration/Backend/Modules.php'));
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function noModuleFlagSkipsTheRegistration(): void
     {
         $this->generateBaseExtension();
 
         $tester = $this->runCommand($this->makeBackendControllerCommand, [
-            'name'        => 'Import',
-            '--extension' => self::EXTENSION_KEY,
             '--actions'   => 'index',
+            '--extension' => self::EXTENSION_KEY,
             '--no-module' => true,
+            'name'        => 'Import',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());

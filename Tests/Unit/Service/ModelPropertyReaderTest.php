@@ -12,26 +12,33 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\MockObject\Exception;
 use PSBits\Crafter\Data\PropertyDefinition;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\FieldTypeRegistry;
 use PSBits\Crafter\Service\ModelPropertyReader;
 use PSBits\Crafter\Tests\Unit\AbstractCrafterTestCase;
+use Random\RandomException;
+use RuntimeException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+use function array_map;
 use function dirname;
 
 /**
- * Class ModelPropertyReaderTest
- *
  * Feeds the reader with the real output of the model generator and with hand written sources, so the attribute
  * patterns of every configured field type are verified.
- *
- * @package PSBits\Crafter\Tests\Unit\Service
  */
 final class ModelPropertyReaderTest extends AbstractCrafterTestCase
 {
     private ModelPropertyReader $modelPropertyReader;
 
+    /**
+     * @throws Exception
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -39,6 +46,36 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         $this->modelPropertyReader = new ModelPropertyReader(new FieldTypeRegistry($this->configurationService));
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function fallsBackToStringForAnUnknownAttribute(): void
+    {
+        $path = $this->writeModelSource(
+            <<<'PHP'
+                <?php
+
+                class Source
+                {
+                    #[SomethingWeird]
+                    protected string $mystery = '';
+                }
+                PHP
+        );
+        $byName = $this->readByProperty($path);
+
+        self::assertSame('string', $byName['mystery']->type);
+        self::assertFalse($byName['mystery']->required);
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
     #[Test]
     public function readsThePropertiesOfAGeneratedModel(): void
     {
@@ -60,94 +97,12 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         self::assertFalse($byName['price']->required);
     }
 
-    #[Test]
-    public function returnsAnEmptyArrayForAMissingFile(): void
-    {
-        self::assertSame([], $this->modelPropertyReader->read('/does/not/exist/Model.php'));
-    }
-
-    #[Test]
-    public function returnsAnEmptyArrayWithoutProtectedProperties(): void
-    {
-        $path = $this->writeModelSource(
-            <<<'PHP'
-                <?php
-
-                class NotAModel
-                {
-                    private string $hidden = 'ignored';
-
-                    public function getName(): string
-                    {
-                        return $this->hidden;
-                    }
-                }
-                PHP
-        );
-
-        self::assertSame([], $this->modelPropertyReader->read($path));
-    }
-
-    #[Test]
-    public function resolvesEveryConfiguredAttributePattern(): void
-    {
-        $path = $this->writeModelSource(
-            <<<'PHP'
-                <?php
-
-                class Source
-                {
-                    #[Check]
-                    protected bool $flag = false;
-
-                    #[Color]
-                    protected string $accent = '';
-
-                    #[Datetime]
-                    protected ?\DateTime $updatedAt = null;
-
-                    #[Input(eval: 'trim,email')]
-                    protected string $contactEmail = '';
-
-                    #[Enum(enumClass: ProductStatus::class)]
-                    protected ?ProductStatus $status = null;
-
-                    #[File]
-                    protected ObjectStorage $attachment;
-
-                    #[Number]
-                    protected int $stock = 0;
-
-                    #[Link]
-                    protected string $website = '';
-
-                    #[Text(enableRichText: true)]
-                    protected string $body = '';
-
-                    #[Slug]
-                    protected string $slug = '';
-                }
-                PHP
-        );
-        $byName = $this->readByProperty($path);
-
-        self::assertSame(
-            [
-                'flag'         => 'boolean',
-                'accent'       => 'color',
-                'updatedAt'    => 'dateTime',
-                'contactEmail' => 'email',
-                'status'       => 'enum',
-                'attachment'   => 'file',
-                'stock'        => 'integer',
-                'website'      => 'link',
-                'body'         => 'richText',
-                'slug'         => 'slug',
-            ],
-            array_map(static fn(PropertyDefinition $property): string => $property->type, $byName)
-        );
-    }
-
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     #[Test]
     public function requiresEveryAttributeOfAType(): void
     {
@@ -171,8 +126,14 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         self::assertSame('string', $byName['label']->type);
     }
 
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     #[Test]
-    public function fallsBackToStringForAnUnknownAttribute(): void
+    public function resolvesEveryConfiguredAttributePattern(): void
     {
         $path = $this->writeModelSource(
             <<<'PHP'
@@ -180,19 +141,98 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
 
                 class Source
                 {
-                    #[SomethingWeird]
-                    protected string $mystery = '';
+                    #[Color]
+                    protected string $accent = '';
+
+                    #[File]
+                    protected ObjectStorage $attachment;
+
+                    #[Text(enableRichText: true)]
+                    protected string $body = '';
+
+                    #[Input(eval: 'trim,email')]
+                    protected string $contactEmail = '';
+
+                    #[Check]
+                    protected bool $flag = false;
+
+                    #[Slug]
+                    protected string $slug = '';
+
+                    #[Enum(enumClass: ProductStatus::class)]
+                    protected ?ProductStatus $status = null;
+
+                    #[Number]
+                    protected int $stock = 0;
+
+                    #[Datetime]
+                    protected ?\DateTime $updatedAt = null;
+
+                    #[Link]
+                    protected string $website = '';
                 }
                 PHP
         );
         $byName = $this->readByProperty($path);
 
-        self::assertSame('string', $byName['mystery']->type);
-        self::assertFalse($byName['mystery']->required);
+        self::assertSame(
+            [
+                'accent'       => 'color',
+                'attachment'   => 'file',
+                'body'         => 'richText',
+                'contactEmail' => 'email',
+                'flag'         => 'boolean',
+                'slug'         => 'slug',
+                'status'       => 'enum',
+                'stock'        => 'integer',
+                'updatedAt'    => 'dateTime',
+                'website'      => 'link',
+            ],
+            array_map(static fn(PropertyDefinition $property): string => $property->type, $byName)
+        );
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     */
+    #[Test]
+    public function returnsAnEmptyArrayForAMissingFile(): void
+    {
+        self::assertSame([], $this->modelPropertyReader->read('/does/not/exist/Model.php'));
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws ExpectationFailedException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function returnsAnEmptyArrayWithoutProtectedProperties(): void
+    {
+        $path = $this->writeModelSource(
+            <<<'PHP'
+                <?php
+
+                class NotAModel
+                {
+                    private string $hidden = 'ignored';
+
+                    public function getName(): string
+                    {
+                        return $this->hidden;
+                    }
+                }
+                PHP
+        );
+
+        self::assertSame([], $this->modelPropertyReader->read($path));
     }
 
     /**
      * @return array<string, PropertyDefinition>
+     * @throws CrafterException
      */
     private function readByProperty(string $filePath): array
     {
@@ -205,6 +245,10 @@ final class ModelPropertyReaderTest extends AbstractCrafterTestCase
         return $byName;
     }
 
+    /**
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     private function writeModelSource(string $source): string
     {
         $path = $this->getExtensionFilePath('Classes/Domain/Model/' . bin2hex(random_bytes(4)) . '.php');

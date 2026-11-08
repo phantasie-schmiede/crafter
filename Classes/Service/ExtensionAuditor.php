@@ -11,29 +11,42 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\AuditFinding;
 use PSBits\Crafter\Enum\AuditSeverity;
 use PSBits\Crafter\Exception\CrafterException;
+use UnexpectedValueException;
 
+use function array_filter;
 use function array_key_exists;
+use function array_map;
+use function array_unique;
+use function array_values;
+use function basename;
 use function count;
 use function dirname;
+use function file_get_contents;
+use function glob;
+use function implode;
 use function in_array;
 use function is_array;
+use function is_dir;
+use function is_file;
 use function is_string;
+use function ksort;
 use function ltrim;
+use function sort;
 use function sprintf;
+use function str_contains;
+use function str_replace;
+use function usort;
 
 /**
- * Class ExtensionAuditor
- *
  * Compares an existing extension against the conventions Crafter generates by. Every check derives its expected
  * paths from the very same `paths` configuration the generators use, so a project with an own directory layout is
  * audited against its own layout instead of the shipped defaults.
  *
  * The auditor never writes anything. Each finding carries the command that resolves it.
- *
- * @package PSBits\Crafter\Service
  */
 class ExtensionAuditor
 {
@@ -57,8 +70,10 @@ class ExtensionAuditor
 
     /**
      * @param string[] $categories
-     *
      * @return AuditFinding[]
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws UnexpectedValueException
      */
     public function audit(string $extensionKey, array $categories = []): array
     {
@@ -118,6 +133,7 @@ class ExtensionAuditor
 
     /**
      * @return string[]
+     * @throws CrafterException
      */
     public function getCategories(?string $extensionKey = null): array
     {
@@ -126,8 +142,8 @@ class ExtensionAuditor
 
     /**
      * @param array<string, array{actions: string[], backend: bool, name: string, path: string}> $controllers
-     *
      * @return AuditFinding[]
+     * @throws CrafterException
      */
     private function auditControllers(string $extensionKey, string $extensionPath, array $controllers): array
     {
@@ -170,8 +186,8 @@ class ExtensionAuditor
 
     /**
      * @param array<string, array{actions: string[], backend: bool, name: string, path: string}> $controllers
-     *
      * @return AuditFinding[]
+     * @throws CrafterException
      */
     private function auditLanguageFiles(string $extensionKey, string $extensionPath, array $controllers): array
     {
@@ -223,6 +239,7 @@ class ExtensionAuditor
 
     /**
      * @return AuditFinding[]
+     * @throws CrafterException
      */
     private function auditModels(string $extensionKey, string $extensionPath): array
     {
@@ -250,8 +267,8 @@ class ExtensionAuditor
 
     /**
      * @param array<string, array{actions: string[], backend: bool, name: string, path: string}> $controllers
-     *
      * @return AuditFinding[]
+     * @throws CrafterException
      */
     private function auditOrphans(string $extensionKey, string $extensionPath, array $controllers): array
     {
@@ -324,8 +341,8 @@ class ExtensionAuditor
 
     /**
      * @param array<string, array{actions: string[], backend: bool, name: string, path: string}> $controllers
-     *
      * @return AuditFinding[]
+     * @throws CrafterException
      */
     private function auditRegistration(string $extensionKey, string $extensionPath, array $controllers): array
     {
@@ -384,6 +401,7 @@ class ExtensionAuditor
 
     /**
      * @return AuditFinding[]
+     * @throws CrafterException
      */
     private function auditStructure(string $extensionKey, string $extensionPath): array
     {
@@ -408,6 +426,9 @@ class ExtensionAuditor
 
     /**
      * @return AuditFinding[]
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws UnexpectedValueException
      */
     private function auditToolchain(string $extensionKey, string $extensionPath): array
     {
@@ -438,7 +459,6 @@ class ExtensionAuditor
 
     /**
      * @param string[] $languages
-     *
      * @return AuditFinding[]
      */
     private function checkTranslations(string $languagePath, string $extensionPath, array $languages): array
@@ -465,6 +485,7 @@ class ExtensionAuditor
 
     /**
      * @return array<string, array{actions: string[], backend: bool, name: string, path: string}>
+     * @throws CrafterException
      */
     private function collectControllers(string $extensionKey): array
     {
@@ -493,7 +514,6 @@ class ExtensionAuditor
 
     /**
      * @param string[] $labelIds
-     *
      * @return AuditFinding[]
      */
     private function compareLabels(array $labelIds, string $languagePath, string $extensionPath): array
@@ -520,6 +540,8 @@ class ExtensionAuditor
 
     /**
      * Reads the target path of the ExtensionInformation from the `extensionFiles` catalogue instead of assuming it.
+     *
+     * @throws CrafterException
      */
     private function getExtensionInformationPath(string $extensionKey, string $extensionPath): string
     {
@@ -538,6 +560,7 @@ class ExtensionAuditor
 
     /**
      * @return string[]
+     * @throws CrafterException
      */
     private function getListValue(string $path, ?string $extensionKey): array
     {
@@ -552,8 +575,8 @@ class ExtensionAuditor
 
     /**
      * @param array<string, string> $placeholders
-     *
      * @return string[]
+     * @throws CrafterException
      */
     private function listFiles(string $pathType, string $extensionKey, array $placeholders): array
     {
@@ -570,8 +593,8 @@ class ExtensionAuditor
 
     /**
      * @param array{actions: string[], backend: bool, name: string, path: string} $controller
-     *
      * @return string[]
+     * @throws CrafterException
      */
     private function listLanguageFiles(string $extensionKey, array $controller): array
     {
@@ -595,6 +618,7 @@ class ExtensionAuditor
 
     /**
      * @param array{actions: string[], backend: bool, name: string, path: string} $controller
+     * @throws CrafterException
      */
     private function resolveLanguagePath(string $extensionKey, array $controller, string $action): string
     {
@@ -613,6 +637,7 @@ class ExtensionAuditor
 
     /**
      * @param array{actions: string[], backend: bool, name: string, path: string} $controller
+     * @throws CrafterException
      */
     private function resolveTemplatePath(string $extensionKey, array $controller, string $action): string
     {

@@ -12,18 +12,24 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Tests\Unit\Command;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\MockObject\Exception;
+use Random\RandomException;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\LogicException;
 use TYPO3\CMS\Core\Core\Environment;
 
-/**
- * Class SkeletonPublishCommandTest
- *
- * @package PSBits\Crafter\Tests\Unit\Command
- */
 final class SkeletonPublishCommandTest extends AbstractCommandTestCase
 {
     private string $projectRoot;
 
+    /**
+     * @throws Exception
+     * @throws LogicException
+     * @throws RandomException
+     * @throws RuntimeException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,6 +37,10 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
         $this->projectRoot = rtrim(Environment::getProjectPath(), '/') . '/config/Crafter/Skeletons/';
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function copiesAShippedSkeletonIntoTheProjectRoot(): void
     {
@@ -41,24 +51,33 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('config/Crafter/Skeletons/Php/FileHeader.stub', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
-    public function reportsAnAlreadyPublishedSkeleton(): void
+    public function dryRunWritesNoFile(): void
     {
         $tester = $this->runCommand($this->skeletonPublishCommand, [
+            '--dry-run'  => true,
             'identifier' => 'Php/FileHeader',
-            '--priority' => '0',
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('is already published at priority 0', $tester->getDisplay());
+        self::assertStringContainsString('Dry run - no file has been written.', $tester->getDisplay());
+        self::assertFileDoesNotExist($this->projectRoot . 'Php/FileHeader.stub');
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
     public function rejectsAnUnknownPriority(): void
     {
         $tester = $this->runCommand($this->skeletonPublishCommand, [
-            'identifier' => 'Php/FileHeader',
             '--priority' => '99',
+            'identifier' => 'Php/FileHeader',
         ]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
@@ -66,16 +85,19 @@ final class SkeletonPublishCommandTest extends AbstractCommandTestCase
         self::assertStringContainsString('Available priorities', $tester->getDisplay());
     }
 
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
     #[Test]
-    public function dryRunWritesNoFile(): void
+    public function reportsAnAlreadyPublishedSkeleton(): void
     {
         $tester = $this->runCommand($this->skeletonPublishCommand, [
+            '--priority' => '0',
             'identifier' => 'Php/FileHeader',
-            '--dry-run'  => true,
         ]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Dry run - no file has been written.', $tester->getDisplay());
-        self::assertFileDoesNotExist($this->projectRoot . 'Php/FileHeader.stub');
+        self::assertStringContainsString('is already published at priority 0', $tester->getDisplay());
     }
 }

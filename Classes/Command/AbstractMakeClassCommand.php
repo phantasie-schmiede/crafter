@@ -11,25 +11,29 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Service\ClassGenerator;
 use PSBits\Crafter\Service\FileWriter;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use ValueError;
 
 use function is_string;
 use function sprintf;
+use function str_replace;
+use function trim;
 
 /**
- * Class AbstractMakeClassCommand
- *
  * Shared skeleton of all commands that create a single PHP class of the crafter.classTypes catalogue. Subclasses
  * only describe the class by building a ClassBlueprint.
- *
- * @package PSBits\Crafter\Command
  */
 abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
 {
@@ -39,6 +43,9 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
     public const string OPTION_SUB_PATH   = 'sub-path';
     public const string SUB_PATH_PATTERN  = '#^[A-Z][A-Za-z0-9]*(/[A-Z][A-Za-z0-9]*)*$#';
 
+    /**
+     * @throws LogicException
+     */
     public function __construct(
         protected readonly ClassGenerator $classGenerator,
         protected readonly FileWriter     $fileWriter,
@@ -46,13 +53,9 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
         parent::__construct();
     }
 
-    abstract protected function buildBlueprint(
-        InputInterface $input,
-        SymfonyStyle   $io,
-        string         $extensionKey,
-        string         $name,
-    ): ?ClassBlueprint;
-
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function addDependencyOption(): static
     {
         $this->addOption(
@@ -65,6 +68,9 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function addSubPathOption(): static
     {
         $this->addOption(
@@ -77,6 +83,16 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
         return $this;
     }
 
+    abstract protected function buildBlueprint(
+        InputInterface $input,
+        SymfonyStyle   $io,
+        string         $extensionKey,
+        string         $name,
+    ): ?ClassBlueprint;
+
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function configure(): void
     {
         parent::configure();
@@ -84,6 +100,60 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
         $this->addArgument(self::ARGUMENT_NAME, InputArgument::OPTIONAL, $this->getNameDescription());
     }
 
+    abstract protected function getArtifactLabel(): string;
+
+    /**
+     * @return string[] fully qualified class names
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     */
+    protected function getDependencies(InputInterface $input, string $extensionKey): array
+    {
+        $dependencies = [];
+
+        foreach ((array)$input->getOption(self::OPTION_DEPENDENCY) as $dependency) {
+            $dependency = trim((string)$dependency);
+
+            if ('' !== $dependency) {
+                $dependencies[] = $this->classGenerator->resolveDependency($dependency, $extensionKey);
+            }
+        }
+
+        return $dependencies;
+    }
+
+    abstract protected function getNameDescription(): string;
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    protected function getSubPath(InputInterface $input, SymfonyStyle $io): ?string
+    {
+        $subPath = $input->getOption(self::OPTION_SUB_PATH);
+
+        if (!is_string($subPath) || '' === $subPath) {
+            return '';
+        }
+
+        $subPath = trim(str_replace('\\', '/', $subPath), '/');
+
+        if (1 !== preg_match(self::SUB_PATH_PATTERN, $subPath)) {
+            $io->error('The sub path must consist of UpperCamelCase segments, e.g. Contact/Address.');
+
+            return null;
+        }
+
+        return $subPath;
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
+     */
     protected function handle(InputInterface $input, SymfonyStyle $io): int
     {
         $extensionKey = $this->getExtensionKey($input);
@@ -139,46 +209,8 @@ abstract class AbstractMakeClassCommand extends AbstractCrafterCommand
     }
 
     /**
-     * @return string[] fully qualified class names
+     * @throws InvalidArgumentException
      */
-    protected function getDependencies(InputInterface $input, string $extensionKey): array
-    {
-        $dependencies = [];
-
-        foreach ((array)$input->getOption(self::OPTION_DEPENDENCY) as $dependency) {
-            $dependency = trim((string)$dependency);
-
-            if ('' !== $dependency) {
-                $dependencies[] = $this->classGenerator->resolveDependency($dependency, $extensionKey);
-            }
-        }
-
-        return $dependencies;
-    }
-
-    protected function getSubPath(InputInterface $input, SymfonyStyle $io): ?string
-    {
-        $subPath = $input->getOption(self::OPTION_SUB_PATH);
-
-        if (!is_string($subPath) || '' === $subPath) {
-            return '';
-        }
-
-        $subPath = trim(str_replace('\\', '/', $subPath), '/');
-
-        if (1 !== preg_match(self::SUB_PATH_PATTERN, $subPath)) {
-            $io->error('The sub path must consist of UpperCamelCase segments, e.g. Contact/Address.');
-
-            return null;
-        }
-
-        return $subPath;
-    }
-
-    abstract protected function getArtifactLabel(): string;
-
-    abstract protected function getNameDescription(): string;
-
     private function determineName(InputInterface $input, SymfonyStyle $io): ?string
     {
         $name = $input->getArgument(self::ARGUMENT_NAME);

@@ -12,17 +12,20 @@ declare(strict_types=1);
 namespace PSBits\Crafter\Service;
 
 use PSBits\Crafter\Data\ControllerBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use PSBits\Crafter\Utility\NamingUtility;
+use RuntimeException;
 
+use function array_keys;
+use function implode;
 use function is_array;
+use function ksort;
+use function str_replace;
+use function trim;
 
 /**
- * Class LanguageFileGenerator
- *
  * Writes the XLIFF files of an action. Which labels an action needs is defined in crafter.actionLabels, the
  * property labels are derived from the model properties.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class LanguageFileGenerator
 {
@@ -40,6 +43,8 @@ readonly class LanguageFileGenerator
 
     /**
      * @param array<string, string[]> $labelIds label identifiers per action, derived from the rendered templates
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     public function generateForController(ControllerBlueprint $blueprint, array $labelIds = []): void
     {
@@ -62,31 +67,11 @@ readonly class LanguageFileGenerator
     }
 
     /**
-     * @param string[]             $ids
-     * @param array<string, mixed> $labels
-     *
-     * @return array<string, string>
+     * Example: 'releaseDate' => 'Release date'
      */
-    private function buildUnits(array $ids, array $labels, ControllerBlueprint $blueprint): array
+    public function humanize(string $value): string
     {
-        $units = [];
-
-        foreach ($ids as $id) {
-            $units[$id] = isset($labels[$id])
-                ? str_replace(
-                    ['{modelName}', '{pluralName}'],
-                    [
-                        $this->humanize($blueprint->getModelName()),
-                        $this->humanize(NamingUtility::toPlural($blueprint->getModelName())),
-                    ],
-                    (string)$labels[$id]
-                )
-                : $this->humanize($id);
-        }
-
-        ksort($units);
-
-        return $units;
+        return ucfirst(trim(str_replace('_', ' ', NamingUtility::toLowerCaseUnderscored($value))));
     }
 
     /**
@@ -95,6 +80,8 @@ readonly class LanguageFileGenerator
      *
      * @param array<string, string> $placeholders placeholders of the configured path
      * @param array<string, string> $units        translation identifier => source text
+     * @throws CrafterException
+     * @throws RuntimeException
      */
     public function writeLanguageFiles(
         string $extensionKey,
@@ -154,15 +141,35 @@ readonly class LanguageFileGenerator
     }
 
     /**
-     * Example: 'releaseDate' => 'Release date'
+     * @param string[]             $ids
+     * @param array<string, mixed> $labels
+     * @return array<string, string>
      */
-    public function humanize(string $value): string
+    private function buildUnits(array $ids, array $labels, ControllerBlueprint $blueprint): array
     {
-        return ucfirst(trim(str_replace('_', ' ', NamingUtility::toLowerCaseUnderscored($value))));
+        $units = [];
+
+        foreach ($ids as $id) {
+            $units[$id] = isset($labels[$id])
+                ? str_replace(
+                    ['{modelName}', '{pluralName}'],
+                    [
+                        $this->humanize($blueprint->getModelName()),
+                        $this->humanize(NamingUtility::toPlural($blueprint->getModelName())),
+                    ],
+                    (string)$labels[$id]
+                )
+                : $this->humanize($id);
+        }
+
+        ksort($units);
+
+        return $units;
     }
 
     /**
      * @param array<string, string> $units
+     * @throws RuntimeException
      */
     private function write(ControllerBlueprint $blueprint, string $action, array $units): void
     {

@@ -11,15 +11,18 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Service;
 
+use JsonException;
 use PSBits\Crafter\Data\ControllerBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
+use RuntimeException;
+use ValueError;
+
+use function file_get_contents;
+use function is_file;
 
 /**
- * Class PluginRegistrar
- *
  * Adds the plugin of a generated controller to the ExtensionInformation of the extension. Foundation derives the
  * whole plugin configuration from there and from the PluginAction attributes, so no further registration is needed.
- *
- * @package PSBits\Crafter\Service
  */
 readonly class PluginRegistrar
 {
@@ -38,6 +41,10 @@ readonly class PluginRegistrar
 
     /**
      * @return bool true when the plugin has been added, false when the file is missing or the plugin already exists
+     * @throws CrafterException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws ValueError
      */
     public function register(ControllerBlueprint $blueprint): bool
     {

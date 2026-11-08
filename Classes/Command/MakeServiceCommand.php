@@ -11,17 +11,16 @@ declare(strict_types=1);
 
 namespace PSBits\Crafter\Command;
 
+use JsonException;
 use PSBits\Crafter\Data\ClassBlueprint;
+use PSBits\Crafter\Exception\CrafterException;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Class MakeServiceCommand
- *
  * Creates a service class with its constructor dependencies.
- *
- * @package PSBits\Crafter\Command
  */
 #[AsCommand(
     name: 'crafter:make:service',
@@ -31,27 +30,11 @@ class MakeServiceCommand extends AbstractMakeClassCommand
 {
     public const string CLASS_TYPE = 'service';
 
-    protected function configure(): void
-    {
-        parent::configure();
-        $this->setHelp(
-            <<<'HELP'
-            Creates a service class with its constructor dependencies.
-
-            Dependencies are given with the repeatable option --dependency as fully qualified
-            class names or as short names like ContactRepository, which are resolved against the
-            target extension. Use --sub-path to place the service in a sub directory of the base
-            directory of the class type.
-
-            Example:
-              crafter:make:service --extension budget_manager Import \
-                  --dependency ContactRepository --sub-path Import
-            HELP
-        );
-        $this->addDependencyOption();
-        $this->addSubPathOption();
-    }
-
+    /**
+     * @throws CrafterException
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     */
     protected function buildBlueprint(
         InputInterface $input,
         SymfonyStyle   $io,
@@ -71,6 +54,30 @@ class MakeServiceCommand extends AbstractMakeClassCommand
             dependencies: $this->getDependencies($input, $extensionKey),
             subPath     : $subPath
         );
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    protected function configure(): void
+    {
+        parent::configure();
+        $this->setHelp(
+            <<<'HELP'
+            Creates a service class with its constructor dependencies.
+
+            Dependencies are given with the repeatable option --dependency as fully qualified
+            class names or as short names like ContactRepository, which are resolved against the
+            target extension. Use --sub-path to place the service in a sub directory of the base
+            directory of the class type.
+
+            Example:
+              crafter:make:service --extension budget_manager Import \
+                  --dependency ContactRepository --sub-path Import
+            HELP
+        );
+        $this->addDependencyOption();
+        $this->addSubPathOption();
     }
 
     protected function getArtifactLabel(): string
