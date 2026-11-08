@@ -78,6 +78,50 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
     /**
      * @throws CrafterException
      * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
+    #[Test]
+    public function missingBackendLanguageFileIsReported(): void
+    {
+        $this->generateExtension();
+        $this->backendControllerGenerator->generate(self::EXTENSION_KEY, 'Import', ['index'], [], 'import');
+        unlink($this->getExtensionFilePath('Resources/Private/Language/Backend/Import/index.xlf'));
+        $findings = $this->auditCategory('language');
+
+        self::assertCount(1, $findings);
+        self::assertSame(AuditSeverity::error, $findings[0]->severity);
+        self::assertSame('Resources/Private/Language/Backend/Import/index.xlf', $findings[0]->path);
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
+    #[Test]
+    public function missingBaseLanguageFileIsReported(): void
+    {
+        $this->generateExtension();
+        unlink($this->getExtensionFilePath('Resources/Private/Language/Frontend/Product/list.xlf'));
+        $findings = $this->auditCategory('language');
+
+        self::assertCount(1, $findings);
+        self::assertSame(AuditSeverity::error, $findings[0]->severity);
+        self::assertSame('Resources/Private/Language/Frontend/Product/list.xlf', $findings[0]->path);
+        self::assertStringContainsString('no language file', $findings[0]->message);
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws Exception
      * @throws JsonException
      * @throws RuntimeException
      * @throws UnexpectedValueException
@@ -196,6 +240,31 @@ final class ExtensionAuditorTest extends AbstractGeneratorTestCase
         self::assertCount(1, $findings);
         self::assertSame(AuditSeverity::warning, $findings[0]->severity);
         self::assertSame('Build/Quality/.php-cs-fixer.dist.php', $findings[0]->path);
+    }
+
+    /**
+     * @throws CrafterException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     * @throws ValueError
+     */
+    #[Test]
+    public function orphanedLanguageFileIsReported(): void
+    {
+        $this->generateExtension();
+        $this->backendControllerGenerator->generate(self::EXTENSION_KEY, 'Import', ['index'], [], 'import');
+        file_put_contents(
+            $this->getExtensionFilePath('Resources/Private/Language/Frontend/Product/archive.xlf'),
+            '<?xml version="1.0" encoding="utf-8"?><xliff version="1.2"><file><body/></file></xliff>'
+        );
+        $findings = $this->auditCategory('orphan');
+
+        self::assertCount(1, $findings);
+        self::assertSame(AuditSeverity::notice, $findings[0]->severity);
+        self::assertStringContainsString('archive.xlf', $findings[0]->path);
     }
 
     /**

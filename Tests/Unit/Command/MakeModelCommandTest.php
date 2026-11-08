@@ -82,6 +82,27 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
      * @throws RuntimeException
      */
     #[Test]
+    public function noControllerFlagSkipsTheController(): void
+    {
+        $tester = $this->runCommand($this->makeModelCommand, [
+            '--extension'       => self::EXTENSION_KEY,
+            '--no-controller'   => true,
+            '--property'        => ['name=title,type=string'],
+            '--with-repository' => true,
+            'name'              => 'Product',
+        ]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertFileExists($this->getExtensionFilePath('Classes/Domain/Model/Product.php'));
+        self::assertFileExists($this->getExtensionFilePath('Classes/Domain/Repository/ProductRepository.php'));
+        self::assertFileDoesNotExist($this->getExtensionFilePath('Classes/Controller/ProductController.php'));
+    }
+
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
+    #[Test]
     public function rejectsAnInvalidName(): void
     {
         $tester = $this->runCommand($this->makeModelCommand, ['--extension' => self::EXTENSION_KEY, 'name' => 'product']);
@@ -136,5 +157,32 @@ final class MakeModelCommandTest extends AbstractCommandTestCase
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('The option --extension is required.', $tester->getDisplay());
+    }
+
+    /**
+     * @throws ExpectationFailedException
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function withControllerFlagCreatesTheControllerWithPlugin(): void
+    {
+        $this->generateBaseExtension();
+
+        $tester = $this->runCommand($this->makeModelCommand, [
+            '--extension'       => self::EXTENSION_KEY,
+            '--property'        => ['name=title,type=string'],
+            '--with-controller' => true,
+            'name'              => 'Product',
+        ]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertFileExists($this->getExtensionFilePath('Classes/Domain/Model/Product.php'));
+        self::assertFileExists($this->getExtensionFilePath('Classes/Controller/ProductController.php'));
+        self::assertFileExists($this->getExtensionFilePath('Resources/Private/Templates/Product/List.html'));
+        self::assertFileDoesNotExist($this->getExtensionFilePath('Classes/Domain/Repository/ProductRepository.php'));
+        self::assertStringContainsString(
+            "name       : 'Products'",
+            (string)file_get_contents($this->getExtensionFilePath('Classes/Data/ExtensionInformation.php'))
+        );
     }
 }

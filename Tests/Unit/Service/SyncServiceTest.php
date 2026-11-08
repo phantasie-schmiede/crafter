@@ -25,6 +25,7 @@ use function dirname;
 use function file_get_contents;
 use function is_array;
 use function json_decode;
+use function json_encode;
 use function str_replace;
 
 /**
@@ -228,6 +229,70 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         self::assertSame(['.Build/bin/qa sync'], $composer['scripts']['post-update-cmd']);
         self::assertSame('phpunit', $composer['scripts']['test:user']);
         self::assertSame('^2.0', $composer['require-dev']['foo/bar']);
+    }
+
+    /**
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws JsonException
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function syncMergesAndReplacesManagedPackageJsonKeys(): void
+    {
+        $this->createExtensionFile('Resources/Private/Templates/Product/List.html', '<!-- product -->');
+        $this->createExtensionFile('composer.json', '{"name":"acme/demo-shop","license":"proprietary"}');
+        $this->createExtensionFile(
+            'package.json',
+            '{
+                "name": "demo-shop",
+                "scripts": {
+                    "lint:htmlxml": "echo stale",
+                    "lint:json": "echo stale",
+                    "test:user": "vitest"
+                },
+                "devDependencies": {
+                    "prettier": "^2.0.0",
+                    "vitest": "^3.0.0"
+                }
+            }'
+        );
+
+        $this->syncService->sync(self::EXTENSION_KEY);
+
+        $packageJsonPath = $this->getExtensionFilePath('package.json');
+        $packageJson     = json_decode((string)file_get_contents($packageJsonPath), true);
+        self::assertSame('demo-shop', $packageJson['name']);
+        self::assertSame('vitest', $packageJson['scripts']['test:user']);
+        self::assertSame(
+            'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs'
+            . ' --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"',
+            $packageJson['scripts']['lint:htmlxml']
+        );
+        self::assertSame(
+            'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs'
+            . ' --ignore-path Build/Quality/.prettierignore --check "package.json"',
+            $packageJson['scripts']['lint:json']
+        );
+        self::assertSame(
+            ['fix:classes', 'fix:htmlxml', 'fix:json', 'lint:classes', 'lint:htmlxml', 'lint:json', 'test:user'],
+            array_keys($packageJson['scripts'])
+        );
+        self::assertSame('^3.6.2', $packageJson['devDependencies']['prettier']);
+        self::assertSame('^3.0.0', $packageJson['devDependencies']['vitest']);
+        self::assertArrayHasKey('@prettier/plugin-xml', $packageJson['devDependencies']);
+        self::assertArrayHasKey('prettier-plugin-organize-attributes', $packageJson['devDependencies']);
+        self::assertSame(
+            str_replace(
+                '    ',
+                '  ',
+                (string)json_encode(
+                    $packageJson,
+                    JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                )
+            ) . "\n",
+            (string)file_get_contents($packageJsonPath)
+        );
     }
 
     /**
