@@ -1,6 +1,6 @@
 {
   "name": "crafter",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "TYPO3 extension starter package",
   "scripts": {
     "fix:classes": "node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs",
