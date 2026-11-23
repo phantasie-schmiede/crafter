@@ -184,6 +184,7 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         );
         self::assertFileExists($this->getExtensionFilePath('Build/Quality/phpstan.neon.dist'));
         self::assertFileExists($this->getExtensionFilePath('Build/Quality/.php-cs-fixer.dist.php'));
+        self::assertFileExists($this->getExtensionFilePath('Build/Quality/.phpcs.xml.dist'));
         self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/php-cs-fixer/ClassBlockSeparationFixer.php'));
         self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/php-cs-fixer/PropertyNamesAlignmentFixer.php'));
         self::assertFileDoesNotExist($this->getExtensionFilePath('Build/Quality/lint-class-attributes.mjs'));
@@ -265,8 +266,7 @@ final class SyncServiceTest extends AbstractCrafterTestCase
         self::assertSame('demo-shop', $packageJson['name']);
         self::assertSame('vitest', $packageJson['scripts']['test:user']);
         self::assertSame(
-            'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs'
-            . ' --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"',
+            'node .Build/vendor/psbits/qa/Resources/Quality/prettier.mjs check',
             $packageJson['scripts']['lint:htmlxml']
         );
         self::assertSame(

@@ -172,6 +172,17 @@ final class GeneratorTest extends AbstractGeneratorTestCase
     }
 
     /**
+     * @throws RuntimeException
+     */
+    #[Test]
+    public function extensionQualityIncludesTheSharedPhpCodeSnifferRules(): void
+    {
+        $this->generateBaseExtension(['core', 'quality']);
+
+        $this->assertFileMatchesFixture('Build/Quality/.phpcs.xml.dist', 'Quality/PhpCs.xml');
+    }
+
+    /**
      * @throws JsonException
      * @throws RuntimeException
      * @throws ValueError

@@ -90,10 +90,10 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         self::assertSame(
             [
                 'fix:classes'  => 'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs',
-                'fix:htmlxml'  => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "**/*.{html,xml,xlf}"',
+                'fix:htmlxml'  => 'node .Build/vendor/psbits/qa/Resources/Quality/prettier.mjs fix',
                 'fix:json'     => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --write "package.json"',
                 'lint:classes' => 'node .Build/vendor/psbits/qa/Resources/Quality/lint-class-attributes.mjs --dry-run',
-                'lint:htmlxml' => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "**/*.{html,xml,xlf}"',
+                'lint:htmlxml' => 'node .Build/vendor/psbits/qa/Resources/Quality/prettier.mjs check',
                 'lint:json'    => 'prettier --config .Build/vendor/psbits/qa/Resources/Quality/prettier.config.mjs --ignore-path Build/Quality/.prettierignore --check "package.json"',
             ],
             $this->toolchainGenerator->getManagedPackageScripts($profile)
@@ -129,7 +129,7 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
                 'phpunit/phpunit'                 => '^11',
                 'psbits/qa'                       => '@dev',
                 'roave/security-advisories'       => 'dev-latest',
-                'saschaegerer/phpstan-typo3'      => '^2.1 || ^3.0',
+                'saschaegerer/phpstan-typo3'      => '^2.1 || ^3.1',
                 'typo3/testing-framework'         => '^9.5',
             ],
             $this->toolchainGenerator->getManagedComposerRequireDev($profile)
@@ -159,6 +159,7 @@ final class ToolchainGeneratorTest extends AbstractCrafterTestCase
         );
         self::assertSame(
             [
+                'Extension/Quality/PhpCs',
                 'Extension/Quality/PhpCsFixer',
                 'Extension/Quality/PhpStan',
             ],

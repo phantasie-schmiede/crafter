@@ -147,7 +147,7 @@ inconsistencies between the codebase and these instructions, mention them - don'
 Repository quality checks are defined in `composer.json`, `package.json`, and `Build/` configuration files.
 
 - `fix:all` **rewrites source files** (runs class attribute linting, Prettier
-  for XML/XLF and package.json, the composer.json normalization, php-cs-fixer);
+  for HTML/XML/XLF and package.json, the composer.json normalization, PHP_CodeSniffer and php-cs-fixer);
   `lint:all` is the read-only verification.
 - A pre-commit hook (installed by `.Build/bin/qa sync` from the psbits/qa package) runs `composer lint:all`.
 - The shared QA scripts and their `lint:all` / `fix:all` aggregates are kept in sync by
