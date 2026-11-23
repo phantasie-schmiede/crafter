@@ -122,7 +122,7 @@ inconsistencies between the codebase and these instructions, mention them - don'
 
 ## Validation
 
-- `fix:all` **rewrites source files** (formats HTML/XML, reorders class attributes, runs php-cs-fixer); `lint:all` is
+- `fix:all` **rewrites source files** (formats HTML/XML/XLF, reorders class attributes, runs PHP_CodeSniffer and php-cs-fixer); `lint:all` is
   the read-only verification.
 - A pre-commit hook (installed by `.Build/bin/qa sync` from the psbits/qa package) runs `composer lint:all`.
 - The same checks run in the shared `CI` GitHub Actions workflow (`.github/workflows/ci.yml`).

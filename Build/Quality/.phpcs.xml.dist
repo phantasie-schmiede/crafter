@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<ruleset name="PSBits Crafter">
+    <description>Thin shim over the shared PSBits PHP_CodeSniffer ruleset.</description>
+
+    <rule ref="../../.Build/vendor/psbits/qa/Resources/Quality/phpcs.xml" />
+
+    <file>../../Classes</file>
+    <file>../../Configuration</file>
+    <file>../../Tests</file>
+</ruleset>

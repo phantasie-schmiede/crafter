@@ -64,8 +64,10 @@ final class MakeExtensionCommandTest extends AbstractCommandTestCase
         self::assertFileExists($this->pathOf('budget_tracker', 'composer.json'));
         self::assertFileExists($this->pathOf('budget_tracker', 'ext_emconf.php'));
         self::assertFileExists($this->pathOf('budget_tracker', 'Build/Quality/.php-cs-fixer.dist.php'));
+        self::assertFileExists($this->pathOf('budget_tracker', 'Build/Quality/.phpcs.xml.dist'));
         $composer = json_decode((string)file_get_contents($this->pathOf('budget_tracker', 'composer.json')), true, 512, JSON_THROW_ON_ERROR);
         self::assertSame('acme/budget-tracker', $composer['name']);
+        self::assertTrue($composer['config']['allow-plugins']['dealerdirect/phpcodesniffer-composer-installer']);
         self::assertSame('Classes', $composer['autoload']['psr-4']['Acme\BudgetTracker\\']);
         self::assertStringContainsString("=> 'stable'", (string)file_get_contents($this->pathOf('budget_tracker', 'ext_emconf.php')));
         self::assertStringContainsString('Extension "budget_tracker" has been created.', $tester->getDisplay());
